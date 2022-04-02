@@ -1235,12 +1235,6 @@ class UnoEventProcessor:
 
 # TODO stat graphs with seaborn?
 class UnoStatusCenter:
-    # show me the current turn order
-    # show me the leaderboard
-    # show me what happened last turn
-    # show me the game settings
-    # show me my status
-    # show me some cool statistics
     def __init__(self, game: UnoGame):
         self.game = game
 
