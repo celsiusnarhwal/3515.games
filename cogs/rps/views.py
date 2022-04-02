@@ -21,7 +21,7 @@ class RPSChooseMoveView(EnhancedView):
 
         :param players: A list of players in the match.
         """
-        super(RPSChooseMoveView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.ready_players = set()
         self.players = players
         self.challenger = players[0].user
@@ -46,7 +46,7 @@ class RPSChooseMoveView(EnhancedView):
                 f"to choose theirs.",
                 ephemeral=True)
         else:
-            return await super(RPSChooseMoveView, self).interaction_check(interaction)
+            return await super().interaction_check(interaction)
 
     @discord_button(label="Rock", emoji="🪨", style=ButtonStyle.green)
     async def rock(self, button: Button, interaction: Interaction):
@@ -122,7 +122,7 @@ class RPSMatchEndView(EnhancedView):
 
         :param match_record: A list of lists of strings representing the match record..
         """
-        super(RPSMatchEndView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.match_record = match_record
         self.timeout = 180
         self.results_msg = None
@@ -133,7 +133,7 @@ class RPSMatchEndView(EnhancedView):
 
     @discord_button(label="View Match Record", style=discord.ButtonStyle.blurple)
     async def view_match_record(self, button: Button, interaction: Interaction):
-        pages = [discord.Embed(title="Match Record", description="\n\n".join(page), color=support.ExtendedColors.mint())
+        pages = [discord.Embed(title="Match Record", description="\n\n".join(page), color=support.Color.mint())
                  for page in self.match_record]
         paginator = discord_pages.Paginator(pages=pages, use_default_buttons=False,
                                             custom_buttons=support.paginator_emoji_buttons())
@@ -152,6 +152,6 @@ class RPSMatchEndView(EnhancedView):
                        f"{opponent.score} {opponent.user.mention}\n"
 
         results_embed = discord.Embed(title="Rock-Paper-Scissors: Game Over!", description=results_text,
-                                      color=support.ExtendedColors.mint())
+                                      color=support.Color.mint())
 
         self.results_msg = await self.ctx.send(embed=results_embed, view=self)

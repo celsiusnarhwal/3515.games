@@ -1,2 +1,2 @@
-from cogs.uno.classes import *
+from cogs.uno.models import *
 from cogs.uno.views import *

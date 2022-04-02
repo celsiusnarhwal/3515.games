@@ -1,6 +1,6 @@
-import datetime
 import json
 import os
+import platform
 import textwrap
 
 import discord
@@ -16,62 +16,68 @@ from support.views import EnhancedView
 class AboutView(EnhancedView):
     def __init__(self, **kwargs):
         super(AboutView, self).__init__(**kwargs)
+        self.add_item(Button(label="Source Code", emoji="<:github:953746341413142638>",
+                             url="https://github.com/celsiusnarhwal/3515.games"))
 
-    @discord_button(label="Third-Party Acknowledgements", style=ButtonStyle.gray)
-    async def third_party_acknowledgements(self, button: Button, interaction: Interaction):
-        class AcknowledgementsView(EnhancedView):
-            def __init__(self, **kwargs):
-                super(AcknowledgementsView, self).__init__()
+    @discord_button(label="Acknowledgements", style=ButtonStyle.gray)
+    async def view_acknowledgements(self, button: Button, interaction: Interaction):
 
-            @discord_button(label="View Acknowledgements", style=ButtonStyle.gray)
-            async def view_acknowledgements(self, button: Button, interaction: Interaction):
-                licenses = json.load(open(os.path.join(os.getcwd(), "licenses.json")))
+        licenses = json.load(open(os.path.join(os.getcwd(), "licenses.json")))
 
-                pages = []
-                for oss_license in licenses:
-                    page_title = oss_license["Name"]
-                    page_text = f"**{oss_license['License']}**\n\n{oss_license['LicenseText']}"
+        pages = []
+        for oss_license in licenses:
+            page_title = oss_license["Name"]
+            page_text = f"**{oss_license['License']}**\n\n{oss_license['LicenseText']}"
 
-                    split_page_text = textwrap.wrap(page_text, 2000, break_long_words=False, replace_whitespace=False)
+            split_page_text = textwrap.wrap(page_text, 2000, break_long_words=False, replace_whitespace=False)
 
-                    embeds = []
-                    for index, text in enumerate(split_page_text):
+            embeds = []
+            for index, text in enumerate(split_page_text):
 
-                        if index == 1:
-                            page_title += " (cont.)"
+                if index == 1:
+                    page_title += " (cont.)"
 
-                        embeds.append(discord.Embed(title=page_title, description=text,
-                                                    color=support.ExtendedColors.mint()))
+                embeds.append(discord.Embed(title=page_title, description=text,
+                                            color=support.Color.mint()))
 
-                    pages.extend(embeds)
+            pages.extend(embeds)
 
-                paginator = discord_pages.Paginator(pages=pages, use_default_buttons=False,
-                                                    custom_buttons=support.paginator_emoji_buttons())
-                await paginator.respond(interaction, ephemeral=True)
-
-        embed_text = "3515.games wouldn't be possible without the contributions of open-source software. " \
-                     "Here, you'll find the required acknowledgements for the open-source software " \
-                     "used by 3515.games. "
-
-        tpa_prompt_embed = discord.Embed(title="Third-Party Acknowledgements", description=embed_text,
-                                         color=support.ExtendedColors.mint())
-
-        await interaction.response.send_message(embed=tpa_prompt_embed, view=AcknowledgementsView(), ephemeral=True)
+        paginator = discord_pages.Paginator(pages=pages, use_default_buttons=False,
+                                            custom_buttons=support.paginator_emoji_buttons())
+        await paginator.respond(interaction, ephemeral=True)
 
     async def show_about(self):
         pyproject = toml.load(open(os.path.join(os.getcwd(), "pyproject.toml")))
 
-        version = pyproject["tool"]["poetry"]["version"]
-        copyright_year = datetime.datetime.now().year
+        bot_version = pyproject["tool"]["poetry"]["version"]
+        copyright_year = discord.utils.utcnow().year
 
-        about_text = f"3515.games is a project of 3515 Productions, a one-man band led by <@170966436125212673>.\n" \
+        about_text = f"I'm 3515.games, a bot that lets you enjoy real-time social games with your friends on " \
+                     f"Discord. Thanks for playing with me!\n" \
                      f"\n" \
-                     f"© {copyright_year} 3515 Productions. All rights reserved.\n" \
+                     f"(This is my about page. If you need help using me or playing any of my games, check out " \
+                     f"`/help`.)\n" \
                      f"\n" \
-                     f"Thanks for playing!"
+                     f"__Technical Information__\n" \
+                     f"Bot Version: {bot_version}\n" \
+                     f"Python Version: {platform.python_version()}\n" \
+                     f"Pycord Version: {discord.__version__}\n" \
+                     f"\n" \
+                     f"__Legal Information__\n" \
+                     f"3515.games © {copyright_year} celsius narhwal. All rights reserved.\n" \
+                     f"\n" \
+                     f"UNO is a trademark of Mattel, Inc.\n" \
+                     f"\n" \
+                     f"*Cards Against Humanity* content is used under the " \
+                     f"[Creative Commons BY-NC-SA 2.0](https://creativecommons.org/licenses/by-nc-sa/2.0/) license. " \
+                     f"This software is in no way affiliated with or endorsed by Cards Against Humanity, LLC. " \
+                     f"Cards Against Humanity is a trademark of Cards Against Humanity, LLC.\n" \
+                     f"\n" \
+                     f"3515.games makes use of open-source software. To view acknowledgements for this software, " \
+                     f"select the 'Acknowledgements' button below."
 
-        about_embed = discord.Embed(title=f"3515.games v{version}", description=about_text,
-                                    color=support.ExtendedColors.mint())
+        about_embed = discord.Embed(title="About Me", description=about_text,
+                                    color=support.Color.mint())
         about_embed.set_image(url="https://i.ibb.co/5jCMMRJ/3515-games-logo.png")
 
         await self.ctx.respond(embed=about_embed, view=self, ephemeral=True)

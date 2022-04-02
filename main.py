@@ -1,3 +1,7 @@
+"""
+3515.games' execution point. Running this script starts up the bot.
+"""
+
 import logging
 import os
 
@@ -16,12 +20,18 @@ bot = discord.Bot(debug_guilds=[392426193581768717, 941766354380394506, 94181674
 
 @bot.event
 async def on_ready():
+    """
+    Prints a message to the console when 3515.games has connected to Discord and is ready for use.
+    """
     print("3515.games is ready to play!")
     await bot.register_commands(force=True)
     await bot.sync_commands(force=True)
 
 
 def configure_logging():
+    """
+    Configures API event logging.
+    """
     logger = logging.getLogger('discord')
     logger.setLevel(logging.DEBUG)
     handler = logging.FileHandler(filename='3515games.log', encoding='utf-8', mode='w')
@@ -30,6 +40,9 @@ def configure_logging():
 
 
 def cog_setup():
+    """
+    Initializes cogs.
+    """
     all_cogs = [cogs.RockPaperScissorsCog, cogs.AboutCog, cogs.UnoCog]
     for cog in all_cogs:
         bot.add_cog(cog(bot=bot))

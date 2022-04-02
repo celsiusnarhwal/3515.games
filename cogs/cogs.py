@@ -1,13 +1,15 @@
 import discord
 from discord.commands import Option, SlashCommandGroup, slash_command
 from discord.ext import commands
+from llist import dllistnode
 
-import cogs.uno.functions
+import cogs.uno.decorators
 import support
+import support.functions
 from cogs import about, rps, uno
 
 
-class CogMaster(commands.Cog):
+class MasterCog(commands.Cog):
     """
     A custom ``Cog`` class that extends Pycord's ``Cog`` class and that all of 3515.games' cogs inherit from.
     """
@@ -16,31 +18,32 @@ class CogMaster(commands.Cog):
         self.bot = bot
 
 
-class AboutCog(CogMaster):
+class AboutCog(MasterCog):
     """
     The cog for the About module, which displays meta information about 3515.games.
     """
 
     def __init__(self, **kwargs):
-        super(AboutCog, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
-    @slash_command(description="View version, copyright, and legal information for 3515.games.")
+    @slash_command(description="Allow me to reintroduce myself.")
     async def about(self, ctx):
         await about.AboutView(ctx=ctx).show_about()
 
 
-class RockPaperScissorsCog(CogMaster):
+class RockPaperScissorsCog(MasterCog):
     """
     The cog for the Rock-Paper-Scissors module, which facilitates Rock-Paper-Scissors matches between two members of
     the same Discord server.
     """
 
     def __init__(self, **kwargs):
-        super(RockPaperScissorsCog, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     rps_group = SlashCommandGroup("rps", "Commands for playing Rock-Paper-Scissors.")
 
     @rps_group.command(description="Challenge someone to a game of Rock-Paper-Scissors.")
+    @support.functions.bot_has_permissions(support.GamePermissions.rps())
     async def challenge(
             self,
             ctx: discord.ApplicationContext,
@@ -64,7 +67,7 @@ class RockPaperScissorsCog(CogMaster):
             await ctx.respond("You can't play with yourself!", ephemeral=True)
             return
 
-        # maps game formats to the number of points needed for victory in each
+        # map game formats to the number of points needed for victory in each
         victory_points = {
             "Best of Three": 2,
             "Best of Five": 3,
@@ -97,31 +100,37 @@ class RockPaperScissorsCog(CogMaster):
                         rps_game.current_round += 1
 
 
-class UnoCog(CogMaster):
+class UnoCog(MasterCog):
     """
     The cog for the UNO module, which facilitates UNO games with up to 20 members of the same Discord server.
     """
 
     def __init__(self, **kwargs):
-        super(UnoCog, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     uno_group = SlashCommandGroup("uno", "Commands for playing UNO.")
-    create_group = uno_group.create_subgroup("creategame", "Commands for creating UNO games.")
-    gamehost_group = uno_group.create_subgroup("gamehost", "Commands for UNO Game Hosts.")
+    create_group = uno_group.create_subgroup("create", "Commands for creating UNO games.")
+    gamehost_group = uno_group.create_subgroup("host", "Commands for UNO Game Hosts.")
 
     # game creation commands
 
     @create_group.command(name="public", description="Create a public UNO game.")
+    @support.functions.bot_has_permissions(support.GamePermissions.uno_public())
+    @support.functions.invoked_in_text_channel()
+    @uno.decorators.verify_host_uniqueness()
     async def create_public_game(self,
                                  ctx: discord.ApplicationContext,
                                  players: Option(
                                      int,
-                                     "Choose the maximum number of players that can join your game (min. 2, max. 20). "
-                                     "This includes you.", min_value=2, max_value=20
+                                     "Choose how many players can join your game (min. 2, max. 20). "
+                                     "This includes you. The default is 20.", min_value=2, max_value=20, default=20
                                  ),
-                                 points: Option(int, "(Optional) Choose the number of points required to win "
-                                                     "(min. 100, max. 500). The default is 500.",
-                                                min_value=100, max_value=500, default=500)):
+                                 points: Option(int, "Choose the number of points required to win "
+                                                     "(max. 1000). The default is 500.",
+                                                min_value=0, max_value=1000, default=500),
+                                 timeout: Option(int, "Choose how many seconds players must finish their turns in "
+                                                      "(min. 30, max. 120). The default is 60.",
+                                                 min_value=30, max_value=120, default=60)):
         """
         Creates an UNO game and corresponding game thread.
 
@@ -130,116 +139,107 @@ class UnoCog(CogMaster):
             maximum is 20.
         :param points: The number of points that will be required to win the game. Minimum is 100, maximum is 500.
             Optional; defaults to 500.
+        :param timeout: The number of seconds each player will have to move when its their turn.
         """
 
-        # the bot must have certain permissions in order to create an UNO game
-        if not await uno.functions.has_creation_permissions(ctx):
-            return
-
-        # UNO games can only be created in text channels
-        if not isinstance(ctx.channel, discord.TextChannel):
-            message = "You can only use that command in regular text channels - not threads. Go to a text channel," \
-                      "then try again."
-            embed = discord.Embed(title="You can't do that in a thread.", description=message,
-                                  color=support.ExtendedColors.red())
-
-            await ctx.respond(embed=embed, ephemeral=True)
-            return
-
-        # users may not host more than one game in the same server at a time
-        user_is_hosting = uno.UnoGame.get_hosted_games(user=ctx.user, guild_id=ctx.guild_id)
-
-        if user_is_hosting:
-            message = "You're already hosting an UNO game in this server. Before you can create a new one, you must " \
-                      "either complete, end, or transfer host powers for your current game.\n"
-            embed = discord.Embed(title="You're already hosting a game.", description=message,
-                                  color=support.ExtendedColors.red())
-            game_thread_url = f"https://discord.com/channels/{ctx.guild_id}/{user_is_hosting.thread.id}"
-            await ctx.respond(embed=embed, view=uno.GoToUnoThreadView(game_thread_url), ephemeral=True)
-            return
-
         # tell the user important information about creating an UNO game
-        warning_text = f"You're about to create a **public** UNO game. There are a few important things you need to " \
-                       f"know:\n" \
-                       f"\n" \
-                       f"**UNO games are contained within " \
-                       f"[threads](https://support.discord.com/hc/en-us/articles/4403205878423-Threads-FAQ).** " \
-                       f"I'll handle the creation and management of the thread for you. If you can " \
-                       f"``Manage Threads``, please refrain from editing or deleting the thread until the game is " \
-                       f"over (trust me, I've got this).\n" \
-                       f"\n" \
-                       f"**Anyone can join.** Since you're creating a public UNO game, anyone who can both see and " \
-                       f"talk in this channel will be able to join or spectate your game.\n" \
-                       f"\n" \
-                       f"**You're in control.** You'll be the Game Host for this UNO game. This entitles you to " \
-                       f"certain special powers, like removing players from the game or the thread it's hosted in, " \
-                       f"or ending the game early. However...\n" \
-                       f"\n" \
-                       f"**With power comes responsibility.** The UNO game won't start until you use " \
-                       f"``/uno gamehost start``, and if you leave the thread at any time, the game will immediately " \
-                       f"end for all players. For more, see the *Host Powers and Responsibilities* section of " \
-                       f"``/help uno``.\n" \
-                       f"\n" \
-                       f"**I'm watching for inactivity.** Players determined to be inactive may be automatically " \
-                       f"removed from the game by yours truly. __You're not exempt from this__, and if *you* get " \
-                       f"removed, the game will end for everyone else, since you're the Game Host. Keep that in " \
-                       f"mind.\n" \
-                       f"\n" \
-                       f"Before we start, let's review your game settings.\n" \
-                       f"\n" \
-                       f"__Game Settings__\n" \
-                       f"**Players**: {players}\n" \
-                       f"**Points to Win**: {points}\n" \
-                       f"\n" \
-                       f"If these settings aren't correct, hit the No button below and rerun " \
-                       f"`/uno creategame public` with your intended settings. Once the game has started, these " \
-                       f"settings can't be changed.\n" \
-                       f"\n" \
-                       f"Proceed with creating this UNO game?"
+        msg = f"You're about to create a **public** UNO game. There are a few important things you need to " \
+              f"know:\n" \
+              f"\n" \
+              f"**UNO games are contained within " \
+              f"[threads](https://support.discord.com/hc/en-us/articles/4403205878423-Threads-FAQ).** " \
+              f"I'll handle the creation and management of the thread for you. If you can " \
+              f"``Manage Threads``, please refrain from editing or deleting the thread until the game is " \
+              f"over (trust me, I've got this).\n" \
+              f"\n" \
+              f"**Anyone can join.** Since you're creating a public UNO game, anyone who can both see and " \
+              f"talk in this channel will be able to join or spectate your game.\n" \
+              f"\n" \
+              f"**You're in control.** You'll be the Game Host for this UNO game. This entitles you to " \
+              f"certain special powers, like removing players from the game or the thread it's hosted in, " \
+              f"or ending the game early. However...\n" \
+              f"\n" \
+              f"**With power comes responsibility.** The game won't start until you use " \
+              f"``/uno host start``, and if you leave the game or its thread at any time, the game will immediately " \
+              f"end for all players. For more, see the *Host Powers and Responsibilities* section of " \
+              f"``/help UNO``.\n" \
+              f"\n" \
+              f"**I'm watching for inactivity.** Players determined to be inactive may be automatically " \
+              f"removed from the game by yours truly. __You're not exempt from this__, and if *you* get " \
+              f"removed, the game will end for everyone else, since you're the Game Host. Keep that in " \
+              f"mind.\n" \
+              f"\n" \
+              f"Before we start, let's review your game settings.\n" \
+              f"\n" \
+              f"__Game Settings__\n" \
+              f"**Maximum Players**: {players}\n" \
+              f"**Points to Win**: {points}\n" \
+              f"**Timeout**: {timeout} seconds\n" \
+              f"\n" \
+              f"If these settings aren't correct, hit the No button below and rerun " \
+              f"`/uno create public` with your intended settings. Once the game has been created, these " \
+              f"settings can't be changed.\n" \
+              f"\n" \
+              f"Proceed with creating this UNO game?"
 
-        warning_embed = discord.Embed(title="Please read this carefully.", description=warning_text,
-                                      color=support.ExtendedColors.orange())
+        embed = discord.Embed(title="Creating a Public UNO Game", description=msg,
+                              color=support.Color.orange())
 
         # confirm game creation with user
-        conf_data = await support.ConfirmationView(ctx=ctx).request_confirmation(prompt_embeds=[warning_embed],
-                                                                                 ephemeral=True)
+        view = support.ConfirmationView(ctx=ctx)
+        confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
 
-        conf_success = conf_data["success"]
-        conf_prompt = conf_data["prompt"]
-
-        if conf_success:
+        if confirmation:
             # create an UnoGame object and associated game thread
-            await conf_prompt.edit_original_message(content="Creating your UNO game...", embeds=[], view=None)
+            await ctx.interaction.edit_original_message(content="Creating your UNO game...", embeds=[], view=None)
             game_thread = await ctx.channel.create_thread(name=f"UNO with {ctx.user.name} - check pins to play!",
                                                           type=discord.ChannelType.public_thread,
                                                           auto_archive_duration=1440)
 
-            uno_game = uno.UnoGame(guild=ctx.guild, thread=game_thread, host=ctx.user, max_players=players,
-                                   points_to_win=points)
-            await uno_game.waiting_room_intro()
+            game_settings = uno.UnoGameSettings(max_players=players, points_to_win=points, timeout=timeout)
+            uno_game = uno.UnoGame(guild=ctx.guild, thread=game_thread, host=ctx.user, settings=game_settings)
+            await uno_game.open_lobby()
             await uno_game.add_player(ctx, ctx.user, is_host=True)
 
-            thread_creation_embed = discord.Embed(title="An UNO game has been created!",
-                                                  description=f"{ctx.user.mention} created an UNO game! You can "
-                                                              f"join the game by typing `/join` in the game thread.",
-                                                  color=support.ExtendedColors.mint())
+            embed = discord.Embed(title="An UNO game has been created!",
+                                  description=f"{ctx.user.mention} created an UNO game! You can "
+                                              f"join the game by typing `/uno join` in the "
+                                              f"game thread.",
+                                  color=support.Color.mint())
 
-            thread_url = f"https://discord.com/channels/{ctx.guild_id}/{game_thread.id}"
+            thread_url = f"https://discord.com/channels/{game_thread.guild.id}/{game_thread.id}"
 
-            await ctx.send(embed=thread_creation_embed, view=uno.GoToUnoThreadView(thread_url=thread_url))
+            await ctx.send(embed=embed, view=uno.GoToUnoThreadView(thread_url=thread_url))
+
+            await uno_game.game_timer()
 
         else:
-            cancellation_embed = discord.Embed(title="Game creation canceled.",
+            cancellation_embed = discord.Embed(title="Game Creation Canceled",
                                                description="You canceled the creation of this UNO game. "
-                                                           "You can create a new game with `/uno creategame`.",
-                                               color=support.ExtendedColors.red())
+                                                           f"You can create a new game with "
+                                                           f"`/{ctx.command.qualified_name}`.",
+                                               color=support.Color.red())
 
-            await conf_prompt.edit_original_message(embeds=[cancellation_embed], view=None)
+            await ctx.interaction.edit_original_message(embeds=[cancellation_embed], view=None)
+
+    # TODO implement private games
+    @create_group.command(name="private",
+                          description="Create a private UNO game. Requires Server Boost Level 2 or higher.")
+    @support.functions.bot_has_permissions(support.GamePermissions.uno_private())
+    @support.functions.invoked_in_text_channel()
+    @uno.decorators.verify_host_uniqueness()
+    async def create_private_game(self, ctx: discord.ApplicationContext):
+        if ctx.guild.premium_tier < 2:
+            msg = "Discord won't let me create private UNO games in this server until it's reached Boost Level 2 " \
+                  "or higher."
+            embed = discord.Embed(title="Boost your server first.", description=msg, color=support.Color.red())
+
+            await ctx.respond(embed=embed, view=support.ServerBoostURLView(), ephemeral=True)
 
     # player commands
 
     @uno_group.command(name="join", description="Join an UNO game.")
-    @uno.functions.verify_uno_context
+    @uno.decorators.verify_context(level="thread")
     async def join(self, ctx: discord.ApplicationContext):
         """
         Joins the invoker to an UNO game. Can only be used in UNO game threads.
@@ -253,20 +253,27 @@ class UnoCog(CogMaster):
             msg = "You can't join an UNO game you're already a player in. If you meant to leave, use `/uno leave` " \
                   "instead."
             embed = discord.Embed(title="You're already in this game.", description=msg,
-                                  color=support.ExtendedColors.red())
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # users can't join games they're banned from
+        elif ctx.user in uno_game.banned_users:
+            msg = "You're banned from this game, so you can't rejoin."
+            embed = discord.Embed(title="You're banned from this game.", description=msg,
+                                  color=support.Color.red())
             await ctx.respond(embed=embed, ephemeral=True)
 
         # users can't join games that have already started
         elif not uno_game.is_joinable:
             msg = "You can't join a game that's already in progress."
             embed = discord.Embed(title="This game has already started.", description=msg,
-                                  color=support.ExtendedColors.red())
+                                  color=support.Color.red())
             await ctx.respond(embed=embed, ephemeral=True)
 
         # users can't join games that are already full
-        elif not len(uno_game.players) <= uno_game.max_players:
+        elif not len(uno_game.players) <= uno_game.settings.max_players:
             msg = "You won't be able to join unless someone leaves or is removed by the Game Host."
-            embed = discord.Embed(title="This game is full.", description=msg, color=support.ExtendedColors.red())
+            embed = discord.Embed(title="This game is full.", description=msg, color=support.Color.red())
             await ctx.respond(embed=embed, ephemeral=True)
 
         # if none of the above conditions are met, the user is added to the game
@@ -274,7 +281,7 @@ class UnoCog(CogMaster):
             await uno_game.add_player(ctx, ctx.user)
 
     @uno_group.command(name="leave", description="Leave an UNO game.")
-    @uno.functions.verify_uno_player
+    @uno.decorators.verify_context(level="player")
     async def leave(self, ctx: discord.ApplicationContext):
         """
         Voluntarily removes the player from an UNO game. Can only be used in UNO game threads.
@@ -282,67 +289,137 @@ class UnoCog(CogMaster):
         :param ctx: An ApplicationContext object.
         """
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        player_node = next((player for player in uno_game.players.iternodes()
-                            if player.value.user == ctx.user), None)
+        player_node = uno_game.retrieve_player(ctx.user, return_node=True)
 
         if uno_game and player_node:
-            leave_confirmation_msg = "If the game has already started, you won't be able to rejoin. If you're the " \
-                                     "Game Host, leaving the game will end it for everyone else - consider " \
-                                     "transferring your host powers to another player with `/uno gamehost transfer` " \
-                                     "beforehand."
+            msg = "If the game has already started, you won't be able to rejoin. If you're the " \
+                  "Game Host, leaving the game will end it for everyone else - consider " \
+                  "transferring your host powers to another player with `/uno host transfer` " \
+                  "beforehand."
 
-            leave_confirmation_embed = discord.Embed(title="Leave this UNO game?", description=leave_confirmation_msg,
-                                                     color=support.ExtendedColors.orange())
+            embed = discord.Embed(title="Leave this UNO game?", description=msg,
+                                  color=support.Color.orange())
 
-            conf_data = await support.ConfirmationView(ctx).request_confirmation(
-                prompt_embeds=[leave_confirmation_embed], ephemeral=True)
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(
+                prompt_embeds=[embed], ephemeral=True)
 
-            conf_success = conf_data["success"]
-            conf_prompt = conf_data["prompt"]
-
-            if conf_success:
-                await conf_prompt.edit_original_message(content="Removing you from the game...", view=None,
-                                                        embeds=[])
+            if confirmation:
+                await ctx.interaction.edit_original_message(content="Removing you from the game...", view=None,
+                                                            embeds=[])
                 await uno_game.remove_player(player_node=player_node)
             else:
-                await conf_prompt.edit_original_message(content="Okay! You're still in the game!", view=None,
-                                                        embeds=[])
+                await ctx.interaction.edit_original_message(content="Okay! You're still in the game!", view=None,
+                                                            embeds=[])
 
     @uno_group.command(name="hand", description="See the UNO cards you're currently holding.")
-    @uno.functions.verify_active_game
+    @uno.decorators.verify_context(level="game")
     async def show_hand(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        player = await uno_game.retrieve_player(ctx.user)
+        player = uno_game.retrieve_player(ctx.user)
 
         await player.show_hand(ctx)
 
     @uno_group.command(name="play", description="Play one of your UNO cards.")
-    @uno.functions.verify_player_turn
-    async def play_card(self, ctx: discord.ApplicationContext):
+    @uno.decorators.verify_context(level="turn")
+    async def play_card(self,
+                        ctx: discord.ApplicationContext,
+                        playable: Option(bool, "Setting this to True will display only cards that you can play "
+                                               "this turn.", required=False)):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        player = await uno_game.retrieve_player(ctx.user)
+        player = uno_game.retrieve_player(ctx.user)
 
-        await player.play_card(ctx)
+        await player.select_card(ctx, playable)
 
     @uno_group.command(name="draw", description="Draw an UNO card.")
-    @uno.functions.verify_player_turn
-    async def draw_card(self, ctx: discord.ApplicationContext):
-        uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        player = await uno_game.retrieve_player(ctx.user)
+    @uno.decorators.verify_context(level="turn")
+    async def draw_card(self,
+                        ctx: discord.ApplicationContext,
+                        autoplay: Option(bool, "If possible, automatically play the card you draw. "
+                                               "(Does not apply to Wild or Wild Draw Four cards.)",
+                                         default=False)):
 
-        await player.draw_card(ctx)
-
-    @uno_group.command(name="newround")
-    @uno.functions.verify_active_game
-    async def new_round(self, ctx):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        await uno_game.start_new_round()
+        player = uno_game.retrieve_player(ctx.user)
+
+        await player.draw_card(ctx, autoplay=autoplay)
+
+    @uno_group.command(name="uno", description="Say 'UNO!' when you have one card left.")
+    @uno.decorators.verify_context(level="game")
+    async def say_uno(self, ctx: discord.ApplicationContext):
+        uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
+        player = uno_game.retrieve_player(ctx.user)
+
+        if not len(player.hand) == 1:
+            msg = "You can only say 'UNO!' when you have one card left."
+            embed = discord.Embed(title="Get rid of those cards first.", description=msg,
+                                  color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
+        elif player.has_said_uno:
+            msg = "You've already said UNO. Unless you draw more cards before getting rid of your last one, " \
+                  "you won't be able to say it again."
+            embed = discord.Embed(title="You did that already.", description=msg,
+                                  color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            msg = "Saying 'UNO!' will notify all other players that you have only one card left. Aside from that, " \
+                  "saying 'UNO!' does nothing else.\n" \
+                  "\n" \
+                  "Say UNO?"
+            embed = discord.Embed(title="Say UNO?", description=msg, color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+            if confirmation:
+                await ctx.interaction.edit_original_message(content="Roger that! <:ritsu_salute:727962077888512221>",
+                                                            embeds=[],
+                                                            view=None)
+                await player.say_uno()
+            else:
+                await ctx.interaction.edit_original_message(content="Better hope you don't get called out, then. 😒",
+                                                            embeds=[], view=None)
+
+    @uno_group.command(name="callout", description="Call out a player for failing to say 'UNO!'.")
+    @uno.decorators.verify_context(level="turn")
+    async def callout(self,
+                      ctx: discord.ApplicationContext,
+                      receiving_player: Option(discord.User, "Mention a player to call out.", name="player")):
+
+        uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
+        player: uno.UnoPlayer = uno_game.retrieve_player(ctx.user)
+        recipient: uno.UnoPlayer = uno_game.retrieve_player(receiving_player)
+
+        if not recipient:
+            embed = discord.Embed(title="That's not a player.",
+                                  description="You can only call out users who are also players in this UNO game.",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+        elif player == recipient:
+            embed = discord.Embed(title="Come on, man.",
+                                  description="This should really go without saying, but you can't call out "
+                                              "yourself. Choose another player to call out.",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            await player.callout(ctx=ctx, recipient=recipient)
+
+    @uno_group.command(name="status", description="Open the UNO Status Center.")
+    @uno.decorators.verify_context(level="thread")
+    async def status(self, ctx: discord.ApplicationContext):
+        uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
+        player = uno_game.retrieve_player(ctx.user)
+
+        view = uno.UnoStatusCenterView(ctx=ctx, game=uno_game)
+        await view.open_status_center()
 
     # game host commands
-
     @gamehost_group.command(name="start", description="Start an UNO game. Game Hosts only.")
-    @uno.functions.verify_uno_gamehost
-    async def gamehost_start(self, ctx: discord.ApplicationContext):
+    @uno.decorators.verify_context(level="thread")
+    @uno.decorators.verify_is_host()
+    async def start_game(self, ctx: discord.ApplicationContext):
         """
         Starts an UNO game that has already been created and which at least one player aside from the Game Host has
         joined. Can only be used by UNO Game Hosts in UNO game threads. Not to be confused with
@@ -357,7 +434,7 @@ class UnoCog(CogMaster):
         if not uno_game.is_joinable:
             embed = discord.Embed(title="This game has already started.",
                                   description="You can't start a game that's already in progress, silly!",
-                                  color=support.ExtendedColors.red())
+                                  color=support.Color.red())
 
             await ctx.respond(embed=embed, ephemeral=True)
 
@@ -366,33 +443,32 @@ class UnoCog(CogMaster):
             embed = discord.Embed(title="You need more players.",
                                   description="You can't start this game until at least two players, including "
                                               "yourself, have joined.",
-                                  color=support.ExtendedColors.red())
+                                  color=support.Color.red())
             await ctx.respond(embed=embed, ephemeral=True)
 
         # if none of the above conditions are met, the host is asked to confirm that they want to start the game
         else:
-            conf_embed = discord.Embed(title="Start this UNO game?",
-                                       description="Once the game has begun, no new players will be able to join.",
-                                       color=support.ExtendedColors.orange())
+            embed = discord.Embed(title="Start this UNO game?",
+                                  description="Once the game has begun, no new players will be able to join.",
+                                  color=support.Color.orange())
 
-            conf_data = await support.ConfirmationView(ctx=ctx).request_confirmation(prompt_embeds=[conf_embed],
-                                                                                     ephemeral=True)
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
 
-            conf_success, conf_prompt = conf_data["success"], conf_data["prompt"]
-
-            if conf_success:
-                await conf_prompt.edit_original_message(content="Let's get started!", embeds=[], view=None)
-                await uno_game.host_start_game()
+            if confirmation:
+                await ctx.interaction.edit_original_message(content="Let's get started!", embeds=[], view=None)
+                await uno_game.start_game()
 
             else:
-                await conf_prompt.edit_original_message(content="Okay! Just use `/uno gamehost start` "
-                                                                "whenever you're ready.",
-                                                        embeds=[],
-                                                        view=None)
+                await ctx.interaction.edit_original_message(content="Okay! Just use `/uno host start` "
+                                                                    "whenever you're ready.",
+                                                            embeds=[],
+                                                            view=None)
 
     @gamehost_group.command(name="abort", description="Abort an UNO game. Game Hosts only.")
-    @uno.functions.verify_uno_gamehost
-    async def gamehost_abort(self, ctx: discord.ApplicationContext):
+    @uno.decorators.verify_context(level="thread")
+    @uno.decorators.verify_is_host()
+    async def abort_game(self, ctx: discord.ApplicationContext):
         """
         Aborts an ongoing UNO game, forcefully ending it for all players. Can only be used by UNO Game Hosts in UNO game
         threads.
@@ -403,50 +479,266 @@ class UnoCog(CogMaster):
         message = "Proceeding will immediately end the game and lock the thread for all players, including you.\n" \
                   "\n" \
                   "This can't be undone."
-        embed = discord.Embed(title="Abort this UNO game?", description=message, color=support.ExtendedColors.orange())
-        conf_data = await support.ConfirmationView(ctx=ctx).request_confirmation(prompt_embeds=[embed],
-                                                                                 ephemeral=True)
-        conf_success = conf_data["success"]
-        conf_prompt = conf_data["prompt"]
+        embed = discord.Embed(title="Abort this UNO game?", description=message, color=support.Color.orange())
 
-        if conf_success:
-            await conf_prompt.edit_original_message(content="Aborting your UNO game...", embeds=[], view=None)
-            await uno_game.host_abort_game()
+        view = support.ConfirmationView(ctx=ctx)
+        confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+        if confirmation:
+            await ctx.interaction.edit_original_message(content="Aborting your UNO game...", embeds=[], view=None)
+            await uno_game.abort_game()
         else:
-            await conf_prompt.edit_original_message(content="Okay! Abortion canceled.", embeds=[], view=None)
+            await ctx.interaction.edit_original_message(content="Okay! The game is still on.", embeds=[], view=None)
+
+    @gamehost_group.command(name="kick", description="Kick a player from an UNO game. Game Hosts only.")
+    @uno.decorators.verify_context(level="thread")
+    @uno.decorators.verify_is_host()
+    async def kick_player(self, ctx: discord.ApplicationContext,
+                          player: Option(discord.User, "Mention a player to kick.")):
+        """
+        Kicks a player from an UNO game. Can only be used by UNO Game Hosts in UNO game threads.
+
+        :param player: The player to kick.
+        :param ctx: An ApplicationContext object.
+        """
+        uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
+        player_node: dllistnode = uno_game.retrieve_player(player, return_node=True)
+
+        if not player_node:
+            embed = discord.Embed(title="That's not a player.",
+                                  description="You can't kick someone who isn't a player in this game.",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+        elif player == ctx.user:
+            embed = discord.Embed(title="Um, that's you.",
+                                  description="You can't kick yourself. If you want out, use `/uno leave` "
+                                              "(consider transferring your host powers to someone else first, "
+                                              "though).",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            msg = f"{player.mention} will be able to rejoin the game if it hasn't already started. " \
+                  f"If they don't rejoin, they'll remain a spectator.\n" \
+                  f"\n" \
+                  f"If you want to permanently remove them from both the game and the thread, " \
+                  f"use `/uno host ban` instead.\n" \
+                  f"\n" \
+                  f"Kick {player.mention}?"
+
+            embed = discord.Embed(title=f"Kick {player.name}?", description=msg,
+                                  color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+            if confirmation:
+                await ctx.interaction.edit_original_message(content=f"Kicking {player.name}...",
+                                                            embeds=[],
+                                                            view=None)
+                await uno_game.kick_player(player_node)
+            else:
+                await ctx.interaction.edit_original_message(content=f"Okay! {player.mention} remains in the game.",
+                                                            embeds=[], view=None)
+
+    @gamehost_group.command(name="ban", description="Ban a user from an UNO game thread. Game Hosts only.")
+    @uno.decorators.verify_context(level="thread")
+    @uno.decorators.verify_is_host()
+    async def ban_player(self, ctx: discord.ApplicationContext,
+                         user: Option(discord.User, "Mention a player to ban.")):
+        """
+        Bans a user from an UNO game thread. Can only be used by UNO Game Hosts in UNO game threads.
+
+        :param user: The player to ban.
+        :param ctx: An ApplicationContext object.
+        """
+        uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
+        player_node: dllistnode = uno_game.retrieve_player(user, return_node=True)
+
+        # the host can't ban the bot
+        if user == ctx.me:
+            embed = discord.Embed(title="Haha, no.",
+                                  description="You can't ban me. Choose someone else.",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # the host can't ban players who're already banned
+        elif user in uno_game.banned_users:
+            embed = discord.Embed(title="That user is already banned.",
+                                  description="You can't ban someone who's already banned.",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # the host can't ban players who aren't in the thread
+        elif not discord.utils.find(lambda x: x.id == user.id, await uno_game.thread.fetch_members()):
+            embed = discord.Embed(title="That user isn't in the thread.",
+                                  description="You can't ban someone who isn't in the game thread.",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # the host can't ban themselves
+        elif user == ctx.user:
+            embed = discord.Embed(title="Um, that's you.",
+                                  description="You can't ban yourself. If you want out, use `/uno leave` "
+                                              "(consider transferring your host powers to someone else first, "
+                                              "though).",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # the host can't ban server moderators
+        elif ((discord.Permissions.manage_threads.flag | discord.Permissions.administrator.flag) &
+              ctx.channel.permissions_for(user).value):
+            embed = discord.Embed(title="You can't ban moderators.",
+                                  description="Users with the `Manage Threads` permission are immune to being banned "
+                                              "(you can still `/uno host kick` them if they're a player, though).",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # if none of the above conditions are met, confirm the ban with the host
+        else:
+            msg = f"{user.mention} will be permanently removed from the game thread. If they're a player in this " \
+                  f"game, they'll be permanently removed from the game, too.\n" \
+                  f"\n" \
+                  f"If you *only* want to remove them from the game, use `/uno host kick` instead.\n" \
+                  f"\n" \
+                  f"This action cannot be undone.\n" \
+                  f"\n" \
+                  f"Ban {user.mention}?"
+
+            embed = discord.Embed(title=f"Ban {user.name}?", description=msg,
+                                  color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+            if confirmation:
+                await ctx.interaction.edit_original_message(content=f"Banning {user.name}...",
+                                                            embeds=[], view=None)
+                if player_node:
+                    await uno_game.ban_player(player_node)
+                else:
+                    embed = discord.Embed(title="Spectator Banned",
+                                          description=f"{user.mention} was banned from the thread by the Game Host.",
+                                          color=support.Color.red())
+                    await ctx.respond(embed=embed, ephemeral=True)
+                    await uno_game.thread.remove_user(user)
+            else:
+                await ctx.interaction.edit_original_message(content=f"Okay! {user.mention} remains in the game.",
+                                                            embeds=[], view=None)
+
+    @gamehost_group.command(name="transfer",
+                            description="Transfer your host powers to another player. Game Hosts only.")
+    @uno.decorators.verify_context(level="thread")
+    @uno.decorators.verify_is_host()
+    async def transfer_host(self,
+                            ctx: discord.ApplicationContext,
+                            player: Option(discord.User, "Mention the player you want to transfer host "
+                                                         "powers to.")):
+
+        uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
+
+        # user cannot transfer host powers to themselves
+        if player.id == ctx.user.id:
+            msg = "Choose another player to transfer host powers to."
+            embed = discord.Embed(title="You can't transfer host powers to yourself.", description=msg,
+                                  color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # user cannot transfer host powers to non-players
+        elif not any(p for p in uno_game.players.itervalues() if p.user == player):
+            msg = "The new Game Host must be a player in this UNO game."
+            embed = discord.Embed(title="That person's not a player.", description=msg,
+                                  color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # user cannot transfer host powers to players already hosting another game in the same server
+        elif uno.UnoGame.find_hosted_games(player, ctx.guild_id):
+            msg = "You can't transfer host powers to someone who's already hosting an UNO game in this server."
+            embed = discord.Embed(title="That player's already hosting a game.", description=msg,
+                                  color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # if none of the above conditions are met, the user is asked to confirm the transfer
+        else:
+            msg = f"{player.mention} will become the Game Host, effective immediately, and all associated powers " \
+                  f"will become exclusively theirs to use. Conversely, you will lose your status as Game Host " \
+                  f"and will no longer be able to use any of the powers that come with the title.\n" \
+                  f"\n" \
+                  f"You will remain a player in this UNO game until it ends or you choose to leave.\n" \
+                  f"\n" \
+                  f"This action cannot be undone.\n" \
+                  f"\n" \
+                  f"Do you want to make {player.name} the Game Host?"
+
+            embed = discord.Embed(title=f"Make {player.name} the Game Host?", description=msg,
+                                  color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+            if confirmation:
+                await ctx.interaction.edit_original_message(content=f"Transferring host powers to {player.mention}...",
+                                                            embeds=[], view=None)
+                await uno_game.transfer_host(player)
+
+            else:
+                await ctx.interaction.edit_original_message(content="Ok! You're still the Game Host.",
+                                                            embeds=[],
+                                                            view=None)
+
+    @commands.Cog.listener()
+    async def on_thread_member_join(self, thread_member: discord.ThreadMember):
+        """
+        A listener that runs whenever a user joins a thread. This runs whenever *any* user joins *any* thread in the
+        server, regardless of whether it's an UNO game thread. The purpose of this listener is to enable the bot to
+        automatically remove the user from the thread if they have been banned from the associated UNO game.
+
+        This listener is only effective on public threads; with private threads, Discord provides functionality
+        to properly bar users from rejoining threads they've been removed from.
+
+        :param thread_member: The user who joined the thread.
+        """
+
+        uno_game = uno.UnoGame.retrieve_game(thread_member.thread_id)
+
+        if uno_game:
+            if discord.utils.find(lambda user: user.id == thread_member.id, uno_game.banned_users):
+                await thread_member.thread.remove_user(thread_member)
+                await thread_member.thread.purge(limit=2, check=lambda user: user.author.id == thread_member.id)
 
     @commands.Cog.listener()
     async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
         """
         A listener that runs whenever a user is removed from a thread. This runs whenever *any* user is removed from
-        *any* thread in the server, whether or not they are playing an UNO game or being removed from an UNO game
+        *any* thread in the server, regardless of whether they're playing an UNO game or being removed from an UNO game
         thread. The purpose of this listener is to enable the automatic removal of UNO players from games when they
         leave associated game threads.
 
         :param thread_member: A discord.ThreadMember object representing the removed user.
         """
         uno_game = uno.UnoGame.retrieve_game(thread_member.thread_id)
-        player_node = next((player for player in uno_game.players.iternodes()
-                            if player.value.user.id == thread_member.id), None)
+        player_node = uno_game.retrieve_player(thread_member, return_node=True)
 
         # only call remove_player() if the thread is an UNO game thread AND the user is a player in that game
-        if uno_game and player_node:
+        if player_node:
             await uno_game.remove_player(player_node=player_node)
 
     @commands.Cog.listener()
-    async def on_thread_delete(self, thread: discord.Thread):
+    async def on_raw_thread_delete(self, thread: discord.RawThreadDeleteEvent):
         """
         A listener that runs whenever a thread is deleted. This runs whenever *any* thread in the server is deleted,
         whether or not is an UNO game thread. The purpose of this listener is to enable the automatic closure of UNO
         games whose associated game threads are deleted.
 
-        :param thread: The deleted thread.
+        :param thread: A discord.RawThreadDeleteEvent object representing the deleted thread.
         """
-        uno_game = uno.UnoGame.retrieve_game(thread.id)
+        uno_game = uno.UnoGame.retrieve_game(thread.thread_id)
 
         # only call force_close_thread_deletion() if the deleted thread is associated with an UNO game
         if uno_game:
-            await uno.UnoGame.force_close_thread_deletion(uno_game)
+            await uno_game.force_close(reason="thread_deletion")
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
@@ -460,4 +752,4 @@ class UnoCog(CogMaster):
         # call force_close_channel_deletion() for all channel threads associated with UNO games
         for thread in [thread for thread in channel.threads if thread.id in uno.UnoGame.__all_games__.keys()]:
             uno_game = uno.UnoGame.retrieve_game(thread.id)
-            await uno.UnoGame.force_close_channel_deletion(uno_game)
+            await uno_game.force_close(reason="channel_deletion")

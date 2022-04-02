@@ -10,7 +10,7 @@ class EnhancedView(discord.ui.View):
     instance attributes which are elaborated on in the documentation for its constructor.
     """
 
-    def __init__(self, ctx=None, target_user: discord.User = None):
+    def __init__(self, ctx: discord.ApplicationContext = None, target_user: discord.User = None):
         """
         The constructor for ``EnhancedView``.
 
@@ -21,9 +21,19 @@ class EnhancedView(discord.ui.View):
             particular user. Optional; defaults to None.
         """
         super(EnhancedView, self).__init__()
-        self.ctx = ctx
-        self.target_user = target_user
+        self.ctx: discord.ApplicationContext = ctx
+        self.target_user: discord.User = target_user
+        self.timeout = None
         self.success = None  # views can use this to indicate their successful completion (vs. timing out)
+
+    def disable_children(self):
+        for child in self.children:
+            child.disabled = True
+
+    async def full_stop(self):
+        self.stop()
+        self.disable_children()
+        await self.ctx.interaction.edit_original_message(view=self)
 
 
 class ConfirmationView(EnhancedView):
@@ -31,9 +41,9 @@ class ConfirmationView(EnhancedView):
     Provides a user interface for a user to confirm or cancel an action.
     """
 
-    def __init__(self, ctx, **kwargs):
-        super(ConfirmationView, self).__init__(ctx, **kwargs)
-        self.timeout = 90
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.timeout = None
 
     async def on_timeout(self) -> None:
         self.clear_items()
@@ -57,19 +67,23 @@ class ConfirmationView(EnhancedView):
         self.success = False
         self.stop()
 
-    async def request_confirmation(self, prompt_text=None, prompt_embeds: list[discord.Embed] = None, ephemeral=False):
+    async def request_confirmation(self, prompt_text=None, prompt_embeds: list[discord.Embed] = None, ephemeral=False,
+                                   edit=False):
         """
-        Sends a confirmation prompt in chat.
+        Sends a confirmation prompt.
 
         :param prompt_text: The text the prompt should contain. Optional; defaults to None.
         :param prompt_embeds: A list of embeds the prompt should contain. Optional; defaults to None.
         :param ephemeral: Whether the prompt should be sent as an ephemeral message. Optional; defaults to False.
+        :param edit: Whether the prompt should edit an existing interaction response or create a new one.
+        Optional; defaults to False.
         """
-        confirmation_prompt: discord.Interaction = await self.ctx.respond(content=prompt_text, embeds=prompt_embeds,
-                                                                          view=self,
-                                                                          ephemeral=ephemeral)
+        if edit:
+            await self.ctx.interaction.edit_original_message(content=prompt_text, embeds=prompt_embeds, view=self)
+        else:
+            await self.ctx.respond(content=prompt_text, embeds=prompt_embeds, view=self, ephemeral=ephemeral)
         await self.wait()
-        return {"success": self.success, "prompt": confirmation_prompt}
+        return self.success
 
 
 class GameChallengeResponseView(ConfirmationView):
@@ -86,8 +100,10 @@ class GameChallengeResponseView(ConfirmationView):
         """
         super(GameChallengeResponseView, self).__init__(**kwargs)
         self.challenger = challenger
+
         self.game_name = game_name
         self.prompt_msg = None
+        self.timeout = 90
 
     async def on_timeout(self) -> None:
         self.clear_items()
@@ -119,3 +135,10 @@ class GameChallengeResponseView(ConfirmationView):
                                            delete_after=7)
 
         return self.success
+
+
+class ServerBoostURLView(EnhancedView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.add_item(Button(label="Learn more about Server Boosting",
+                             url="https://support.discord.com/hc/en-us/articles/360028038352-Server-Boosting-FAQ"))

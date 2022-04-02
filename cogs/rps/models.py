@@ -32,7 +32,7 @@ class RPSGame:
         self.current_round = 1
         self.match_record = [[]]
 
-    async def issue_challenge(self, ctx):
+    async def issue_challenge(self, ctx: discord.ApplicationContext):
         """
         This function handles the actual background work of issuing a challenge to a user.
 
@@ -41,30 +41,31 @@ class RPSGame:
         """
 
         # confirm with the challenger (i.e. the invoker of /rps challenge) that they want to issue the challenge
-        confirmation_data = await support.ConfirmationView(ctx=ctx).request_confirmation(
+        view = support.ConfirmationView(ctx=ctx)
+        challenge_confirmation = await view.request_confirmation(
             prompt_text=f"Challenge {self.opponent.user.mention} to Rock-Paper-Scissors ({self.game_format})?",
             ephemeral=True
         )
 
-        challenge_confirmation = confirmation_data["success"]
-        challenge_prompt = confirmation_data["prompt"]
-
         if challenge_confirmation:
-            await challenge_prompt.edit_original_message(content=f"Waiting on {self.opponent.user.mention}...",
-                                                         view=None)
+            await ctx.interaction.edit_original_message(content=f"Waiting on {self.opponent.user.mention}...",
+                                                        view=None)
 
             # ask the challenge recipient whether they accept the challenge
-            challenge_acceptance = await support.GameChallengeResponseView(ctx=ctx,
-                                                                           target_user=self.opponent.user,
-                                                                           challenger=self.challenger.user,
-                                                                           game_name=f"Rock-Paper-Scissors ({self.game_format})"
-                                                                           ).request_response()
+            view = support.GameChallengeResponseView(ctx=ctx,
+                                                     target_user=self.opponent.user,
+                                                     challenger=self.challenger.user,
+                                                     game_name=f"Rock-Paper-Scissors ({self.game_format})"
+                                                     )
+
+            view.timeout = 60
+            challenge_acceptance = await view.request_response()
 
             if challenge_acceptance:
                 return True
         else:
             if challenge_confirmation is not None:
-                await challenge_prompt.edit_original_message(content="Okay! Your challenge was canceled.", view=None)
+                await ctx.interaction.edit_original_message(content="Okay! Your challenge was canceled.", view=None)
                 return False
 
     async def game_intro(self, ctx):
@@ -79,7 +80,7 @@ class RPSGame:
                           f"Let's play!"
 
         intro_embed = discord.Embed(title="Rock-Paper-Scissors: Game Start!", description=game_intro_text,
-                                    color=support.ExtendedColors.mint())
+                                    color=support.Color.mint())
 
         # choose a random gif from rps_intro_gifs.json to accompany the game introduction
         intro_gifs = [value for value in
@@ -134,7 +135,7 @@ class RPSGame:
                        f"{self.opponent.score} {self.opponent.user.mention}"
 
         results_embed = discord.Embed(title=f"Round {self.current_round} Results", description=results_text,
-                                      color=support.ExtendedColors.mint())
+                                      color=support.Color.mint())
 
         # each page in the match record can contain the results of up to three rounds. this limitation, and the
         # implementation of pagination in the match record to begin with, aims to prevent the match record from
@@ -175,6 +176,7 @@ class RPSPlayer:
     """
     Represents a player in a Rock-Paper-Scissors match.
     """
+
     def __init__(self, user: discord.User):
         """
         The constructor for `RPSPlayer`.
