@@ -1,4 +1,4 @@
-import discord.ui
+import discord
 from discord import Interaction, ButtonStyle
 from discord.ui import Button, Select, button as discord_button
 from llist import dllist as DoublyLinkedList
