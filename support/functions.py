@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import discord
 from discord import ButtonStyle
 from discord.ext import pages, commands
@@ -14,6 +16,7 @@ def bot_has_permissions(expected_permissions):
 
     :param expected_permissions: A ``discord.Permissions`` object representing the permissions to check for.
     """
+
     async def predicate(ctx):
 
         actual_permissions = ctx.channel.permissions_for(ctx.me)

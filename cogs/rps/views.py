@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import discord
 from discord import Interaction, ButtonStyle
 from discord.ext import pages as discord_pages
@@ -120,6 +122,7 @@ class RPSMatchEndView(EnhancedView):
     """
     Provides a user interface for viewing the final results and complete record of a Rock-Paper-Scissors match.
     """
+
     def __init__(self, match_record: list[list[str]], **kwargs):
         """
         The constructor for ``RPSMatchEndView``.

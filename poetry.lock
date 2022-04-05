@@ -149,7 +149,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Pycord-Development/pycord"
 reference = "master"
-resolved_reference = "37c9567769a07fae11d77f7505de50d1a2d12785"
+resolved_reference = "72a160e88b27dab99170f62af1ad1e91f237545a"
 
 [[package]]
 name = "python-dotenv"

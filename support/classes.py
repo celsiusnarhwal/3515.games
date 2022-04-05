@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import discord
 
 
@@ -8,6 +10,7 @@ class Color(discord.Color):
     by this class can be accessed from ``Color`` objects, avoiding the need to flip-flop between
     ``Color`` and ``discord.Color``.
     """
+
     @classmethod
     def mint(cls):
         return cls(0x03cb98)

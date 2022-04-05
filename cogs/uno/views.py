@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import discord
 from discord import Interaction, ButtonStyle
 from discord.ui import Button, Select, button as discord_button
