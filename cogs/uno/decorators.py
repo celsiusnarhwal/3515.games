@@ -24,7 +24,6 @@ def verify_context(level: str):
     """
 
     async def predicate(ctx: discord.ApplicationContext):
-        success = False
         command_name = f"`/{ctx.command.qualified_name}`"
 
         async def is_uno_thread():
@@ -85,6 +84,8 @@ def verify_context(level: str):
             "game": is_active_game(),
             "turn": is_player_turn(),
         }
+
+        success = False
 
         for key, check in checks.items():
             success = await check

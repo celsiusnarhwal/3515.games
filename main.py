@@ -1,6 +1,8 @@
-"""
-3515.games' execution point. Running this script starts up the bot.
-"""
+# 3515.games is source-available, not open source. You may not use, modify, or redistribute 3515.games' source code
+# without the express written permission of celsius narhwal.
+
+# 3515.games © celsius narhwal. All rights reserved.
+
 import inspect
 import logging
 
@@ -17,7 +19,7 @@ async def on_ready():
     """
     Prints a message to the console when 3515.games has connected to Discord and is ready for use.
     """
-    print(f"3515.games{'.dev' if settings.DEBUG else ''} is ready to play!")
+    print(f"3515.games{'.dev' if settings.DEV_MODE else ''} is ready to play!")
     await bot.register_commands(force=True)
     await bot.sync_commands(force=True)
 
