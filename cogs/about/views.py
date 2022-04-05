@@ -78,6 +78,7 @@ class AboutView(EnhancedView):
 
         about_embed = discord.Embed(title="About Me", description=about_text,
                                     color=support.Color.mint())
-        about_embed.set_image(url="https://i.ibb.co/5jCMMRJ/3515-games-logo.png")
+        bot_logo = discord.File("bot_logo.png", filename="bot_logo.png")
+        about_embed.set_image(url="attachment://bot_logo.png")
 
-        await self.ctx.respond(embed=about_embed, view=self, ephemeral=True)
+        await self.ctx.respond(embed=about_embed, file=bot_logo, view=self, ephemeral=True)

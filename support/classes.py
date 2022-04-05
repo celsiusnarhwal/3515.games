@@ -37,9 +37,9 @@ class GamePermissions(discord.Permissions):
     def universal(cls):
         """
         The set of permissions universally required by all of 3515.games' functionality. All other permission sets
-        implemented by ``GamePermissions`` are *in addition* to this one.
+        implemented by :class:`GamePermissions` are *in addition* to this one.
 
-        Returns a ``discord.Permissions`` object with the following permissions:
+        Returns a :class:`discord.Permissions` object with the following permissions:
 
         - Read Messages/View Channels
         - Send Messages
@@ -51,7 +51,7 @@ class GamePermissions(discord.Permissions):
         """
         The set of permissions required for Rock-Paper-Scissors.
 
-        Returns a ``discord.Permissions`` object with ``GamePermissions.universal()`` and the following permissions:
+        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following permissions:
 
         - Embed Links
         """
@@ -62,7 +62,7 @@ class GamePermissions(discord.Permissions):
         """
         The set of permissions required for public UNO games.
 
-        Returns a ``discord.Permissions`` object with ``GamePermissions.universal()`` and the following permissions:
+        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following permissions:
 
         - Create Public Threads
         - Send Messages in Threads
@@ -79,7 +79,7 @@ class GamePermissions(discord.Permissions):
         """
         The set of permissions required for public UNO games.
 
-        Returns a ``discord.Permissions`` object with ``GamePermissions.universal()`` and the following permissions:
+        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following permissions:
 
         - Create Private Threads
         - Send Messages in Threads

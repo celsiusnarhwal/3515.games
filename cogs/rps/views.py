@@ -48,7 +48,7 @@ class RPSChooseMoveView(EnhancedView):
         else:
             return await super().interaction_check(interaction)
 
-    @discord_button(label="Rock", emoji="🪨", style=ButtonStyle.green)
+    @discord_button(label="Rock", emoji="🪨", style=ButtonStyle.blurple)
     async def rock(self, button: Button, interaction: Interaction):
         interacting_player = next(player for player in self.players if player.user == interaction.user)
         interacting_player.selected_move = "Rock"
@@ -65,7 +65,7 @@ class RPSChooseMoveView(EnhancedView):
             self.success = True
             self.stop()
 
-    @discord_button(label="Paper", emoji="📄", style=ButtonStyle.green)
+    @discord_button(label="Paper", emoji="📄", style=ButtonStyle.blurple)
     async def paper(self, button: Button, interaction: Interaction):
         interacting_player = next(player for player in self.players if player.user == interaction.user)
         interacting_player.selected_move = "Paper"
@@ -82,7 +82,7 @@ class RPSChooseMoveView(EnhancedView):
             self.success = True
             self.stop()
 
-    @discord_button(label="Scissors", emoji="✂", style=ButtonStyle.green)
+    @discord_button(label="Scissors", emoji="✂", style=ButtonStyle.blurple)
     async def scissors(self, button: Button, interaction: Interaction):
         interacting_player = next(player for player in self.players if player.user == interaction.user)
         interacting_player.selected_move = "Scissors"
@@ -99,6 +99,10 @@ class RPSChooseMoveView(EnhancedView):
             self.stop()
 
     async def start_move_selection(self, round_number: int):
+        """
+        Initiates the move selection process.
+        :param round_number: The round number.
+        """
         prompt_text = f"**__Rock-Paper-Scissors__**\n" \
                       f"**{self.challenger.mention}** vs. **{self.opponent.mention}**\n" \
                       f"**Round {round_number}**" \
@@ -131,8 +135,11 @@ class RPSMatchEndView(EnhancedView):
         self.clear_items()
         await self.results_msg.edit(view=self)
 
-    @discord_button(label="View Match Record", style=discord.ButtonStyle.blurple)
+    @discord_button(label="View Match Record", style=discord.ButtonStyle.secondary)
     async def view_match_record(self, button: Button, interaction: Interaction):
+        """
+        Displays the match record.
+        """
         pages = [discord.Embed(title="Match Record", description="\n\n".join(page), color=support.Color.mint())
                  for page in self.match_record]
         paginator = discord_pages.Paginator(pages=pages, use_default_buttons=False,
@@ -140,6 +147,12 @@ class RPSMatchEndView(EnhancedView):
         await paginator.respond(interaction, ephemeral=True)
 
     async def show_match_results(self, players, winner):
+        """
+        Displays the match results.
+
+        :param players: The players involved in the match.
+        :param winner: The winner of the match.
+        """
         challenger, opponent = players[0], players[1]
 
         results_text = f"The winner of the Rock-Paper-Scissors match between {challenger.user.mention} " \

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os.path
 import random
 
@@ -70,7 +69,8 @@ class RPSGame:
 
     async def game_intro(self, ctx):
         """
-        Publicly announces the start of a Rock-Paper-Scissors match.
+        Announces the start of a Rock-Paper-Scissors match.
+
         :param ctx: An ApplicationContext object.
         """
         game_intro_text = f"**Players:** {self.challenger.user.mention} vs." \
@@ -82,16 +82,16 @@ class RPSGame:
         intro_embed = discord.Embed(title="Rock-Paper-Scissors: Game Start!", description=game_intro_text,
                                     color=support.Color.mint())
 
-        # choose a random gif from rps_intro_gifs.json to accompany the game introduction
-        intro_gifs = [value for value in
-                      json.load(open(os.path.join(os.getcwd(), "cogs/rps/files/rps_intro_gifs.json"))).values()]
-        intro_embed.set_image(url=random.choice(intro_gifs))
+        intro_gif = random.choice(os.listdir("cogs/rps/files/intro_gifs"))
+        gif_file = discord.File(f"cogs/rps/files/intro_gifs/{intro_gif}", filename=intro_gif)
+        intro_embed.set_image(url=f"attachment://{intro_gif}")
 
-        await ctx.send(embed=intro_embed)
+        await ctx.send(embed=intro_embed, file=gif_file)
 
     async def select_player_moves(self, ctx):
         """
         Prompts both players to select their moves.
+
         :param ctx: An ApplicationContext object.
         :return: True if move selection completed successfully, False otherwise.
         """
@@ -100,7 +100,8 @@ class RPSGame:
 
     async def report_round_results(self, ctx):
         """
-        Publicly announces the results of a round and adds them to the game's match record.
+        Announces the results of a round and adds them to the game's match record.
+
         :param ctx: An ApplicationContext object.
         """
 
@@ -120,7 +121,7 @@ class RPSGame:
             if winning_cases[self.challenger.selected_move] == self.opponent.selected_move:
                 winner = self.challenger
             else:
-                # if it's not a draw and the challenger didn't win, the opponent won.
+                # if it's not a draw and the challenger doesn't win, the opponent wins.
                 winner = self.opponent
 
             winner.score += 1

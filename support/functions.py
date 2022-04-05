@@ -75,6 +75,10 @@ def bot_has_permissions(expected_permissions):
 
 
 def invoked_in_text_channel():
+    """
+    A decorator that checks if a command was invoked invoked in a text channel.
+    """
+
     async def predicate(ctx: discord.ApplicationContext):
         command_name = f"`/{ctx.command.qualified_name}`"
         if isinstance(ctx.channel, discord.TextChannel):
@@ -94,6 +98,12 @@ def invoked_in_text_channel():
 # non-decorators
 
 def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary):
+    """
+    Returns a list of emoji buttons for use with :class:`discord.ext.pages.Paginator`
+    objects.
+
+    :param button_style: The button style to use.
+    """
     return [
         pages.PaginatorButton("first", emoji="⏮", style=button_style),
         pages.PaginatorButton("prev", emoji="⏪", style=button_style),
@@ -104,4 +114,10 @@ def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary):
 
 
 def posessive(string: str):
+    """
+    Returns a string with a possessive ending. Strings ending in "s" will be appended with a sole apostrophe; other
+    strings will be appended with both an apostrophe and an "s".
+
+    :param string: The string to append the possessive ending to.
+    """
     return f"{string}'" if string.endswith('s') else f"{string}'s"

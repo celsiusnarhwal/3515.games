@@ -11,9 +11,11 @@ from cogs import about, rps, uno
 
 class MasterCog(commands.Cog):
     """
-    A custom ``Cog`` class that extends Pycord's ``Cog`` class and that all of 3515.games' cogs inherit from.
+    A subclass of :class:`commands.Cog` that all of 3515.games' cogs inherit from.
     """
 
+    # pycord requires that all cogs use this exact constructor, so we save a little bit of typing by having them all
+    # inherit from MasterCog. yay!
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
@@ -22,10 +24,6 @@ class AboutCog(MasterCog):
     """
     The cog for the About module, which displays meta information about 3515.games.
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @slash_command(description="Allow me to reintroduce myself.")
     async def about(self, ctx):
         await about.AboutView(ctx=ctx).show_about()
@@ -36,10 +34,6 @@ class RockPaperScissorsCog(MasterCog):
     The cog for the Rock-Paper-Scissors module, which facilitates Rock-Paper-Scissors matches between two members of
     the same Discord server.
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     rps_group = SlashCommandGroup("rps", "Commands for playing Rock-Paper-Scissors.")
 
     @rps_group.command(description="Challenge someone to a game of Rock-Paper-Scissors.")
@@ -104,10 +98,6 @@ class UnoCog(MasterCog):
     """
     The cog for the UNO module, which facilitates UNO games with up to 20 members of the same Discord server.
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     uno_group = SlashCommandGroup("uno", "Commands for playing UNO.")
     create_group = uno_group.create_subgroup("create", "Commands for creating UNO games.")
     gamehost_group = uno_group.create_subgroup("host", "Commands for UNO Game Hosts.")
@@ -410,7 +400,6 @@ class UnoCog(MasterCog):
     @uno.decorators.verify_context(level="thread")
     async def status(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        player = uno_game.retrieve_player(ctx.user)
 
         view = uno.UnoStatusCenterView(ctx=ctx, game=uno_game)
         await view.open_status_center()
@@ -544,7 +533,7 @@ class UnoCog(MasterCog):
     @uno.decorators.verify_context(level="thread")
     @uno.decorators.verify_is_host()
     async def ban_player(self, ctx: discord.ApplicationContext,
-                         user: Option(discord.User, "Mention a player to ban.")):
+                         user: Option(discord.User, "Mention a user to ban.")):
         """
         Bans a user from an UNO game thread. Can only be used by UNO Game Hosts in UNO game threads.
 

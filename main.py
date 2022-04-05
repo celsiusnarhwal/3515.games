@@ -1,21 +1,15 @@
 """
 3515.games' execution point. Running this script starts up the bot.
 """
-
+import inspect
 import logging
-import os
 
 import discord
 
 import cogs
+import settings
 
-intents = discord.Intents.default()
-
-# noinspection PyDunderSlots,PyUnresolvedReferences
-intents.members = True
-
-bot = discord.Bot(debug_guilds=[392426193581768717, 941766354380394506, 941816746162159636],
-                  intents=intents)
+bot = discord.Bot(intents=settings.INTENTS)
 
 
 @bot.event
@@ -23,7 +17,7 @@ async def on_ready():
     """
     Prints a message to the console when 3515.games has connected to Discord and is ready for use.
     """
-    print("3515.games is ready to play!")
+    print(f"3515.games{'.dev' if settings.DEBUG else ''} is ready to play!")
     await bot.register_commands(force=True)
     await bot.sync_commands(force=True)
 
@@ -43,12 +37,17 @@ def cog_setup():
     """
     Initializes cogs.
     """
-    all_cogs = [cogs.RockPaperScissorsCog, cogs.AboutCog, cogs.UnoCog]
+    all_cogs = [
+        cog[1] for cog in inspect.getmembers(
+            cogs, lambda obj: inspect.isclass(obj) and cogs.MasterCog in inspect.getmro(obj)[1:])
+    ]
+
     for cog in all_cogs:
-        bot.add_cog(cog(bot=bot))
+        if cog not in settings.DISABLED_COGS:
+            bot.add_cog(cog(bot=bot))
 
 
 if __name__ == '__main__':
     configure_logging()
     cog_setup()
-    bot.run(os.getenv("BOT_TOKEN"))
+    bot.run(settings.TOKEN)

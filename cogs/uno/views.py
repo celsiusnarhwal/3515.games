@@ -9,12 +9,21 @@ from support.views import EnhancedView, ConfirmationView
 
 
 class GoToUnoThreadView(EnhancedView):
+    """
+    Provides a URL button that points to a newly-created UNO game thread.
+    """
+
     def __init__(self, thread_url, **kwargs):
         super().__init__(**kwargs)
         self.add_item(Button(label="Go to game thread", url=thread_url))
 
 
 class UnoTerminableView(EnhancedView):
+    """
+    A subclass of :class:`EnhancedView` whose views are set to automatically disabled themselves and stop
+    listening for interactions upon the end of the turn of the player who created them.
+    """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         game: uno.UnoGame = uno.UnoGame.retrieve_game(self.ctx.channel_id)
@@ -24,11 +33,27 @@ class UnoTerminableView(EnhancedView):
 
 
 class UnoTerminableConfView(ConfirmationView, UnoTerminableView):
+    """
+    A subclass of :class:`support.views.ConfirmationView` and :class:`UnoTerminableView` whose sole purpose is to
+    inherit the functionality of both of those classes, giving :class:`ConfirmationView` objects the auto-terminating
+    properties of :class:`UnoTerminableView` objects.
+    """
     pass
 
 
 class UnoCardSelectView(UnoTerminableView):
+    """
+    Provides an interface for a player to select a card to play.
+    """
+
     class UnoCardSelectPaginator:
+        """
+        If the player who invokes :class:`UnoCardSelectView` has more than 23 cards in their hand, this class
+        will paginate the selection menu into multiple pages with up to 23 cards each. 23 is chosen as the limit because
+        Discord's select menus only allow for up to 25 items per page; for a player in an UNO game, that will be 23
+        cards plus the next and previous page buttons.
+        """
+
         def __init__(self, pages: DoublyLinkedList):
             self.pages = pages
             self.current_page = self.pages.first
@@ -65,8 +90,15 @@ class UnoCardSelectView(UnoTerminableView):
         )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
+        """
+        Proccesses the result of the player's interaction with the card selection menu.
+
+        :param interaction: The interaction.
+        """
+        # get the card selection menu
         card_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
 
+        # if the selected option is the next or previous page buttons, switch pages accordingly
         if card_menu.values[0] in ["next", "prev"]:
             self.clear_items()
             if card_menu.values[0] == "next":
@@ -74,13 +106,16 @@ class UnoCardSelectView(UnoTerminableView):
             elif card_menu.values[0] == "prev":
                 self.paginator.previous()
 
+            # once the page has been switched, recreate the selection menu with the cards on the new page
             card_menu = await self.create_menu()
             self.add_item(card_menu)
 
             await interaction.response.edit_message(view=self)
         else:
+            # if the selected option is a card, find the card with the corresponding UUID in the player's hand
             played_card: uno.UnoCard = discord.utils.find(lambda x: x.uuid == card_menu.values[0], self.player.hand)
 
+            # verify that the card is playable
             if not await self.game.is_card_playable(played_card):
                 msg = "You can only play a card that matches the color or suit of the last card played. " \
                       "Pick a different card, or draw a card with `/uno draw` if there are no cards you can play."
@@ -88,12 +123,16 @@ class UnoCardSelectView(UnoTerminableView):
                                       color=support.Color.red())
                 await interaction.response.send_message(embed=embed, ephemeral=True)
             else:
+                # if it's playable, validate the interaction and stop the view
                 self.selected_card = played_card
                 self.success = True
                 await self.full_stop()
                 return await super().interaction_check(interaction)
 
     async def create_menu(self) -> Select:
+        """
+        Creates the card selection menu.
+        """
         placeholder = "Pick a card, any card!"
 
         if len(self.paginator.pages) > 1:
@@ -116,6 +155,9 @@ class UnoCardSelectView(UnoTerminableView):
         return card_menu
 
     async def select_card(self) -> dict:
+        """
+        Sends the card selection menu and an accompanying message to the player in chat.
+        """
         card_menu = await self.create_menu()
         self.add_item(card_menu)
 
@@ -138,6 +180,10 @@ class UnoCardSelectView(UnoTerminableView):
 
 
 class WildColorSelectView(UnoTerminableView):
+    """
+    Provides an interface for color selection when a Wild card is played.
+    """
+
     def __init__(self, player: uno.UnoPlayer, **kwargs):
         super().__init__(**kwargs)
         self.player = player
@@ -173,6 +219,9 @@ class WildColorSelectView(UnoTerminableView):
         self.stop()
 
     async def choose_color(self):
+        """
+        Sends the color selection menu and an accompanying message to the player in chat.
+        """
         msg = "Since you played a Wild card, you get to choose the next color in play. The next player will be " \
               "able to play any card that matches the color you select (or a Wild card of their own, of course)."
 
@@ -204,6 +253,10 @@ class WildColorSelectView(UnoTerminableView):
 
 
 class UnoStatusCenterView(EnhancedView):
+    """
+    The frontend for the UNO Status Center. (The backend is :class:`uno.UnoStatusCenter`.)
+    """
+
     def __init__(self, game: uno.UnoGame, **kwargs):
         super().__init__(**kwargs)
         self.game = game
@@ -213,6 +266,12 @@ class UnoStatusCenterView(EnhancedView):
             self.invoker = self.ctx.user
 
     async def interaction_check(self, interaction: Interaction) -> bool:
+        """
+        Processes interactions with the UNO Status Center.
+
+        :param interaction: The interaction.
+        """
+        # get the select menu
         status_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
 
         choice = status_menu.values[0]
@@ -226,6 +285,7 @@ class UnoStatusCenterView(EnhancedView):
             "mystats": self.player_stats(),
         }
 
+        # get embeds from the appropriate method based on the user's choice
         embeds = options[choice]
         embeds[0].set_author(name="UNO Status Center", icon_url=self.ctx.me.display_avatar.url)
 
@@ -234,11 +294,14 @@ class UnoStatusCenterView(EnhancedView):
         return super().interaction_check(interaction)
 
     def create_menu(self) -> Select:
+        """
+        Creates the UNO Status Center's menu.
+        """
         status_menu = Select(placeholder="What do you want to know?",
                              min_values=1,
                              max_values=1)
 
-        # pre-start options
+        # these options are always available
 
         status_menu.add_option(label="Game Settings", value="settings", emoji="⚙️",
                                description="See the settings for this game.")
@@ -246,7 +309,7 @@ class UnoStatusCenterView(EnhancedView):
         status_menu.add_option(label="Players", value="players", emoji="👥",
                                description="See who's playing in this game.")
 
-        # post-start options
+        # these options are only available after the game has started
 
         if not self.status.game.is_joinable:
             status_menu.add_option(label="Turn Order", value="turn", emoji="🕒",
@@ -258,7 +321,7 @@ class UnoStatusCenterView(EnhancedView):
             status_menu.add_option(label="Last Turn", value="last", emoji="⏪",
                                    description="See what happened last turn.")
 
-            # player-exclusive options
+            # this option is only available if the user is a player in the game
 
             if self.game.retrieve_player(self.invoker) is not None:
                 status_menu.add_option(label="Your Stats", value="mystats", emoji="📊",
@@ -267,6 +330,9 @@ class UnoStatusCenterView(EnhancedView):
         return status_menu
 
     async def open_status_center(self):
+        """
+        Sends the UNO Status Center menu in chat.
+        """
         status_menu = self.create_menu()
         self.add_item(status_menu)
 
@@ -285,13 +351,19 @@ class UnoStatusCenterView(EnhancedView):
         await self.ctx.respond(embed=embed, view=self, ephemeral=True)
 
     def game_settings(self):
+        """
+        Returns an embed containing a string representation of the game settings.
+        """
         settings = self.status.get_game_settings()
 
-        embed = discord.Embed(title="Game Settings", description=settings, color=support.Color.mint())
+        embed = discord.Embed(title="⚙️ Game Settings", description=settings, color=support.Color.mint())
 
         return [embed]
 
     def player_list(self):
+        """
+        Returns an embed contianing a string representation of the player list.
+        """
         players = self.status.get_player_list()
 
         def string_builder(player: uno.UnoPlayer):
@@ -308,11 +380,14 @@ class UnoStatusCenterView(EnhancedView):
 
         msg += "\n\n(👑 = Game Host)"
 
-        embed = discord.Embed(title="Players", description=msg, color=support.Color.mint())
+        embed = discord.Embed(title="👥 Players", description=msg, color=support.Color.mint())
 
         return [embed]
 
     def turn_order(self):
+        """
+        Returns an embed containing a string representation of the turn order.
+        """
         turn_order = self.status.get_turn_order()
 
         def string_builder(index: int, player: uno.UnoPlayer):
@@ -332,11 +407,14 @@ class UnoStatusCenterView(EnhancedView):
 
         msg = "\n".join(string_builder(index, player) for index, player in enumerate(turn_order)) + "\n"
 
-        embed = discord.Embed(title="Turn Order", description=msg, color=support.Color.mint())
+        embed = discord.Embed(title="🕒 Turn Order", description=msg, color=support.Color.mint())
 
         return [embed]
 
     def leaderboard(self):
+        """
+        Returns an embed containing a string representation of the leaderboard.
+        """
         leaderboard = self.status.get_leaderboard()
 
         string = ""
@@ -372,13 +450,15 @@ class UnoStatusCenterView(EnhancedView):
 
                 string += "\n"
 
-        embed = discord.Embed(title="Leaderboard", description=string, color=support.Color.mint())
+        embed = discord.Embed(title="🏆 Leaderboard", description=string, color=support.Color.mint())
 
         return [embed]
 
     def last_turn(self):
-        embed = discord.Embed(title="Last Turn",
-                              color=support.Color.mint())
+        """
+        Returns a lists of embeds representing the events of the previous turn.
+        """
+        embed = discord.Embed(title="⏪ Last Turn", color=support.Color.mint())
 
         turn_record = self.status.get_last_turn()
 
@@ -390,16 +470,18 @@ class UnoStatusCenterView(EnhancedView):
         return [embed] + self.status.get_last_turn()
 
     def player_stats(self):
+        """
+        Returns an embed containing the player's stats.
+        """
         player = self.game.retrieve_player(self.invoker)
-        embed = discord.Embed(title="Your Stats", color=support.Color.mint())
+        embed = discord.Embed(title="📊 Your Stats", color=support.Color.mint())
         embed.set_thumbnail(url=player.user.display_avatar.url)
 
         stats = self.status.get_player_stats(player)
 
-        for stat, value in stats.items():
+        for index, (stat, value) in enumerate(stats.items()):
             embed.add_field(name=stat, value=value, inline=True)
 
-            index = list(stats.keys()).index(stat)
             if (index + 1) % 2 == 0:
                 embed.add_field(name="\u200b", value="\u200b")
 
@@ -407,6 +489,12 @@ class UnoStatusCenterView(EnhancedView):
 
 
 class UnoGameEndView(EnhancedView):
+    """
+    When an UNO game ends, this view provides a button for players to see the final leaderboard. Since a thread
+    ceases to be an UNO game thread when its associated game ends, the `/uno status` command will no longer work,
+    so this view will be the only way to see the leaderboard.
+    """
+
     def __init__(self, game: uno.UnoGame, **kwargs):
         super().__init__(**kwargs)
         self.game = game
