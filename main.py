@@ -1,8 +1,3 @@
-# 3515.games is source-available, not open source. You may not use, modify, or redistribute 3515.games' source code
-# without the express written permission of celsius narhwal.
-
-# 3515.games © celsius narhwal. All rights reserved.
-
 import inspect
 import logging
 

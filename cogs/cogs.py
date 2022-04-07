@@ -312,27 +312,20 @@ class UnoCog(MasterCog):
 
     @uno_group.command(name="play", description="Play one of your UNO cards.")
     @uno.decorators.verify_context(level="turn")
-    async def play_card(self,
-                        ctx: discord.ApplicationContext,
-                        playable: Option(bool, "Setting this to True will display only cards that you can play "
-                                               "this turn.", required=False)):
+    async def play_card(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
 
-        await player.select_card(ctx, playable)
+        await player.select_card(ctx)
 
     @uno_group.command(name="draw", description="Draw an UNO card.")
     @uno.decorators.verify_context(level="turn")
-    async def draw_card(self,
-                        ctx: discord.ApplicationContext,
-                        autoplay: Option(bool, "If possible, automatically play the card you draw. "
-                                               "(Does not apply to Wild or Wild Draw Four cards.)",
-                                         default=False)):
+    async def draw_card(self, ctx: discord.ApplicationContext):
 
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
 
-        await player.draw_card(ctx, autoplay=autoplay)
+        await player.draw_card(ctx)
 
     @uno_group.command(name="uno", description="Say 'UNO!' when you have one card left.")
     @uno.decorators.verify_context(level="game")

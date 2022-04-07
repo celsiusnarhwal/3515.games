@@ -100,22 +100,37 @@ class UnoCardSelectView(UnoTerminableView):
         # get the card selection menu
         card_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
 
+        # if there's no card menu, assume the user clicked a button and return the super call
+        if not card_menu:
+            return super().interaction_check(interaction)
+
+        # get the selected option
+        selected_option = card_menu.values[0:1]
+
+        # if there's no selected option, assume the user clicked a button and return the super call
+        if not selected_option:
+            return await super().interaction_check(interaction)
+        else:
+            selected_option = selected_option[0]
+
         # if the selected option is the next or previous page buttons, switch pages accordingly
-        if card_menu.values[0] in ["next", "prev"]:
+        if selected_option in ["next", "prev"]:
+            button = discord.utils.find(lambda x: isinstance(x, Button), self.children)
             self.clear_items()
-            if card_menu.values[0] == "next":
+            if selected_option == "next":
                 self.paginator.next()
-            elif card_menu.values[0] == "prev":
+            elif selected_option == "prev":
                 self.paginator.previous()
 
             # once the page has been switched, recreate the selection menu with the cards on the new page
-            card_menu = await self.create_menu()
+            card_menu = self.get_menu()
             self.add_item(card_menu)
+            self.add_item(button)
 
             await interaction.response.edit_message(view=self)
         else:
             # if the selected option is a card, find the card with the corresponding UUID in the player's hand
-            played_card: uno.UnoCard = discord.utils.find(lambda x: x.uuid == card_menu.values[0], self.player.hand)
+            played_card: uno.UnoCard = discord.utils.find(lambda x: x.uuid == selected_option, self.player.hand)
 
             # verify that the card is playable
             if not await self.game.is_card_playable(played_card):
@@ -124,6 +139,8 @@ class UnoCardSelectView(UnoTerminableView):
                 embed = discord.Embed(title="You can't play that card.", description=msg,
                                       color=support.Color.red())
                 await interaction.response.send_message(embed=embed, ephemeral=True)
+                card_menu.values.clear()
+                await self.ctx.interaction.edit_original_message(view=self)
             else:
                 # if it's playable, validate the interaction and stop the view
                 self.selected_card = played_card
@@ -131,7 +148,72 @@ class UnoCardSelectView(UnoTerminableView):
                 await self.full_stop()
                 return await super().interaction_check(interaction)
 
-    async def create_menu(self) -> Select:
+    async def show_all_cards(self, *args):
+        """
+        A callback for a button that switches the menu to show all cards in the player's hand.
+        """
+        self.paginator = self.UnoCardSelectPaginator(
+            pages=DoublyLinkedList([self.cards[i:i + 23] for i in range(0, len(self.cards), 23)])
+        )
+
+        msg = f"Pick a card from the dropdown menu. You can play any card that matches the color or suit of the " \
+              f"last card played. You can also play a Wild or Wild Draw Four card, if you have one."
+        msg += f"\n\n{self.game.last_move}" if self.game.last_move else \
+            "\n\nNo cards have been played during this round yet, so you can play any card in your hand."
+        msg += "\n\nYou can view all your cards with `/uno hand`."
+
+        embed = discord.Embed(title="Play a Card", description=msg, color=support.Color.mint())
+
+        card_menu = self.get_menu()
+        button = self.get_button()
+
+        self.clear_items()
+        self.add_item(card_menu)
+        self.add_item(button)
+
+        await self.ctx.interaction.edit_original_message(embed=embed, view=self)
+
+    async def show_playable_cards(self, *args):
+        """
+        A callback for a button that switches the menu to only show cards that can played this round.
+        """
+
+        playable_cards = [card for card in self.cards if await self.game.is_card_playable(card)]
+        if playable_cards:
+            self.paginator = self.UnoCardSelectPaginator(
+                pages=DoublyLinkedList([playable_cards[i:i + 23] for i in range(0, len(playable_cards), 23)])
+            )
+
+            card_menu = self.get_menu()
+            button = self.get_button()
+
+            self.clear_items()
+            self.add_item(card_menu)
+            self.add_item(button)
+
+            await self.ctx.interaction.edit_original_message(view=self)
+        else:
+            msg = "You have no cards that can be played this round. You must draw a card with `/uno draw`."
+            embed = discord.Embed(title="No Playable Cards", description=msg,
+                                  color=support.Color.red())
+
+            button = self.get_button()
+            self.clear_items()
+            self.add_item(button)
+
+            await self.ctx.interaction.edit_original_message(embed=embed, view=self)
+
+    def get_button(self):
+        if discord.utils.find(lambda x: isinstance(x, Button) and x.label == "Show Playable Cards", self.children):
+            button = Button(label="Show All Cards", style=ButtonStyle.secondary)
+            button.callback = self.show_all_cards
+            return button
+        else:
+            button = Button(label="Show Playable Cards", style=ButtonStyle.secondary)
+            button.callback = self.show_playable_cards
+            return button
+
+    def get_menu(self) -> Select:
         """
         Creates the card selection menu.
         """
@@ -160,13 +242,15 @@ class UnoCardSelectView(UnoTerminableView):
         """
         Sends the card selection menu and an accompanying message to the player in chat.
         """
-        card_menu = await self.create_menu()
+        card_menu = self.get_menu()
         self.add_item(card_menu)
+
+        self.add_item(self.get_button())
 
         msg = f"Pick a card from the dropdown menu. You can play any card that matches the color or suit of the " \
               f"last card played. You can also play a Wild or Wild Draw Four card, if you have one."
         msg += f"\n\n{self.game.last_move}" if self.game.last_move else \
-            "\n\nBecause no cards have been played during this round yet, you can play any card in your hand."
+            "\n\nNo cards have been played during this round yet, so you can play any card in your hand."
         msg += "\n\nYou can view all your cards with `/uno hand`."
 
         embed = discord.Embed(title="Play a Card", description=msg, color=support.Color.mint())
@@ -179,6 +263,52 @@ class UnoCardSelectView(UnoTerminableView):
             return self.selected_card
         else:
             return None
+
+
+class UnoDrawCardView(UnoTerminableView):
+    """
+    Provides an interface for drawing a card.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.autoplay = False
+
+    @discord_button(label="Draw", style=ButtonStyle.green)
+    async def draw(self, button: Button, interaction: Interaction):
+        self.success = True
+        self.autoplay = False
+        self.stop()
+
+    @discord_button(label="Draw and Play", style=ButtonStyle.green)
+    async def draw_autoplay(self, button: Button, interaction: Interaction):
+        self.success = True
+        self.autoplay = True
+        self.stop()
+
+    @discord_button(label="Cancel", style=ButtonStyle.red)
+    async def cancel(self, button: Button, interaction: Interaction):
+        self.success = False
+        self.stop()
+
+    async def draw_card(self):
+        """
+        Sends the draw card menu and an accompanying message to the player in chat.
+        """
+        msg = "You can choose to either a) draw a card normally, or b) draw a card and, if possible, play it " \
+              "automatically. Note that Wild and Wild Draw Four cards will never be played automatically.\n" \
+              "\n" \
+              "Drawing a card will end your turn."
+        embed = discord.Embed(title="Draw a Card", description=msg, color=support.Color.mint())
+        await self.ctx.respond(embed=embed, view=self, ephemeral=True)
+
+        await self.wait()
+
+        if self.success:
+            await self.ctx.interaction.edit_original_message(view=None)
+        else:
+            msg = "Okay! Make your move whenever you're ready."
+            await self.ctx.interaction.edit_original_message(content=msg, embed=None, view=None)
 
 
 class WildColorSelectView(UnoTerminableView):

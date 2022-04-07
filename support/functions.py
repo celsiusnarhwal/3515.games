@@ -100,7 +100,7 @@ def invoked_in_text_channel():
 
 # non-decorators
 
-def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary):
+def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary) -> list[pages.PaginatorButton]:
     """
     Returns a list of emoji buttons for use with :class:`discord.ext.pages.Paginator`
     objects.
@@ -116,7 +116,7 @@ def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary):
     ]
 
 
-def posessive(string: str):
+def posessive(string: str) -> str:
     """
     Returns a string with a possessive ending. Strings ending in "s" will be appended with a sole apostrophe; other
     strings will be appended with both an apostrophe and an "s".

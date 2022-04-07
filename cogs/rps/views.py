@@ -32,7 +32,7 @@ class RPSChooseMoveView(EnhancedView):
 
     async def on_timeout(self):
         timeout_message = "Your Rock-Paper-Scissors match has been aborted because one of you took too long to make a " \
-                          "move. You can start another match with `/rps start.`"
+                          "move. You can start another match with `/rps challenge.`"
         timeout_embed = discord.Embed(title="You timed out.", description=timeout_message,
                                       color=discord.Color.red())
         await self.ctx.send(f"{self.challenger.mention} {self.opponent.mention}",

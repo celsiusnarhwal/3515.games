@@ -272,7 +272,7 @@ class UnoGame:
                         f"The Game Host can begin the game at any time with `/uno host start`. Once the game " \
                         f"has begun, no new players will be able to join."
 
-        intro_embed = discord.Embed(title=f"Welcome to {posessive(self.host.name)}'s UNO game!",
+        intro_embed = discord.Embed(title=f"Welcome to {posessive(self.host.name)} UNO game!",
                                     description=intro_message,
                                     color=support.Color.mint())
 
@@ -798,30 +798,15 @@ class UnoPlayer:
 
         await paginator.respond(ctx.interaction, ephemeral=True)
 
-    async def select_card(self, ctx: discord.ApplicationContext, playable: bool):
+    async def select_card(self, ctx: discord.ApplicationContext):
         """
         Allows players to select a card to play.
 
         :param ctx: A discord.ApplicationContext object.
-        :param playable: If True, the player will only be able to select from cards that can be played on the current
         turn.
         """
 
-        # if the playable flag is true, filter the player's hand down to cards that can be played on the current turn
-        if playable:
-            selectable_cards = [card for card in self.hand if await self.game.is_card_playable(card)]
-
-            # if the player has no such cards, tell them as much
-            if not selectable_cards:
-                msg = "You have no cards that can be played this turn. You must draw a card with `/uno draw`."
-                embed = discord.Embed(title="No Playable Cards", description=msg, color=support.Color.red())
-                await ctx.respond(embed=embed, ephemeral=True)
-                return
-        else:
-            # if tne playable flag is false, the domain of selectable cards is the player's entire hand
-            selectable_cards = self.hand
-
-        view = uno.UnoCardSelectView(ctx=ctx, player=self, cards=selectable_cards)
+        view = uno.UnoCardSelectView(ctx=ctx, player=self, cards=self.hand)
         selected_card: UnoCard = await view.select_card()
 
         if selected_card:
@@ -837,7 +822,7 @@ class UnoPlayer:
                       f"called out.\n" \
                       f"\n" \
                       f"Proceed with playing this card?"
-                embed = discord.Embed(title="Notice: One Card Remaining", description=msg,
+                embed = discord.Embed(title="One Card Remaining", description=msg,
                                       color=support.Color.orange())
 
                 view = uno.UnoTerminableConfView(ctx=ctx)
@@ -852,8 +837,9 @@ class UnoPlayer:
 
                     return
 
-            # present color selection view if the player selects a wild card
-            if selected_card.color.casefold() == "wild":
+            # present color selection view if the player selects a wild card, provided it isn't the last card in
+            # their hand
+            if selected_card.color.casefold() == "wild" and len(self.hand) > 1:
                 view = uno.WildColorSelectView(ctx=ctx, player=self)
                 color_was_changed: bool = await view.choose_color()
 
@@ -893,32 +879,17 @@ class UnoPlayer:
 
         await self.end_turn()
 
-    async def draw_card(self, ctx: discord.ApplicationContext, autoplay=False):
+    async def draw_card(self, ctx: discord.ApplicationContext):
         """
         Draws an UNO card.
 
         :param ctx: A discord.ApplicationContext object.
-        :param autoplay: If True, the drawn card will be automatically played if possible.
         """
 
-        # confirm that the player wants to draw
-        if autoplay:
-            msg = "If the card you draw can be played, it will be played automatically. If the card can't be played " \
-                  "automatically, or if it's a Wild or Wild Draw Four card, it will remain in your hand.\n" \
-                  "\n" \
-                  "Drawing a card will end your turn.\n" \
-                  "\n" \
-                  "Draw a card?"
+        view = uno.UnoDrawCardView(ctx=ctx)
+        await view.draw_card()
 
-            embed = discord.Embed(title="Draw a Card", description=msg, color=support.Color.orange())
-        else:
-            msg = "Drawing a card will end your turn. Draw a card?"
-            embed = discord.Embed(title="Draw a Card", description=msg, color=support.Color.orange())
-
-        view = uno.UnoTerminableConfView(ctx=ctx)
-        confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
-
-        if confirmation:
+        if view.success:
             await self.reset_timeouts()
 
             drawn_card = await self.add_cards(1, return_added_cards=True)
@@ -937,16 +908,17 @@ class UnoPlayer:
                 "wild": support.Color.black(),
             }
 
-            if autoplay and await self.game.is_card_playable(card) and card.color.casefold() != "wild":
+            if view.autoplay and await self.game.is_card_playable(card) and card.color.casefold() != "wild":
                 # play the card if it can be played on the current turn and isn't a wild or wild draw four
                 embed = discord.Embed(title="Card Drawn and Played",
                                       description=f"You drew and played a **{str(card)}**.",
                                       color=embed_colors[card.color.casefold()])
+                embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
 
                 if len(self.hand) == 2 and not self.can_say_uno:
-                    embed = discord.Embed(title="Notice: One Card Remaining",
+                    embed = discord.Embed(title="One Card Remaining",
                                           description="You'll need to say 'UNO!' again or risk being called out by "
                                                       "another player.",
                                           color=support.Color.orange())
@@ -957,10 +929,11 @@ class UnoPlayer:
             else:
                 embed = discord.Embed(title="Card Drawn", description=f"You drew a **{str(card)}**.",
                                       color=embed_colors[card.color.casefold()])
+                embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
                 await self.end_turn()
-        elif confirmation is False:
+        elif view.success is False:
             msg = "Okay! Make your move whenever you're ready."
             await ctx.interaction.edit_original_message(content=msg, embeds=[], view=None)
 
@@ -1190,7 +1163,10 @@ class UnoEventProcessor:
         embed = discord.Embed(title="Card Played", description=f"**{player.user.name}** plays a **{str(card)}**.",
                               color=embed_colors[card.color.casefold()])
 
-        embed.set_thumbnail(url=player.user.display_avatar.url)
+        embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
+        embed.set_footer(icon_url=player.user.display_avatar.url,
+                         text=f"{player.user.name}#{player.user.discriminator} • UNO with {self.game.host.name}! • "
+                              f"Round {self.game.current_round}")
 
         self.game.last_move = "The last card played was a "
 
@@ -1216,6 +1192,9 @@ class UnoEventProcessor:
                               color=support.Color.greyple())
 
         embed.set_thumbnail(url=player.user.display_avatar.url)
+        embed.set_footer(icon_url=player.user.display_avatar.url,
+                         text=f"{player.user.name}#{player.user.discriminator} • UNO with {self.game.host.name}! • "
+                              f"Round {self.game.current_round}")
 
         self.game.turn_record.append(embed)
 
@@ -1228,13 +1207,10 @@ class UnoEventProcessor:
         next_player: UnoPlayer = await self.game.walk_players(self.game.current_player, 1, use_value=True)
         await next_player.add_cards(2)
 
-        embed = discord.Embed(title="🎬 Take Two!",
-                              description=f"**{next_player.user.name}** draws two cards and forfeits their turn.",
-                              color=support.Color.fuchsia())
-
-        embed.set_thumbnail(url=next_player.user.display_avatar.url)
-
-        self.game.turn_record.append(embed)
+        self.game.turn_record[-1].add_field(name="🎬 Take Two!",
+                                            value=f"**{next_player.user.name}** draws two cards and "
+                                                  f"forfeits their turn.",
+                                            inline=False)
 
     async def draw_four_event(self):
         """
@@ -1246,13 +1222,10 @@ class UnoEventProcessor:
         next_player: UnoPlayer = await self.game.walk_players(self.game.current_player, 1, use_value=True)
         await next_player.add_cards(4)
 
-        embed = discord.Embed(title="🍀 Four Score!",
-                              description=f"**{next_player.user.name}** draws four cards and forfeits their turn.",
-                              color=support.Color.fuchsia())
-
-        embed.set_thumbnail(url=next_player.user.display_avatar.url)
-
-        self.game.turn_record.append(embed)
+        self.game.turn_record[-1].add_field(name="🎬 Four Score!",
+                                            value=f"**{next_player.user.name}** draws four cards and "
+                                                  f"forfeits their turn.",
+                                            inline=False)
 
     async def skip_event(self):
         """
@@ -1262,13 +1235,9 @@ class UnoEventProcessor:
 
         skipped_player = await self.game.walk_players(self.game.current_player, 1, use_value=True)
 
-        embed = discord.Embed(title="⏩ Fast Forward!",
-                              description=f"**{skipped_player.user.name}'s** turn has been skipped.",
-                              color=support.Color.purple())
-
-        embed.set_thumbnail(url=skipped_player.user.display_avatar.url)
-
-        self.game.turn_record.append(embed)
+        self.game.turn_record[-1].add_field(name="⏩ Fast Forward!",
+                                            value=f"**{posessive(skipped_player.user.name)}** turn has "
+                                                  f"been skipped.", inline=False)
 
     async def reverse_event(self):
         """
@@ -1279,10 +1248,8 @@ class UnoEventProcessor:
         if len(self.game.players) == 2:
             self.game.skip_next_player = True
 
-        embed = discord.Embed(title="🔄 Reverse, Reverse!", description="The turn order has been reversed.",
-                              color=support.Color.purple())
-
-        self.game.turn_record.append(embed)
+        self.game.turn_record[-1].add_field(name="🔄 Reverse, Reverse!", value="The turn order has been reversed.",
+                                            inline=False)
 
     async def wild_event(self, player: UnoPlayer):
         """
@@ -1290,18 +1257,12 @@ class UnoEventProcessor:
 
         :param player: The player who played the Wild card.
         """
-        embed_colors = {
-            "red": support.Color.brand_red(),
-            "blue": support.Color.blue(),
-            "green": support.Color.green(),
-            "yellow": support.Color.yellow(),
-        }
 
-        embed = discord.Embed(title=f"{player.user.name} plays a Wild card!",
-                              description=f"The color in play is now **{self.game.color_in_play.title()}**.",
-                              color=embed_colors[self.game.color_in_play.casefold()])
-
-        self.game.turn_record.append(embed)
+        self.game.turn_record[-1].add_field(name="🎲 A Wild card appears!",
+                                            value=f"**{player.user.name}** plays a Wild card. "
+                                                  f"The color in play changes to "
+                                                  f"**{self.game.color_in_play.title()}**.",
+                                            inline=False)
 
     async def say_uno_event(self, player: UnoPlayer):
         """
