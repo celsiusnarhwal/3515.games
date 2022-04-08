@@ -54,42 +54,48 @@ class GamePermissions(discord.Permissions):
         """
         The set of permissions required for Rock-Paper-Scissors.
 
-        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following permissions:
+        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following
+        permissions:
 
         - Embed Links
+        - Attach Files
         """
-        return cls(cls.universal().value | 16384)
+        return cls(cls.universal().value | 49152)
 
     @classmethod
     def uno_public(cls):
         """
         The set of permissions required for public UNO games.
 
-        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following permissions:
+        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following
+        permissions:
 
         - Create Public Threads
         - Send Messages in Threads
         - Manage Messages
         - Manage Threads
         - Embed Links
+        - Attach Files
         - Mention @everyone, @here, and All Roles
         - Use External Emojis
         """
-        return cls(cls.universal().value | 326417932288)
+        return cls(cls.universal().value | 326417965056)
 
     @classmethod
     def uno_private(cls):
         """
         The set of permissions required for public UNO games.
 
-        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following permissions:
+        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following
+        permissions:
 
         - Create Private Threads
         - Send Messages in Threads
         - Manage Messages
         - Manage Threads
         - Embed Links
+        - Attach Files
         - Mention @everyone, @here, and All Roles
         - Use External Emojis
         """
-        return cls(cls.universal().value | 360777670656)
+        return cls(cls.universal().value | 360777703424)

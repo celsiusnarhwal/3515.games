@@ -6,7 +6,7 @@ import discord
 import cogs
 import settings
 
-bot = discord.Bot(intents=settings.INTENTS)
+bot = discord.Bot(intents=settings.INTENTS, debug_guilds=settings.DEBUG_GUILDS)
 
 
 @bot.event
@@ -14,7 +14,7 @@ async def on_ready():
     """
     Prints a message to the console when 3515.games has connected to Discord and is ready for use.
     """
-    print(f"3515.games{'.dev' if settings.DEV_MODE else ''} is ready to play!")
+    print(f"3515.games{'.dev' if settings.DEV_MODE else ''} is ready to play!", flush=True)
     await bot.register_commands(force=True)
     await bot.sync_commands(force=True)
 

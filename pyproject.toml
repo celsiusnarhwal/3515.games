@@ -1,21 +1,21 @@
 [tool.poetry]
-name = "games3515"
+name = "3515.games"
 version = "1.0.0b1"
 description = "3515.games is a Discord bot that lets you enjoy real-time social games with your friends."
 authors = ["celsiusnarhwal <celsiusnarhwal@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10.2"
-pip-licenses = "^3.5.3"
 toml = "^0.10.2"
 llist = "^0.8"
 titlecase = "^2.3"
-py-cord = {git = "https://github.com/Pycord-Development/pycord"}
+py-cord = { git = "https://github.com/Pycord-Development/pycord" }
 sortedcontainers = "^2.4.0"
 inflect = "^5.4.0"
 python-dotenv = "^0.20.0"
 
 [tool.poetry.dev-dependencies]
+pip-licenses = "^3.5.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

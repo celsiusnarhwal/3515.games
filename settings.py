@@ -19,8 +19,11 @@ DEV_MODE = False
 INTENTS = discord.Intents.default()
 INTENTS.members = True
 
+# Debug Guilds
+DEBUG_GUILDS = []
+
 # Disabled Cogs
-# Commands in these cogs will not be loaded. If this list is empty, all cogs will be loaded.
+# Cogs in this list will be disablec. If this list is empty, all cogs will be loaded.
 DISABLED_COGS = []
 
 # Bot Token
