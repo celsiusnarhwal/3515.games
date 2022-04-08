@@ -23,7 +23,6 @@ INTENTS.members = True
 DEBUG_GUILDS = []
 
 # Disabled Cogs
-# Cogs in this list will be disablec. If this list is empty, all cogs will be loaded.
 DISABLED_COGS = []
 
 # Bot Token
