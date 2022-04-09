@@ -8,9 +8,6 @@ Production settings.
 import os
 
 import discord
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Dev Mode
 DEV_MODE = False
