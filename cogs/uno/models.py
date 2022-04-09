@@ -393,6 +393,7 @@ class UnoGame:
 
         :param player_node: The dllistnode object corresponding to the player to be removed.
         """
+        self.players.remove(player_node)
 
         player: UnoPlayer = player_node.value
 
@@ -407,13 +408,11 @@ class UnoGame:
             await self.force_close(reason="host_left")
 
         # if there are fewer than two players remaining in the game and the game has started, the game is force closed
-        elif len(self.players) - 1 < 2 and not self.is_joinable:
+        elif len(self.players) < 2 and not self.is_joinable:
             await self.force_close(reason="players_left")
 
         elif not self.current_player == player_node and not self.is_joinable:
             await player.end_turn()
-
-        self.players.remove(player_node)
 
     async def walk_players(self, player_node: dllistnode, steps: int, use_value=False) -> dllistnode or UnoPlayer:
         """
@@ -1190,7 +1189,7 @@ class UnoEventProcessor:
         }
 
         embed = discord.Embed(title=f"Card {'Drawn and' if with_draw else ''} Played",
-                              description=f"**{player.user.name}** {'draws and' if with_draw else ''} "
+                              description=f"**{player.user.name}** {'draws and' if with_draw else''} "
                                           f"plays a **{str(card)}**.",
                               color=embed_colors[card.color.casefold()])
 
