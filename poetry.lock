@@ -63,6 +63,14 @@ python-versions = ">=3.5.0"
 unicode_backport = ["unicodedata2"]
 
 [[package]]
+name = "chess"
+version = "1.9.0"
+description = "A chess library with move generation and validation, Polyglot opening book probing, PGN reading and writing, Gaviota tablebase probing, Syzygy tablebase probing, and XBoard/UCI engine communication."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "frozenlist"
 version = "1.3.0"
 description = "A list-like structure which implements collections.abc.MutableSequence"
@@ -130,7 +138,7 @@ python-versions = "*"
 
 [[package]]
 name = "py-cord"
-version = "2.0.0b5"
+version = "2.0.0b6"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -149,7 +157,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Pycord-Development/pycord"
 reference = "master"
-resolved_reference = "688b59c76a0034d2c72e21a9c585ff644b9228fe"
+resolved_reference = "d8bcbfabe5e80f1337b77948196dfd01619d9a4d"
 
 [[package]]
 name = "sortedcontainers"
@@ -194,7 +202,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10.2"
-content-hash = "2a63b46185250029dd6a4396463e43a7fece37f70b74f6ccead8fe2e00ed289a"
+content-hash = "ffd057a2233bed1e546d6c03ed31e8a5fcde92ac496146e72d3381416b59963e"
 
 [metadata.files]
 aiohttp = [
@@ -286,6 +294,10 @@ attrs = [
 charset-normalizer = [
     {file = "charset-normalizer-2.0.12.tar.gz", hash = "sha256:2857e29ff0d34db842cd7ca3230549d1a697f96ee6d3fb071cfa6c7393832597"},
     {file = "charset_normalizer-2.0.12-py3-none-any.whl", hash = "sha256:6881edbebdb17b39b4eaaa821b438bf6eddffb4468cf344f09f89def34a8b1df"},
+]
+chess = [
+    {file = "chess-1.9.0-py3-none-any.whl", hash = "sha256:02d1169a3db21451216474971f95b0609f4a22a18d2ced591a04b038357838fb"},
+    {file = "chess-1.9.0.tar.gz", hash = "sha256:7791833312ca930821a415d01e5b743e99fb540d65cae6cca0e02ba6a352a452"},
 ]
 frozenlist = [
     {file = "frozenlist-1.3.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:d2257aaba9660f78c7b1d8fea963b68f3feffb1a9d5d05a18401ca9eb3e8d0a3"},

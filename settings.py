@@ -9,7 +9,10 @@ import os
 
 import discord
 
+import cogs
+
 # Dev Mode
+
 DEV_MODE = False
 
 # Gateway Intents (https://discord.com/developers/docs/topics/gateway#gateway-intents)
@@ -20,7 +23,7 @@ INTENTS.members = True
 DEBUG_GUILDS = []
 
 # Disabled Cogs
-DISABLED_COGS = []
+DISABLED_COGS = [cogs.ChessCog]
 
 # Bot Token
 TOKEN = os.getenv("DEV_TOKEN" if DEV_MODE else "BOT_TOKEN")

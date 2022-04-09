@@ -6,7 +6,8 @@ from llist import dllistnode
 import cogs.uno.decorators
 import support
 import support.functions
-from cogs import about, rps, uno
+import support.views
+from cogs import about, rps, uno, chess
 
 
 class MasterCog(commands.Cog):
@@ -24,6 +25,7 @@ class AboutCog(MasterCog):
     """
     The cog for the About module, which displays meta information about 3515.games.
     """
+
     @slash_command(description="Allow me to reintroduce myself.")
     async def about(self, ctx):
         await about.AboutView(ctx=ctx).show_about()
@@ -57,7 +59,7 @@ class RockPaperScissorsCog(MasterCog):
         """
 
         # the invoker cannot challenge themselves
-        if ctx.user.id == opponent.id:
+        if ctx.user == opponent:
             await ctx.respond("You can't play with yourself!", ephemeral=True)
             return
 
@@ -199,7 +201,7 @@ class UnoCog(MasterCog):
 
             thread_url = f"https://discord.com/channels/{game_thread.guild.id}/{game_thread.id}"
 
-            await ctx.send(embed=embed, view=uno.GoToUnoThreadView(thread_url=thread_url))
+            await ctx.send(embed=embed, view=support.GoToGameThreadView(thread_url=thread_url))
 
             await uno_game.game_timer()
 
@@ -728,3 +730,94 @@ class UnoCog(MasterCog):
         for thread in [thread for thread in channel.threads if thread.id in uno.UnoGame.__all_games__.keys()]:
             uno_game = uno.UnoGame.retrieve_game(thread.id)
             await uno_game.force_close(reason="channel_deletion")
+
+
+class ChessCog(MasterCog):
+    """
+    The cog for the chess modules, which facilitates chess games between two members of the same Discord server.
+    """
+    chess_group = SlashCommandGroup("chess", "Commands for playing chess.")
+
+    @chess_group.command(description="Challenge someone to a game of chess.")
+    async def challenge(self,
+                        ctx: discord.ApplicationContext,
+                        opponent: Option(discord.User, "Mention a user to be your opponent.")):
+
+        if ctx.user == opponent:
+            await ctx.respond("You can't play with yourself!", ephemeral=True)
+            return
+
+        # confirm with the challenger (i.e. the invoker of /chess challenge) that they want to issue the challenge
+
+        msg = f"You're about to challenge {opponent.mention} to a game of chess. There are a few important things " \
+              f"you need to know:\n" \
+              f"\n" \
+              f"**Chess games are contained within [threads]" \
+              f"(https://support.discord.com/hc/en-us/articles/4403205878423-Threads-FAQ).** I'll handle the " \
+              f"creation and management of the thread for you. If you can `Manage Threads`, please refrain from " \
+              f"editing or deleting the thread until the game is over (trust me, I've got this).\n" \
+              f"\n" \
+              f"**Anyone can spectate.** Anyone who can both see and talk in this channel can spectate your game. " \
+              f"However, only you and your opponent will be able to talk in the game thread.\n" \
+              f"\n" \
+              f"**You can call it quits at any time.** Either you or your opponent can forfeit the game with " \
+              f"`/chess forfeit` or propose a stalemate with `/chess stalemate`.\n" \
+              f"\n" \
+              f"**I'm watching for inactivity.** If I determine either you or your opponent to have gone AFK, " \
+              f"I can forfeit the game on your behalves. Watch out.\n" \
+              f"\n" \
+              f"Challenge {opponent.mention} to a game of chess?"
+
+        embed = discord.Embed(title="Creating a Chess Game", description=msg, color=support.Color.orange())
+
+        view = support.ConfirmationView(ctx=ctx)
+        challenge_confirmation = await view.request_confirmation(
+            prompt_embeds=[embed],
+            ephemeral=True
+        )
+
+        if challenge_confirmation:
+            # ask the challenge recipient whether they accept the challenge
+            await ctx.interaction.edit_original_message(content=f"Waiting on {opponent.mention}...",
+                                                        embeds=[],
+                                                        view=None)
+
+            view = support.GameChallengeResponseView(ctx=ctx,
+                                                     target_user=opponent,
+                                                     challenger=ctx.user,
+                                                     game_name="a game of Chess"
+                                                     )
+
+            challenge_acceptance = await view.request_response()
+
+            if not challenge_acceptance:
+                return
+        else:
+            if challenge_confirmation is not None:
+                await ctx.interaction.edit_original_message(content="Okay! Your challenge was canceled.",
+                                                            embeds=[],
+                                                            view=None)
+                return
+
+        # create a new chess game
+        game_thread = await ctx.channel.create_thread(
+            name=f"Chess - {ctx.user.name} vs. {opponent.name}",
+            type=discord.ChannelType.public_thread,
+            auto_archive_duration=1440
+        )
+
+        chess_game = chess.ChessGame(thread=game_thread, players=[ctx.user, opponent])
+
+        await chess_game.open_lobby()
+
+        await game_thread.add_user(ctx.user)
+        await game_thread.add_user(opponent)
+
+        embed = discord.Embed(title="A chess game has begun!",
+                              description=f"{ctx.user.mention} has challenged {opponent.mention} to a game of chess. "
+                                          f"You can spectate their match by going to the game thread.",
+                              color=support.Color.mint())
+
+        thread_url = f"https://discordapp.com/channels/{game_thread.guild.id}/{game_thread.id}"
+
+        await ctx.send(embed=embed, view=support.GoToGameThreadView(thread_url=thread_url))

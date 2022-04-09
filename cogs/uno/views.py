@@ -10,16 +10,6 @@ from cogs import uno
 from support.views import EnhancedView, ConfirmationView
 
 
-class GoToUnoThreadView(EnhancedView):
-    """
-    Provides a URL button that points to a newly-created UNO game thread.
-    """
-
-    def __init__(self, thread_url, **kwargs):
-        super().__init__(**kwargs)
-        self.add_item(Button(label="Go to game thread", url=thread_url))
-
-
 class UnoTerminableView(EnhancedView):
     """
     A subclass of :class:`EnhancedView` whose views are set to automatically disabled themselves and stop
