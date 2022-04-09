@@ -38,6 +38,7 @@ class RockPaperScissorsCog(MasterCog):
 
     @rps_group.command(description="Challenge someone to a game of Rock-Paper-Scissors.")
     @support.functions.bot_has_permissions(support.GamePermissions.rps())
+    @support.functions.invoked_in_text_channel()
     async def challenge(
             self,
             ctx: discord.ApplicationContext,
