@@ -662,15 +662,41 @@ class UnoGame:
         self.banned_users.add(player_node.value.user)
         await self.thread.remove_user(player_node.value.user)
 
-        embed = discord.Embed(title=f"You were been banned from {posessive(self.host.name)} UNO game.",
-                              description=f"You were been banned from {self.host.name}'s UNO game in "
+        embed = discord.Embed(title=f"You were banned from {posessive(self.host.name)} UNO game.",
+                              description=f"You were banned from {self.host.name}'s UNO game in "
                                           f"{self.guild.name}. You can continue to spectate silently, but you won't "
-                                          f"be able to rejoin the game or talk in its thread.",
+                                          f"be able to play in the game or talk in its thread.",
                               color=support.Color.red())
 
         embed.timestamp = discord.utils.utcnow()
 
         await player_node.value.user.send(embed=embed)
+
+    async def ban_spectator(self, user: discord.User):
+        """
+        Bans a spectator from the game.
+
+        :param user: The :class:`discord.User` object of the spectator to ban.
+        """
+        embed = discord.Embed(title="Spectator Banned",
+                              description=f"{user.mention} was banned from this UNO game by "
+                                          f"the Game Host.",
+                              color=support.Color.red())
+
+        await self.thread.send(embed=embed)
+
+        self.banned_users.add(user)
+        await self.thread.remove_user(user)
+
+        embed = discord.Embed(title=f"You were banned from {posessive(self.host.name)} UNO game.",
+                              description=f"You were banned from {self.host.name}'s UNO game in "
+                                          f"{self.guild.name}. You can continue to spectate silently, but you won't "
+                                          f"be able to play in the game or talk in its thread.",
+                              color=support.Color.red())
+
+        embed.timestamp = discord.utils.utcnow()
+
+        await user.send(embed=embed)
 
     async def transfer_host(self, new_host: discord.User):
         """

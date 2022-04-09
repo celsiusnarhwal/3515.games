@@ -7,9 +7,9 @@ import support
 from cogs import uno
 
 
-def verify_context(level: str):
+def verify_context(level: str, verify_host: bool = False):
     """
-    A decorator which implements a tiered context verification system for UNO games. This system has four levels. In
+    A decorator which implements a context verification system for UNO games. This system has four levels. In
     order, they are:
 
     - "thread" (verifies that the context is an UNO game thread)
@@ -17,10 +17,15 @@ def verify_context(level: str):
     - "game" (verifies that the game has been started)
     - "turn" (verifies that it's the invoking players turn)
 
+
     Each verification level is inclusive of all previous ones, and *all* verification checks for the specified level
     must pass in order for the decorated command to execute.
 
+    If the ``verify_host`` flag is set to True, the decorator will also check that the invoking user is the Game Host;
+    this, however, is independent of the four verificiation levels described above.
+
     :param level: The verification level.
+    :param verify_host: Whether or not to verify that the invoking user is the Game Host.
     """
 
     async def predicate(ctx: discord.ApplicationContext):
@@ -78,6 +83,19 @@ def verify_context(level: str):
 
                 return False
 
+        async def verify_is_host():
+            game = uno.UnoGame.retrieve_game(ctx.channel_id)
+
+            if game.host == ctx.user:
+                return True
+            else:
+                message = f"Only the Game Host for this UNO game can use {command_name}."
+                embed = discord.Embed(title="You're not the Game Host.", description=message,
+                                      color=support.Color.red())
+                await ctx.respond(embed=embed, ephemeral=True)
+
+                return False
+
         checks = {
             "thread": is_uno_thread(),
             "player": is_player(),
@@ -92,6 +110,10 @@ def verify_context(level: str):
 
             if not success or key == level:
                 break
+
+        # we only want to bother verifying the game host if all the other checks passed
+        if success and verify_host:
+            success = await verify_is_host()
 
         return success
 
@@ -114,30 +136,8 @@ def verify_host_uniqueness():
                       "either complete, end, or transfer host powers for your current game.\n"
             embed = discord.Embed(title="You're already hosting a game.", description=message,
                                   color=support.Color.red())
-            game_thread_url = f"https://discord.com/channels/{ctx.guild_id}/{user_hosted_game.thread.id}"
+            game_thread_url = f"https://discord.com/channels/{user_hosted_game.guild.id}/{user_hosted_game.thread.id}"
             await ctx.respond(embed=embed, view=uno.GoToUnoThreadView(game_thread_url), ephemeral=True)
-
-            return False
-
-    return commands.check(predicate)
-
-
-def verify_is_host():
-    """
-    A decorator used to check that a command is being used by an UNO Game Host before executing it.
-    """
-
-    async def predicate(ctx: discord.ApplicationContext):
-        game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        command_name = f"`/{ctx.command.qualified_name}`"
-
-        if game.host == ctx.user:
-            return True
-        else:
-            message = f"Only the Game Host for this UNO game can use {command_name}."
-            embed = discord.Embed(title="You're not the Game Host.", description=message,
-                                  color=support.Color.red())
-            await ctx.respond(embed=embed, ephemeral=True)
 
             return False
 
