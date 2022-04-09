@@ -239,7 +239,7 @@ class UnoCog(MasterCog):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
 
         # users can't join games they're already in
-        if any(player for player in uno_game.players.itervalues() if player.user == ctx.user):
+        if uno_game.retrieve_player(ctx.user):
             msg = "You can't join an UNO game you're already a player in. If you meant to leave, use `/uno leave` " \
                   "instead."
             embed = discord.Embed(title="You're already in this game.", description=msg,
@@ -248,7 +248,7 @@ class UnoCog(MasterCog):
 
         # users can't join games they're banned from
         elif ctx.user in uno_game.banned_users:
-            msg = "You're banned from this game, so you can't rejoin."
+            msg = "You're banned from this game, so you can't play in it."
             embed = discord.Embed(title="You're banned from this game.", description=msg,
                                   color=support.Color.red())
             await ctx.respond(embed=embed, ephemeral=True)
@@ -399,8 +399,7 @@ class UnoCog(MasterCog):
 
     # game host commands
     @gamehost_group.command(name="start", description="Start an UNO game. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread")
-    @uno.decorators.verify_is_host()
+    @uno.decorators.verify_context(level="thread", verify_host=True)
     async def start_game(self, ctx: discord.ApplicationContext):
         """
         Starts an UNO game that has already been created and which at least one player aside from the Game Host has
@@ -448,8 +447,7 @@ class UnoCog(MasterCog):
                                                             view=None)
 
     @gamehost_group.command(name="abort", description="Abort an UNO game. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread")
-    @uno.decorators.verify_is_host()
+    @uno.decorators.verify_context(level="thread", verify_host=True)
     async def abort_game(self, ctx: discord.ApplicationContext):
         """
         Aborts an ongoing UNO game, forcefully ending it for all players. Can only be used by UNO Game Hosts in UNO game
@@ -473,8 +471,7 @@ class UnoCog(MasterCog):
             await ctx.interaction.edit_original_message(content="Okay! The game is still on.", embeds=[], view=None)
 
     @gamehost_group.command(name="kick", description="Kick a player from an UNO game. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread")
-    @uno.decorators.verify_is_host()
+    @uno.decorators.verify_context(level="thread", verify_host=True)
     async def kick_player(self, ctx: discord.ApplicationContext,
                           player: Option(discord.User, "Mention a player to kick.")):
         """
@@ -523,8 +520,7 @@ class UnoCog(MasterCog):
                                                             embeds=[], view=None)
 
     @gamehost_group.command(name="ban", description="Ban a user from an UNO game thread. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread")
-    @uno.decorators.verify_is_host()
+    @uno.decorators.verify_context(level="thread", verify_host=True)
     async def ban_player(self, ctx: discord.ApplicationContext,
                          user: Option(discord.User, "Mention a user to ban.")):
         """
@@ -534,7 +530,6 @@ class UnoCog(MasterCog):
         :param ctx: An ApplicationContext object.
         """
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        player_node: dllistnode = uno_game.retrieve_player(user, return_node=True)
 
         # the host can't ban the bot
         if user == ctx.me:
@@ -595,22 +590,20 @@ class UnoCog(MasterCog):
             if confirmation:
                 await ctx.interaction.edit_original_message(content=f"Banning {user.name}...",
                                                             embeds=[], view=None)
+
+                player_node: dllistnode = uno_game.retrieve_player(user, return_node=True)
+
                 if player_node:
                     await uno_game.ban_player(player_node)
                 else:
-                    embed = discord.Embed(title="Spectator Banned",
-                                          description=f"{user.mention} was banned from the thread by the Game Host.",
-                                          color=support.Color.red())
-                    await ctx.respond(embed=embed, ephemeral=True)
-                    await uno_game.thread.remove_user(user)
+                    await uno_game.ban_spectator(user)
             else:
                 await ctx.interaction.edit_original_message(content=f"Okay! {user.mention} remains in the game.",
                                                             embeds=[], view=None)
 
     @gamehost_group.command(name="transfer",
                             description="Transfer your host powers to another player. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread")
-    @uno.decorators.verify_is_host()
+    @uno.decorators.verify_context(level="thread", verify_host=True)
     async def transfer_host(self,
                             ctx: discord.ApplicationContext,
                             player: Option(discord.User, "Mention the player you want to transfer host "
@@ -627,7 +620,7 @@ class UnoCog(MasterCog):
             await ctx.respond(embed=embed, ephemeral=True)
 
         # user cannot transfer host powers to non-players
-        elif not any(p for p in uno_game.players.itervalues() if p.user == player):
+        elif not uno_game.retrieve_player(player):
             msg = "The new Game Host must be a player in this UNO game."
             embed = discord.Embed(title="That person's not a player.", description=msg,
                                   color=support.Color.red())
