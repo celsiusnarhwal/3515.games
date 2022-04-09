@@ -486,7 +486,7 @@ class UnoGame:
               f"{round_winner.user.name} currently has **{round_winner.points} points**, putting them in " \
               f"**{winner_rank} place**"
 
-        if round_winner.points <= self.settings.points_to_win:
+        if round_winner.points < self.settings.points_to_win:
             point_gap = self.settings.points_to_win - round_winner.points
             msg += f"—{self.settings.points_to_win - round_winner.points} point{'s' if point_gap > 1 else ''} " \
                    f"away from winning the game"
@@ -849,11 +849,12 @@ class UnoPlayer:
             else:
                 await self.play_card(selected_card)
 
-    async def play_card(self, card: UnoCard):
+    async def play_card(self, card: UnoCard, with_draw: bool = False):
         """
         Plays UNO cards.
 
         :param card: The card to play.
+        :param with_draw: Whether or not the card with automatically played after being drawn.
         """
         await self.reset_timeouts()
 
@@ -863,7 +864,7 @@ class UnoPlayer:
         self.num_cards_played += 1
 
         processor = UnoEventProcessor(self.game)
-        await processor.card_played_event(player=self, card=card)
+        await processor.card_played_event(player=self, card=card, with_draw=with_draw)
 
         if card.color.casefold() == "wild":
             await processor.wild_event(player=self)
@@ -896,10 +897,6 @@ class UnoPlayer:
 
             card = drawn_card[0]
 
-            processor = UnoEventProcessor(self.game)
-
-            await processor.card_drawn_event(player=self)
-
             embed_colors = {
                 "red": support.Color.brand_red(),
                 "blue": support.Color.blue(),
@@ -925,13 +922,17 @@ class UnoPlayer:
 
                     await ctx.interaction.followup.send(embed=embed, ephemeral=True)
 
-                await self.play_card(card)
+                await self.play_card(card, with_draw=True)
             else:
                 embed = discord.Embed(title="Card Drawn", description=f"You drew a **{str(card)}**.",
                                       color=embed_colors[card.color.casefold()])
                 embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
+
+                processor = UnoEventProcessor(self.game)
+                await processor.card_drawn_event(player=self)
+
                 await self.end_turn()
         elif view.success is False:
             msg = "Okay! Make your move whenever you're ready."
@@ -1140,12 +1141,13 @@ class UnoEventProcessor:
     def __init__(self, game: UnoGame):
         self.game = game
 
-    async def card_played_event(self, player: UnoPlayer, card: UnoCard):
+    async def card_played_event(self, player: UnoPlayer, card: UnoCard, with_draw: bool = False):
         """
         The handler for the event of playing a card.
 
         :param player: The player who played the card.
         :param card: The card that was played.
+        :param with_draw: Whether or not the card was automatically played after being drawn.
         """
         if card.color.casefold() != "wild":
             self.game.color_in_play = card.color
@@ -1160,7 +1162,9 @@ class UnoEventProcessor:
             "wild": support.Color.black(),
         }
 
-        embed = discord.Embed(title="Card Played", description=f"**{player.user.name}** plays a **{str(card)}**.",
+        embed = discord.Embed(title=f"Card {'Drawn and' if with_draw else ''} Played",
+                              description=f"**{player.user.name}** {'draws and' if with_draw else''} "
+                                          f"plays a **{str(card)}**.",
                               color=embed_colors[card.color.casefold()])
 
         embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
@@ -1222,7 +1226,7 @@ class UnoEventProcessor:
         next_player: UnoPlayer = await self.game.walk_players(self.game.current_player, 1, use_value=True)
         await next_player.add_cards(4)
 
-        self.game.turn_record[-1].add_field(name="🎬 Four Score!",
+        self.game.turn_record[-1].add_field(name="🍀 Four Score!",
                                             value=f"**{next_player.user.name}** draws four cards and "
                                                   f"forfeits their turn.",
                                             inline=False)
@@ -1236,8 +1240,8 @@ class UnoEventProcessor:
         skipped_player = await self.game.walk_players(self.game.current_player, 1, use_value=True)
 
         self.game.turn_record[-1].add_field(name="⏩ Fast Forward!",
-                                            value=f"**{posessive(skipped_player.user.name)}** turn has "
-                                                  f"been skipped.", inline=False)
+                                            value=f"**{posessive(skipped_player.user.name)}** turn is skipped.",
+                                            inline=False)
 
     async def reverse_event(self):
         """
@@ -1248,7 +1252,7 @@ class UnoEventProcessor:
         if len(self.game.players) == 2:
             self.game.skip_next_player = True
 
-        self.game.turn_record[-1].add_field(name="🔄 Reverse, Reverse!", value="The turn order has been reversed.",
+        self.game.turn_record[-1].add_field(name="🔄 Reverse, Reverse!", value="The turn order is reversed.",
                                             inline=False)
 
     async def wild_event(self, player: UnoPlayer):
