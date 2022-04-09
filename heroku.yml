@@ -1,6 +1,3 @@
 build:
   docker:
     web: Dockerfile
-run:
-  command:
-    - poetry run python3 main.py
