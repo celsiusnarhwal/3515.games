@@ -144,3 +144,13 @@ class ServerBoostURLView(EnhancedView):
         super().__init__(**kwargs)
         self.add_item(Button(label="Learn more about Server Boosting",
                              url="https://support.discord.com/hc/en-us/articles/360028038352-Server-Boosting-FAQ"))
+
+
+class GoToGameThreadView(EnhancedView):
+    """
+    Provides a URL button that points to a newly-created game thread.
+    """
+
+    def __init__(self, thread_url, **kwargs):
+        super().__init__(**kwargs)
+        self.add_item(Button(label="Go to game thread", url=thread_url))

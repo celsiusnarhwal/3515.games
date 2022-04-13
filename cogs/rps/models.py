@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os.path
+import os
 import random
 
 import discord

@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 
 import support
+import support.views
 from cogs import uno
 
 
@@ -137,7 +138,7 @@ def verify_host_uniqueness():
             embed = discord.Embed(title="You're already hosting a game.", description=message,
                                   color=support.Color.red())
             game_thread_url = f"https://discord.com/channels/{user_hosted_game.guild.id}/{user_hosted_game.thread.id}"
-            await ctx.respond(embed=embed, view=uno.GoToUnoThreadView(game_thread_url), ephemeral=True)
+            await ctx.respond(embed=embed, view=support.views.GoToGameThreadView(game_thread_url), ephemeral=True)
 
             return False
 

@@ -10,16 +10,6 @@ from cogs import uno
 from support.views import EnhancedView, ConfirmationView
 
 
-class GoToUnoThreadView(EnhancedView):
-    """
-    Provides a URL button that points to a newly-created UNO game thread.
-    """
-
-    def __init__(self, thread_url, **kwargs):
-        super().__init__(**kwargs)
-        self.add_item(Button(label="Go to game thread", url=thread_url))
-
-
 class UnoTerminableView(EnhancedView):
     """
     A subclass of :class:`EnhancedView` whose views are set to automatically disabled themselves and stop
@@ -133,7 +123,7 @@ class UnoCardSelectView(UnoTerminableView):
             played_card: uno.UnoCard = discord.utils.find(lambda x: x.uuid == selected_option, self.player.hand)
 
             # verify that the card is playable
-            if not await self.game.is_card_playable(played_card):
+            if not self.game.is_card_playable(played_card):
                 msg = "You can only play a card that matches the color or suit of the last card played. " \
                       "Pick a different card, or draw a card with `/uno draw` if there are no cards you can play."
                 embed = discord.Embed(title="You can't play that card.", description=msg,
@@ -160,7 +150,6 @@ class UnoCardSelectView(UnoTerminableView):
               f"last card played. You can also play a Wild or Wild Draw Four card, if you have one."
         msg += f"\n\n{self.game.last_move}" if self.game.last_move else \
             "\n\nNo cards have been played during this round yet, so you can play any card in your hand."
-        msg += "\n\nYou can view all your cards with `/uno hand`."
 
         embed = discord.Embed(title="Play a Card", description=msg, color=support.Color.mint())
 
@@ -178,7 +167,7 @@ class UnoCardSelectView(UnoTerminableView):
         A callback for a button that switches the menu to only show cards that can played this round.
         """
 
-        playable_cards = [card for card in self.cards if await self.game.is_card_playable(card)]
+        playable_cards = [card for card in self.cards if self.game.is_card_playable(card)]
         if playable_cards:
             self.paginator = self.UnoCardSelectPaginator(
                 pages=DoublyLinkedList([playable_cards[i:i + 23] for i in range(0, len(playable_cards), 23)])
@@ -193,7 +182,7 @@ class UnoCardSelectView(UnoTerminableView):
 
             await self.ctx.interaction.edit_original_message(view=self)
         else:
-            msg = "You have no cards that can be played this round. You must draw a card with `/uno draw`."
+            msg = "You have no cards that can be played this turn. You must draw a card with `/uno draw`."
             embed = discord.Embed(title="No Playable Cards", description=msg,
                                   color=support.Color.red())
 
@@ -251,7 +240,6 @@ class UnoCardSelectView(UnoTerminableView):
               f"last card played. You can also play a Wild or Wild Draw Four card, if you have one."
         msg += f"\n\n{self.game.last_move}" if self.game.last_move else \
             "\n\nNo cards have been played during this round yet, so you can play any card in your hand."
-        msg += "\n\nYou can view all your cards with `/uno hand`."
 
         embed = discord.Embed(title="Play a Card", description=msg, color=support.Color.mint())
         await self.ctx.respond(embed=embed, view=self, ephemeral=True)
@@ -566,7 +554,7 @@ class UnoStatusCenterView(EnhancedView):
 
                     # if there are multiple but less than four players in last place, print all of their names
                     elif len(group) <= 3:
-                        string += "&".join(
+                        string += ", & ".join(
                             f"{index + 1}. {', '.join(player.user.name for player in group)}".rsplit(",", 1)
                         )
 
