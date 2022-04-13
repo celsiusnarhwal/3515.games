@@ -613,7 +613,7 @@ class UnoGame:
                 await processor.turn_timeout_event(player=player)
                 await player.end_turn()
 
-    async def is_card_playable(self, card: UnoCard):
+    def is_card_playable(self, card: UnoCard):
         """
         Given an :class:`UnoCard`, this method determines whether it can be played on the current turn.
         """
@@ -925,14 +925,14 @@ class UnoPlayer:
             card = drawn_card[0]
 
             embed_colors = {
-                "red": support.Color.brand_red(),
-                "blue": support.Color.blue(),
-                "green": support.Color.green(),
-                "yellow": support.Color.yellow(),
+                "red": support.Color.uno_red(),
+                "blue": support.Color.uno_blue(),
+                "green": support.Color.uno_green(),
+                "yellow": support.Color.uno_yellow(),
                 "wild": support.Color.black(),
             }
 
-            if view.autoplay and await self.game.is_card_playable(card) and card.color.casefold() != "wild":
+            if view.autoplay and self.game.is_card_playable(card) and card.color.casefold() != "wild":
                 # play the card if it can be played on the current turn and isn't a wild or wild draw four
                 embed = discord.Embed(title="Card Drawn and Played",
                                       description=f"You drew and played a **{str(card)}**.",
@@ -941,9 +941,9 @@ class UnoPlayer:
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
 
-                if len(self.hand) == 2 and not self.can_say_uno:
+                if len(self.hand) - 1 == 1:
                     embed = discord.Embed(title="One Card Remaining",
-                                          description="You'll need to say 'UNO!' again or risk being called out by "
+                                          description="You'll need to say 'UNO!' or risk being called out by "
                                                       "another player.",
                                           color=support.Color.orange())
 
@@ -1070,12 +1070,12 @@ class UnoPlayer:
             if not view.is_finished():
                 await view.full_stop()
 
+        if len(self.hand) == 1 and not self.has_said_uno:
+            self.can_say_uno = True
+
         await self.game.end_current_turn()
 
         self.terminable_views.clear()
-
-        if len(self.hand) == 1 and not self.has_said_uno:
-            self.can_say_uno = True
 
 
 class UnoCard:
@@ -1182,14 +1182,14 @@ class UnoEventProcessor:
         self.game.suit_in_play = card.suit
 
         embed_colors = {
-            "red": support.Color.brand_red(),
-            "blue": support.Color.blue(),
-            "green": support.Color.green(),
-            "yellow": support.Color.yellow(),
+            "red": support.Color.uno_red(),
+            "blue": support.Color.uno_blue(),
+            "green": support.Color.uno_green(),
+            "yellow": support.Color.uno_yellow(),
             "wild": support.Color.black(),
         }
 
-        embed = discord.Embed(title=f"Card {'Drawn and' if with_draw else ''} Played",
+        embed = discord.Embed(title=f"Card {'Drawn and ' if with_draw else ''}Played",
                               description=f"**{player.user.name}** {'draws and' if with_draw else ''} "
                                           f"plays a **{str(card)}**.",
                               color=embed_colors[card.color.casefold()])
@@ -1290,8 +1290,7 @@ class UnoEventProcessor:
         """
 
         self.game.turn_record[-1].add_field(name="🎲 A Wild card appears!",
-                                            value=f"**{player.user.name}** plays a Wild card. "
-                                                  f"The color in play changes to "
+                                            value=f"**{player.user.name}** changes the color in play to "
                                                   f"**{self.game.color_in_play.title()}**.",
                                             inline=False)
 

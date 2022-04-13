@@ -2,9 +2,6 @@
 Production settings.
 """
 
-# Don't change these settings unless there's a *very* good reason to. To override these settings in a development
-# environment, use local_settings.py, or create it if it doesn't exist.
-
 import os
 
 import discord
