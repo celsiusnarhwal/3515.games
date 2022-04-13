@@ -925,10 +925,10 @@ class UnoPlayer:
             card = drawn_card[0]
 
             embed_colors = {
-                "red": support.Color.uno_red(),
-                "blue": support.Color.uno_blue(),
-                "green": support.Color.uno_green(),
-                "yellow": support.Color.uno_yellow(),
+                "red": support.Color.brand_red(),
+                "blue": support.Color.blue(),
+                "green": support.Color.green(),
+                "yellow": support.Color.yellow(),
                 "wild": support.Color.black(),
             }
 
@@ -1182,10 +1182,10 @@ class UnoEventProcessor:
         self.game.suit_in_play = card.suit
 
         embed_colors = {
-            "red": support.Color.uno_red(),
-            "blue": support.Color.uno_blue(),
-            "green": support.Color.uno_green(),
-            "yellow": support.Color.uno_yellow(),
+            "red": support.Color.brand_red(),
+            "blue": support.Color.blue(),
+            "green": support.Color.green(),
+            "yellow": support.Color.yellow(),
             "wild": support.Color.black(),
         }
 

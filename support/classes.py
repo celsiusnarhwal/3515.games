@@ -7,17 +7,13 @@ class Color(discord.Color):
     """
     An extension of Pycord's ``discord.Color`` class that implements additional colors not included with the library.
     Because it subclasses ``discord.Color``, both the standard Pycord colors and the custom colors implemented
-    by this class can be accessed from ``Color`` objects, avoiding the need to flip-flop between
+    by this class can be accessed from the ``Color`` class, avoiding the need to flip-flop between
     ``Color`` and ``discord.Color``.
     """
 
     @classmethod
     def mint(cls):
         return cls(0x03cb98)
-
-    @classmethod
-    def cyan(cls):
-        return cls(0x00ffff)
 
     @classmethod
     def white(cls):
