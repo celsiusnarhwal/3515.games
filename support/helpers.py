@@ -123,4 +123,4 @@ def posessive(string: str) -> str:
 
     :param string: The string to append the possessive ending to.
     """
-    return f"{string}'" if string.endswith('s') else f"{string}'s"
+    return f"{string}'" if string.endswith("s") else f"{string}'s"

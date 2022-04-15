@@ -95,3 +95,21 @@ class GamePermissions(discord.Permissions):
         - Use External Emojis
         """
         return cls(cls.universal().value | 360777703424)
+
+    @classmethod
+    def chess(cls):
+        """
+        The set of permissions required for chess.
+
+        Returns a :class:`discord.Permissions` object with ``GamePermissions.universal()`` and the following
+        permissions:
+
+        - Create Public Threads
+        - Send Messages in Threads
+        - Manage Messages
+        - Manage Threads
+        - Embed Links
+        - Attach Files
+        - Use External Emojis
+        """
+        return cls(cls.universal().value | 326417833984)

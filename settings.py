@@ -9,7 +9,6 @@ import discord
 import cogs
 
 # Dev Mode
-
 DEV_MODE = False
 
 # Gateway Intents (https://discord.com/developers/docs/topics/gateway#gateway-intents)

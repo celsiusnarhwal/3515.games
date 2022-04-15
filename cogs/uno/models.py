@@ -525,7 +525,7 @@ class UnoGame:
                               description=f"It's {posessive(self.current_player.value.user.name)} turn.",
                               color=support.Color.white())
 
-        embed.set_thumbnail(url=self.current_player.value.user.display_avatar.url)
+        embed.set_thumbnail(url=self.current_player.value.user.display_avatar.attachment_url)
 
         await self.thread.send(content=f"{self.current_player.value.user.mention}, it's your turn.", embed=embed)
         await self.turn_timer()
