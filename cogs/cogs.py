@@ -683,10 +683,11 @@ class UnoCog(MasterCog):
         if uno_game:
             if discord.utils.find(lambda user: user.id == thread_member.id, uno_game.banned_users):
                 await thread_member.thread.remove_user(thread_member)
-                await thread_member.thread.purge(limit=2, check=lambda user: user.author.id == thread_member.id)
+                await thread_member.thread.purge(limit=2, check=lambda message: message.author.id == thread_member.id)
 
     @commands.Cog.listener()
     async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
+
         """
         A listener that runs whenever a user is removed from a thread. This runs whenever *any* user is removed from
         *any* thread in the server, regardless of whether they're playing an UNO game or being removed from an UNO game
@@ -727,7 +728,7 @@ class UnoCog(MasterCog):
         :param channel: The deleted channel.
         """
         # call force_close_channel_deletion() for all channel threads associated with UNO games
-        for thread in [thread for thread in channel.threads if thread.id in uno.UnoGame.__all_games__.keys()]:
+        for thread in [thread for thread in channel.threads if thread.id in uno.UnoGame.retrieve_game(thread.id)]:
             uno_game = uno.UnoGame.retrieve_game(thread.id)
             await uno_game.force_close(reason="channel_deletion")
 
@@ -737,7 +738,6 @@ class ChessCog(MasterCog):
     The cog for the chess modules, which facilitates chess games between two members of the same Discord server.
     """
     chess_group = SlashCommandGroup("chess", "Commands for playing chess.")
-    draw_group = chess_group.create_subgroup("draw", "Commands for proposing draws a chess game.")
 
     @chess_group.command(description="Challenge someone to a game of chess.")
     @support.helpers.bot_has_permissions(support.GamePermissions.chess())
@@ -763,6 +763,15 @@ class ChessCog(MasterCog):
             msg = "You can only play with real people. Choose someone else to challenge."
             embed = discord.Embed(title="That's a bot.", description=msg, color=support.Color.red())
             await ctx.respond(embed=embed, ephemeral=True)
+
+        elif chess.ChessGame.retrieve_duplicate_game(players=[ctx.user, opponent], guild=ctx.guild):
+            chess_game = chess.ChessGame.retrieve_duplicate_game(players=[ctx.user, opponent], guild=ctx.guild)
+            msg = f"You're in an ongoing chess match with {opponent.mention} in this server. " \
+                  f"You'll need to wrap it up before you can challenge them to another one."
+            embed = discord.Embed(title=f"You're already playing with {opponent.name}.", description=msg,
+                                  color=support.Color.red())
+            thread_url = f"https://discord.com/channels/{chess_game.guild.id}/{chess_game.thread.id}"
+            await ctx.respond(embed=embed, view=support.GoToGameThreadView(thread_url=thread_url), ephemeral=True)
 
         else:
             # confirm with the challenger (i.e. the invoker of /chess challenge) that they want to issue the challenge
@@ -838,7 +847,9 @@ class ChessCog(MasterCog):
 
             await ctx.send(embed=embed, view=support.GoToGameThreadView(thread_url=thread_url))
 
-    @chess_group.command(description="Mark yourself as ready to begin a chess match.")
+            await chess_game.game_timer()
+
+    @chess_group.command(description="Identify yourself as ready to begin a chess match.")
     async def ready(self, ctx: discord.ApplicationContext):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
@@ -848,10 +859,10 @@ class ChessCog(MasterCog):
             embed = discord.Embed(title="You're already ready.", description=msg, color=support.Color.red())
             await ctx.respond(embed=embed, ephemeral=True)
         else:
-            msg = "The game will start as soon as both players are ready. Make sure you really are ready to play; " \
+            msg = "The match will begin as soon as both players are ready. Make sure you really are ready to play; " \
                   "once you select the Yes button below, you won't be able to change your mind.\n" \
                   "\n" \
-                  "Mark yourself as ready?"
+                  "Identify yourself as ready?"
             embed = discord.Embed(title="Ready to play?", description=msg, color=support.Color.orange())
 
             view = support.ConfirmationView(ctx=ctx)
@@ -875,7 +886,7 @@ class ChessCog(MasterCog):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
-        if self.game.has_started:
+        if chess_game.has_started:
             msg = "Forfeiting will cause you to be declared the loser. If this outcome is not desirable, consider " \
                   "proposing a draw instead.\n" \
                   "\n" \
@@ -898,55 +909,53 @@ class ChessCog(MasterCog):
             await ctx.interaction.edit_original_message(content="Forfeiting the match...", view=None, embeds=[])
             await player.forfeit()
         else:
-            await ctx.interaction.edit_original_message(content=f"Okay! The game is still on", view=None, embeds=[])
+            await ctx.interaction.edit_original_message(content=f"Okay! The game is still on.", view=None, embeds=[])
 
-    @draw_group.command(description="Propose a draw in a chess match.")
-    async def propose(self, ctx: discord.ApplicationContext):
+    @chess_group.command(description="Propose a draw in a chess match, or rescind a proposal you've already made.")
+    async def draw(self,
+                   ctx: discord.ApplicationContext,
+                   mode: Option(str, description="Choose whether to propose a draw or rescind an existing proposal.",
+                                choices=["Propose", "Rescind"])):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
-
-        if player.has_proposed_draw:
-            msg = "You'll need to resicind your current proposal with `/chess draw rescind` before you can make a " \
-                  "new one."
-            embed = discord.Embed(title="You've already proposed a draw.",
-                                  description=msg, color=support.Color.red())
-            await ctx.respond(embed=embed, ephemeral=True)
-        else:
-            msg = "If you think it's time to wrap things up, you can propose a draw. If your opponent accepts, " \
-                  "the match will end in a draw, with neither player being declared the winner.\n" \
-                  "\n" \
-                  "If you change your mind before your opponent accepts (or rejects) your proposal, you can rescind " \
-                  "your proposal with `/chess draw rescind`.\n" \
-                  "\n" \
-                  "Propose a draw?"
-
-            embed = discord.Embed(title="Proposing a Draw", description=msg, color=support.Color.orange())
-
-            view = support.ConfirmationView(ctx=self.game.ctx)
-
-            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
-
-            if confirmation:
-                await ctx.interaction.edit_original_message(content="Proposing a draw...", view=None, embeds=[])
-                await player.propose_draw()
+        if mode == "Propose":
+            if player.has_proposed_draw:
+                msg = "You'll need to resicind your current proposal before you can make a new one."
+                embed = discord.Embed(title="You've already proposed a draw.",
+                                      description=msg, color=support.Color.red())
+                await ctx.respond(embed=embed, ephemeral=True)
             else:
-                await ctx.interaction.edit_original_message(content=f"Okay! You can use `/{ctx.command.qualified_name} "
-                                                                    f"at any time if you change your mind.",
-                                                            view=None, embeds=[])
+                msg = f"If you think it's time to wrap things up, you can propose a draw. If " \
+                      f"{player.opponent.user.mention} accepts, the match will end in a draw, with neither player " \
+                      f"being declared the winner.\n" \
+                      "\n" \
+                      "If you change your mind before your opponent accepts your proposal, you can rescind your " \
+                      "proposal by using `/chess draw` and selecting the 'Rescind' option.\n" \
+                      "\n" \
+                      "Propose a draw?"
 
-    @draw_group.command(description="Rescind a proposed draw in a chess match.")
-    async def rescind(self, ctx: discord.ApplicationContext):
-        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
-        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+                embed = discord.Embed(title="Proposing a Draw", description=msg, color=support.Color.orange())
 
-        if not player.has_proposed_draw:
-            msg = "You need to propose a draw with `/chess draw propose` before you can rescind one."
-            embed = discord.Embed(title="You haven't proposed a draw.", description=msg, color=support.Color.red())
+                view = support.ConfirmationView(ctx=ctx)
 
-            await ctx.respond(embed=embed, ephemeral=True)
-        else:
-            await ctx.respond(content="Rescinding your proposal...", )
-            await player.rescind_draw()
+                confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+                if confirmation:
+                    await ctx.interaction.edit_original_message(content="Proposing a draw...", view=None, embeds=[])
+                    await player.propose_draw()
+                else:
+                    await ctx.interaction.edit_original_message(
+                        content=f"Okay! You can propose a draw at any time if you change your mind.",
+                        view=None, embeds=[])
+        elif mode == "Rescind":
+            if not player.has_proposed_draw:
+                msg = "You need to propose a draw before you can rescind one."
+                embed = discord.Embed(title="You haven't proposed a draw.", description=msg, color=support.Color.red())
+
+                await ctx.respond(embed=embed, ephemeral=True)
+            else:
+                await ctx.respond(content="Rescinding your proposal...", ephemeral=True)
+                await player.rescind_draw()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -954,3 +963,31 @@ class ChessCog(MasterCog):
 
         if chess_game and not chess_game.retrieve_player(message.author) and not message.author.bot:
             await message.delete()
+
+    @commands.Cog.listener()
+    async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(thread_member.thread_id)
+        player: chess.ChessPlayer = chess_game.retrieve_player(thread_member)
+
+        if player:
+            await player.forfeit()
+
+            msg = f"I forfeited your chess match against {player.opponent} in {chess_game.guild} on your behalf " \
+                  f"because you left the game thread."
+
+            embed = discord.Embed(title="Chess Match Forfeited", description=msg, color=support.Color.red())
+
+            await player.user.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_raw_thread_delete(self, thread: discord.RawThreadDeleteEvent):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(thread.thread_id)
+
+        if chess_game:
+            await chess_game.force_close(reason="thread_deletion")
+
+    @commands.Cog.listener()
+    async def on_guild_channel_delete(self, channel):
+        for thread in [thread for thread in channel.threads if chess.ChessGame.retrieve_game(thread.id)]:
+            chess_game = chess.ChessGame.retrieve_game(thread.id)
+            await chess_game.force_close(reason="channel_deletion")

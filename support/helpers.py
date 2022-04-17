@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import alianator
 import discord
 from discord import ButtonStyle
 from discord.ext import pages, commands
-from titlecase import titlecase
 
 import support
 
@@ -26,33 +26,6 @@ def bot_has_permissions(expected_permissions):
         if actual_permissions.is_superset(expected_permissions):
             return True
         else:
-            def resolve_name(permission_name: str) -> str:
-                """
-                Returns the user-facing aliases for permissions whose API names don't match up with their names
-                in the Discord user interface.
-                :param permission_name: The name of the permission.
-                :return: The user-facing alias of the permission.
-                """
-
-                # the inlcusion of a permission in this dictionary does NOT necessarily mean it's used by the bot
-                names = {
-                    "external_emojis": "Use External Emoji",
-                    "external_stickers": "Use External Stickers",
-                    "manage_emojis": "Manage Emojis and Stickers",
-                    "manage_guild": "Manage Server",
-                    "mention_everyone": "Mention \\@everyone, \\@here, and All Roles",
-                    "moderate_members": "Timeout Members",
-                    "send_tts_messages": "Send Text-to-Speech Messages",
-                    "start_embedded_activities": "Use Activities",
-                    "stream": "Video",
-                    "use_slash_commands": "Use Application Commands",
-                    "use_voice_activation": "Use Voice Activity",
-                }
-
-                # simply removing the underscores and titlecasing the name will give us the user-facing alias in most
-                # cases. the name resolution dictionary is only for when that doesn't work
-                return names.get(permission_name) or titlecase(permission_name.replace("_", " "))
-
             # the missing permissions are represented by the intersection of the expected permissions and the
             # complement of the actual permissions (in english, it's the set of permissions that the bot both needs
             # and doesn't have)
@@ -62,8 +35,7 @@ def bot_has_permissions(expected_permissions):
                       f"`/{ctx.command.qualified_name}`: \n\n"
 
             message += "\n".join(
-                [f"- {resolve_name(p[0])}" for p in missing_permissions if
-                 p[1] is True]
+                f"- {alianator.resolve(missing_permissions)}"
             )
 
             message += "\n\n Once I've been given those permissions, try again."

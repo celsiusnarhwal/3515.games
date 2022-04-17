@@ -15,6 +15,7 @@ inflect = "^5.4.0"
 chess = "^1.9.0"
 svglib = "^1.2.1"
 path = "^16.4.0"
+alianator = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 pip-licenses = "^3.5.3"

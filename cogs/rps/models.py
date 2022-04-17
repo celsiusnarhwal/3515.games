@@ -82,8 +82,8 @@ class RPSGame:
         intro_embed = discord.Embed(title="Rock-Paper-Scissors: Game Start!", description=game_intro_text,
                                     color=support.Color.mint())
 
-        intro_gif = random.choice(os.listdir("cogs/rps/files/intro_gifs"))
-        gif_file = discord.File(f"cogs/rps/files/intro_gifs/{intro_gif}", filename=intro_gif)
+        intro_gif = random.choice(os.listdir(os.path.join(support.assets.rps, "intro_gifs")))
+        gif_file = discord.File(os.path.join(support.assets.rps, "intro_gifs", intro_gif), filename=intro_gif)
         intro_embed.set_image(url=f"attachment://{intro_gif}")
 
         await ctx.send(embed=intro_embed, file=gif_file)

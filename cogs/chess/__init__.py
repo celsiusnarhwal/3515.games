@@ -1,2 +1,2 @@
-from cogs.chess.helpers import *
+import cogs.chess.helpers
 from cogs.chess.models import *
