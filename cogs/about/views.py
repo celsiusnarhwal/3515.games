@@ -24,7 +24,8 @@ class AboutView(EnhancedView):
     @discord_button(label="Acknowledgements", style=ButtonStyle.gray)
     async def view_acknowledgements(self, button: Button, interaction: Interaction):
 
-        licenses = json.load(open(os.path.join(os.getcwd(), "licenses.json")))
+        with support.Assets.about():
+            licenses = json.load(open("licenses.json"))
 
         pages = []
         for oss_license in licenses:
@@ -80,7 +81,9 @@ class AboutView(EnhancedView):
 
         about_embed = discord.Embed(title="About Me", description=about_text,
                                     color=support.Color.mint())
-        bot_logo = discord.File("bot_logo.png", filename="bot_logo.png")
-        about_embed.set_image(url="attachment://bot_logo.png")
 
-        await self.ctx.respond(embed=about_embed, file=bot_logo, view=self, ephemeral=True)
+        with support.Assets.about():
+            bot_logo = discord.File("bot_logo.png", filename="bot_logo.png")
+            about_embed.set_image(url="attachment://bot_logo.png")
+
+            await self.ctx.respond(embed=about_embed, file=bot_logo, view=self, ephemeral=True)

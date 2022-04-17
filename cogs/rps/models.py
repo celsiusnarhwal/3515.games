@@ -82,11 +82,12 @@ class RPSGame:
         intro_embed = discord.Embed(title="Rock-Paper-Scissors: Game Start!", description=game_intro_text,
                                     color=support.Color.mint())
 
-        intro_gif = random.choice(os.listdir(os.path.join(support.assets.rps, "intro_gifs")))
-        gif_file = discord.File(os.path.join(support.assets.rps, "intro_gifs", intro_gif), filename=intro_gif)
-        intro_embed.set_image(url=f"attachment://{intro_gif}")
+        with support.Assets.rps():
+            intro_gif = random.choice(os.listdir("intro_gifs"))
+            gif_file = discord.File(os.path.join("intro_gifs", intro_gif), filename=intro_gif)
+            intro_embed.set_image(url=f"attachment://{intro_gif}")
 
-        await ctx.send(embed=intro_embed, file=gif_file)
+            await ctx.send(embed=intro_embed, file=gif_file)
 
     async def select_player_moves(self, ctx):
         """

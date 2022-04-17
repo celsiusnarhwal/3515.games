@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import copy
 import json
-import os
 import random
 import string
 import uuid
@@ -288,7 +287,8 @@ class UnoGame:
         # noinspection PyTypeChecker
         random.shuffle(self.players)
 
-        start_lines = open(os.path.join(support.assets.uno, "uno_start_lines.txt")).readlines()
+        with support.Assets.uno():
+            start_lines = open("uno_start_lines.txt").readlines()
 
         msg = random.choice(start_lines).replace("\n", "") + "\n\n"
 
@@ -314,9 +314,12 @@ class UnoGame:
                "Let's play!"
 
         embed = discord.Embed(title="Let's play UNO!", description=msg, color=support.Color.mint())
-        uno_logo = discord.File(os.path.join(support.assets.uno, "uno_logo.png"), filename="uno_logo.png")
-        embed.set_image(url="attachment://uno_logo.png")
-        await self.thread.send(content="@everyone", embed=embed, file=uno_logo)
+
+        with support.Assets.uno():
+            uno_logo = discord.File("uno_logo.png", filename="uno_logo.png")
+            embed.set_image(url="attachment://uno_logo.png")
+
+            await self.thread.send(content="@everyone", embed=embed, file=uno_logo)
 
         await asyncio.sleep(3)
 
@@ -1099,7 +1102,8 @@ class UnoCard:
         # included in a standard deck (approx 1.85% for any given card). this differs from a standard UNO game - in a
         # real, physical, UNO deck, not all cards appear with the same frequency.
 
-        card_emoji = json.load(open(os.path.join(support.assets.uno, "uno_card_emotes.json")))
+        with support.Assets.uno():
+            card_emoji = json.load(open("uno_card_emotes.json"))
 
         # for each color (red, blue, green, yellow), there are 13 cards (ten numbered cards 0-9 + reverse, skip,
         # and draw two)
@@ -1352,7 +1356,6 @@ class UnoEventProcessor:
             self.game.turn_record.append(embed)
 
 
-# TODO stat graphs with seaborn?
 class UnoStatusCenter:
     """
     The backend of the UNO Status Center. (The frontend is :class:`uno.views.UnoStatusCenterView`.)

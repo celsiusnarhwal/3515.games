@@ -32,11 +32,9 @@ def bot_has_permissions(expected_permissions):
             missing_permissions = discord.Permissions(expected_permissions.value & ~actual_permissions.value)
 
             message = f"I'm missing the following permissions that I need in order to use " \
-                      f"`/{ctx.command.qualified_name}`: \n\n"
+                      f"`/{ctx.command.qualified_name}` in this channel: \n\n"
 
-            message += "\n".join(
-                f"- {alianator.resolve(missing_permissions)}"
-            )
+            message += "\n".join(f"- {p}" for p in alianator.resolve(missing_permissions))
 
             message += "\n\n Once I've been given those permissions, try again."
 

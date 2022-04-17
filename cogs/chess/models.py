@@ -26,7 +26,7 @@ class ChessGame:
         self.current_player = None
         self.board = pychess.Board()
 
-        random.shuffle(players)
+        random.shuffle(self.players)
 
         self.white = self.players[0]
         self.black = self.players[1]
@@ -153,7 +153,7 @@ class ChessGame:
     async def start_next_turn(self):
         self.current_player = self.white if self.current_player != self.white else self.black
 
-        embed = discord.Embed(title="New Turn", description=f"It's {posessive(self.current_player.user.name)}'s turn.",
+        embed = discord.Embed(title="New Turn", description=f"It's {posessive(self.current_player.user.name)} turn.",
                               color=self.current_player.get_embed_color())
 
         embed.set_thumbnail(url=self.current_player.user.display_avatar.url)
