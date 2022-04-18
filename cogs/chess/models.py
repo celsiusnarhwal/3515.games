@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+import uuid
 from collections import Counter
 
 import chess as pychess
@@ -13,8 +14,6 @@ from support import posessive
 
 
 class ChessGame:
-    # TODO add turn timer
-    # TODO create context verification decorator
     __all_games__ = dict()
 
     def __init__(self, players, thread: discord.Thread):
@@ -24,6 +23,7 @@ class ChessGame:
         self.has_started = False
         self.players = [ChessPlayer(player, self) for player in players]
         self.current_player = None
+        self.turn_uuid = None
         self.board = pychess.Board()
 
         random.shuffle(self.players)
@@ -65,7 +65,7 @@ class ChessGame:
 
         async def thread_deletion():
             for player in self.players:
-                msg = f"Your chess match against {player.opponent} in {self.guild} was forced to end because " \
+                msg = f"Your chess match against {player.opponent.mention} in {self.guild} was forced to end because " \
                       f"its game thread was deleted."
 
                 embed = discord.Embed(title="Your chess match was forced to end.", description=msg,
@@ -77,7 +77,7 @@ class ChessGame:
 
         async def channel_deletion():
             for player in self.players:
-                msg = f"Your chess match against {player.opponent} in {self.guild} was forced to end because " \
+                msg = f"Your chess match against {player.opponent.mention} in {self.guild} was forced to end because " \
                       f"the parent channel of its game thread was deleted."
 
                 embed = discord.Embed(title="Your chess match was forced to end.", description=msg,
@@ -151,6 +151,7 @@ class ChessGame:
         await self.start_next_turn()
 
     async def start_next_turn(self):
+        self.turn_uuid = uuid.uuid4()
         self.current_player = self.white if self.current_player != self.white else self.black
 
         embed = discord.Embed(title="New Turn", description=f"It's {posessive(self.current_player.user.name)} turn.",
@@ -160,16 +161,30 @@ class ChessGame:
 
         await self.thread.send(content=f"{self.current_player.user.mention}, it's your turn.", embed=embed)
 
+        await self.turn_timer()
+
+    async def turn_timer(self):
+        turn_uuid = self.turn_uuid
+
+        await asyncio.sleep(120)
+        if turn_uuid == self.turn_uuid:
+            msg = f"{self.current_player.user.mention} took too long to move."
+            embed = discord.Embed(title=f"{self.current_player.user.name} timed out.",
+                                  description=msg, color=support.Color.red())
+            await self.thread.send(embed=embed)
+
+            await self.end_game(reason="timeout", player=self.current_player)
+
     async def end_game(self, reason: str, **kwargs):
         self.__all_games__.pop(self.thread.id)
 
         async def forfeit():
-            forfeiter = kwargs.get("player")
+            forfeiter: ChessPlayer = kwargs.get("player")
 
             await self.thread.edit(name=f"{self.thread.name} - Game Over!")
 
             if self.has_started:
-                winner = self.white if forfeiter.color == pychess.BLACK else self.black
+                winner = forfeiter.opponent
 
                 msg = f"{winner.user.mention} wins by forfeit.\n" \
                       f"\n" \
@@ -207,7 +222,28 @@ class ChessGame:
             await draw_msg.pin()
 
         async def timeout():
-            pass
+            offender: ChessPlayer = kwargs.get("player")
+
+            msg = f"You took too long to move in your chess match against {offender.opponent.user.mention} in " \
+                  f"{self.guild}. I have forfeited the match on your behalf, and {offender.opponent.user.name} has " \
+                  f"won on time."
+            embed = discord.Embed(title="You timed out.", description=msg, color=support.Color.red(),
+                                  timestamp=discord.utils.utcnow())
+            await offender.user.send(embed=embed)
+
+            await self.thread.edit(name=f"{self.thread.name} - Game Over!")
+
+            msg = f"{offender.opponent.user.mention} wins on time.\n" \
+                  f"\n" \
+                  f"This thread will be automatically deleted in 60 seconds.\n" \
+                  f"\n" \
+                  f"Thanks for playing!"
+
+            embed = discord.Embed(title=f"Chess: Game Over! {offender.opponent.user.name} wins!",
+                                  description=msg, color=support.Color.mint())
+
+            timeout_msg = await self.thread.send(embed=embed)
+            await timeout_msg.pin()
 
         async def stalemate():
             pass

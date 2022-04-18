@@ -68,7 +68,7 @@ def invoked_in_text_channel():
     return commands.check(predicate)
 
 
-# non-decorators
+# miscellaneous
 
 def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary) -> list[pages.PaginatorButton]:
     """

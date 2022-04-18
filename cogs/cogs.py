@@ -850,6 +850,7 @@ class ChessCog(MasterCog):
             await chess_game.game_timer()
 
     @chess_group.command(description="Identify yourself as ready to begin a chess match.")
+    @chess.helpers.verify_context(level="player")
     async def ready(self, ctx: discord.ApplicationContext):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
@@ -882,13 +883,14 @@ class ChessCog(MasterCog):
                 )
 
     @chess_group.command(description="Forfeit a chess match.")
+    @chess.helpers.verify_context(level="player")
     async def forfeit(self, ctx: discord.ApplicationContext):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
         if chess_game.has_started:
-            msg = "Forfeiting will cause you to be declared the loser. If this outcome is not desirable, consider " \
-                  "proposing a draw instead.\n" \
+            msg = f"Forfeiting will cause {player.opponent.mention} to be declared the winner. " \
+                  f"If this outcome is not desirable, consider proposing a draw instead.\n" \
                   "\n" \
                   "This can't be undone.\n" \
                   "\n" \
@@ -912,6 +914,7 @@ class ChessCog(MasterCog):
             await ctx.interaction.edit_original_message(content=f"Okay! The game is still on.", view=None, embeds=[])
 
     @chess_group.command(description="Propose a draw in a chess match, or rescind a proposal you've already made.")
+    @chess.helpers.verify_context(level="game")
     async def draw(self,
                    ctx: discord.ApplicationContext,
                    mode: Option(str, description="Choose whether to propose a draw or rescind an existing proposal.",
