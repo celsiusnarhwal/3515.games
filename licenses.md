@@ -1,6 +1,6 @@
 # Third-party software licenses
 
-This document contains copies of the licenses of third-party software used by 3515.games (you could say it's a more human-readable version of `/cogs/about/licenses.json`). These licenses are also viewable through the bot's `/about` command.
+This document contains copies of the licenses of third-party software used by 3515.games (you could say it's a more human-readable version of `/cogs/about/assets/licenses.json`). These licenses are also viewable through the bot's `/about` command.
 
 This document is included in this repository in the spirit of giving credit where its due. No code from any of the listed software is actually present in this repository, so any strong copyleft licenses you might find here don't apply to this repo's contents (looking at you, GPL).
 
