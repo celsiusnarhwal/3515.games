@@ -78,11 +78,11 @@ def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary) -
     :param button_style: The button style to use.
     """
     return [
-        pages.PaginatorButton("first", emoji="⏮", style=button_style),
-        pages.PaginatorButton("prev", emoji="⏪", style=button_style),
-        pages.PaginatorButton("page_indicator", style=ButtonStyle.gray, disabled=True),
-        pages.PaginatorButton("next", emoji="⏩", style=button_style),
-        pages.PaginatorButton("last", emoji="⏭", style=button_style)
+        pages.PaginatorButton("first", label="", emoji="⏮", style=button_style),
+        pages.PaginatorButton("prev", label="", emoji="⏪", style=button_style),
+        pages.PaginatorButton("page_indicator", label="", style=ButtonStyle.gray, disabled=True),
+        pages.PaginatorButton("next", label="", emoji="⏩", style=button_style),
+        pages.PaginatorButton("last", label="", emoji="⏭", style=button_style)
     ]
 
 

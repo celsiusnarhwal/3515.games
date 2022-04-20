@@ -5,6 +5,7 @@ import discord
 
 import cogs
 import settings
+import uptime
 
 bot = discord.Bot(intents=settings.INTENTS, debug_guilds=settings.DEBUG_GUILDS)
 
@@ -47,4 +48,5 @@ def cog_setup():
 if __name__ == '__main__':
     configure_logging()
     cog_setup()
+    uptime.mark_startup()
     bot.run(settings.TOKEN)
