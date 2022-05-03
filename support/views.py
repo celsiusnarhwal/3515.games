@@ -124,7 +124,7 @@ class GameChallengeResponseView(ConfirmationView):
 
     async def request_response(self):
         prompt_text = f"Hey {self.target_user.mention}! {self.challenger.mention} is challenging you to " \
-                      f"{self.game_name}! Do you accept?"
+                      f"a game of {self.game_name}! Do you accept?"
         self.prompt_msg = await self.ctx.send(prompt_text, view=self)
         await self.wait()
 
@@ -139,13 +139,6 @@ class GameChallengeResponseView(ConfirmationView):
         return self.success
 
 
-class ServerBoostURLView(EnhancedView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.add_item(Button(label="Learn more about Server Boosting",
-                             url="https://support.discord.com/hc/en-us/articles/360028038352-Server-Boosting-FAQ"))
-
-
 class GoToGameThreadView(EnhancedView):
     """
     Provides a URL button that points to a newly-created game thread.
@@ -154,3 +147,10 @@ class GoToGameThreadView(EnhancedView):
     def __init__(self, thread_url, **kwargs):
         super().__init__(**kwargs)
         self.add_item(Button(label="Go to game thread", url=thread_url))
+
+
+class ServerBoostURLView(EnhancedView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.add_item(Button(label="Learn more about Server Boosting",
+                             url="https://support.discord.com/hc/en-us/articles/360028038352-Server-Boosting-FAQ"))

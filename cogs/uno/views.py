@@ -135,10 +135,11 @@ class UnoCardSelectView(UnoTerminableView):
                 # if it's playable, validate the interaction and stop the view
                 self.selected_card = played_card
                 self.success = True
+                await interaction.response.defer()
                 await self.full_stop()
                 return await super().interaction_check(interaction)
 
-    async def show_all_cards(self, *args):
+    async def show_all_cards(self, interaction: Interaction):
         """
         A callback for a button that switches the menu to show all cards in the player's hand.
         """
@@ -160,9 +161,9 @@ class UnoCardSelectView(UnoTerminableView):
         self.add_item(card_menu)
         self.add_item(button)
 
-        await self.ctx.interaction.edit_original_message(embed=embed, view=self)
+        await interaction.response.edit_message(embed=embed, view=self)
 
-    async def show_playable_cards(self, *args):
+    async def show_playable_cards(self, interaction: Interaction):
         """
         A callback for a button that switches the menu to only show cards that can played this round.
         """
@@ -180,7 +181,7 @@ class UnoCardSelectView(UnoTerminableView):
             self.add_item(card_menu)
             self.add_item(button)
 
-            await self.ctx.interaction.edit_original_message(view=self)
+            await interaction.response.edit_message(view=self)
         else:
             msg = "You have no cards that can be played this turn. You must draw a card with `/uno draw`."
             embed = discord.Embed(title="No Playable Cards", description=msg,
@@ -190,7 +191,7 @@ class UnoCardSelectView(UnoTerminableView):
             self.clear_items()
             self.add_item(button)
 
-            await self.ctx.interaction.edit_original_message(embed=embed, view=self)
+            await interaction.response.edit_message(embed=embed, view=self)
 
     def get_button(self):
         if discord.utils.find(lambda x: isinstance(x, Button) and x.label == "Show Playable Cards", self.children):
@@ -456,7 +457,7 @@ class UnoStatusCenterView(EnhancedView):
         status_menu = self.create_menu()
         self.add_item(status_menu)
 
-        msg = "Pick an item from the menu below, and I'll to tell you what you want to know."
+        msg = "Pick an item from the menu below and I'll tell you what you want to know."
 
         if self.status.game.is_joinable:
             msg += "\n\nThis game hasn't started yet, so the information I can tell you is limited. To access all of " \

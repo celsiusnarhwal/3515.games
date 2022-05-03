@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import copy
 import json
-import os.path
 import random
 import string
 import uuid
@@ -148,7 +147,6 @@ class UnoGame:
             await self.host.send(embed=host_embed)
 
             await asyncio.sleep(60)
-
             await self.thread.delete()
 
         async def players_left():
@@ -162,7 +160,7 @@ class UnoGame:
                                          description=thread_msg,
                                          color=support.Color.red(), timestamp=discord.utils.utcnow())
 
-            host_msg = f"Your UNO game in {self.guild.name} was forced to end because all other players left."
+            host_msg = f"Your UNO game in {self.guild.name} was automatically closed because all other players left."
             host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
                                        color=support.Color.red(), timestamp=discord.utils.utcnow())
 
@@ -174,7 +172,6 @@ class UnoGame:
             await self.host.send(embed=host_embed)
 
             await asyncio.sleep(60)
-
             await self.thread.delete()
 
         async def inactivity():
@@ -198,7 +195,6 @@ class UnoGame:
             await self.host.send(embed=host_embed)
 
             await asyncio.sleep(60)
-
             await self.thread.delete()
 
         async def time_limit():
@@ -221,7 +217,6 @@ class UnoGame:
             await self.host.send(embed=host_embed)
 
             await asyncio.sleep(60)
-
             await self.thread.delete()
 
         reason_map = {
@@ -292,7 +287,8 @@ class UnoGame:
         # noinspection PyTypeChecker
         random.shuffle(self.players)
 
-        start_lines = open(os.path.join(os.getcwd(), "cogs/uno/files/uno_start_lines.txt")).readlines()
+        with support.Assets.uno():
+            start_lines = open("uno_start_lines.txt").readlines()
 
         msg = random.choice(start_lines).replace("\n", "") + "\n\n"
 
@@ -318,9 +314,12 @@ class UnoGame:
                "Let's play!"
 
         embed = discord.Embed(title="Let's play UNO!", description=msg, color=support.Color.mint())
-        uno_logo = discord.File("cogs/uno/files/uno_logo.png", filename="uno_logo.png")
-        embed.set_image(url="attachment://uno_logo.png")
-        await self.thread.send(content="@everyone", embed=embed, file=uno_logo)
+
+        with support.Assets.uno():
+            uno_logo = discord.File("uno_logo.png", filename="uno_logo.png")
+            embed.set_image(url="attachment://uno_logo.png")
+
+            await self.thread.send(content="@everyone", embed=embed, file=uno_logo)
 
         await asyncio.sleep(3)
 
@@ -344,7 +343,6 @@ class UnoGame:
         await self.thread.archive(locked=True)
 
         await asyncio.sleep(60)
-
         await self.thread.delete()
 
     async def add_player(self, ctx: discord.ApplicationContext, user: discord.User, is_host=False):
@@ -568,7 +566,6 @@ class UnoGame:
         await msg.pin()
 
         await asyncio.sleep(60)
-
         await self.thread.delete()
 
     async def turn_timer(self):
@@ -660,8 +657,8 @@ class UnoGame:
 
         await self.thread.send(embed=embed)
 
-        self.banned_users.add(player_node.value.user)
         await self.thread.remove_user(player_node.value.user)
+        self.banned_users.add(player_node.value.user)
 
         embed = discord.Embed(title=f"You were banned from {posessive(self.host.name)} UNO game.",
                               description=f"You were banned from {self.host.name}'s UNO game in "
@@ -924,19 +921,11 @@ class UnoPlayer:
 
             card = drawn_card[0]
 
-            embed_colors = {
-                "red": support.Color.brand_red(),
-                "blue": support.Color.blue(),
-                "green": support.Color.green(),
-                "yellow": support.Color.yellow(),
-                "wild": support.Color.black(),
-            }
-
             if view.autoplay and self.game.is_card_playable(card) and card.color.casefold() != "wild":
                 # play the card if it can be played on the current turn and isn't a wild or wild draw four
                 embed = discord.Embed(title="Card Drawn and Played",
                                       description=f"You drew and played a **{str(card)}**.",
-                                      color=embed_colors[card.color.casefold()])
+                                      color=card.get_embed_color())
                 embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
@@ -952,7 +941,7 @@ class UnoPlayer:
                 await self.play_card(card, with_draw=True)
             else:
                 embed = discord.Embed(title="Card Drawn", description=f"You drew a **{str(card)}**.",
-                                      color=embed_colors[card.color.casefold()])
+                                      color=card.get_embed_color())
                 embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
@@ -1077,6 +1066,9 @@ class UnoPlayer:
 
         self.terminable_views.clear()
 
+    def __str__(self):
+        return self.user.name
+
 
 class UnoCard:
     """
@@ -1110,7 +1102,8 @@ class UnoCard:
         # included in a standard deck (approx 1.85% for any given card). this differs from a standard UNO game - in a
         # real, physical, UNO deck, not all cards appear with the same frequency.
 
-        card_emoji = json.load(open(os.path.join(os.getcwd(), "cogs/uno/files/uno_card_emotes.json")))
+        with support.Assets.uno():
+            card_emoji = json.load(open("uno_card_emotes.json"))
 
         # for each color (red, blue, green, yellow), there are 13 cards (ten numbered cards 0-9 + reverse, skip,
         # and draw two)
@@ -1153,6 +1146,21 @@ class UnoCard:
         else:
             return int(self.suit)
 
+    def get_embed_color(self):
+        """
+        Returns the embed color associated with the card.
+        """
+
+        embed_colors = {
+            "red": support.Color.brand_red(),
+            "blue": support.Color.blue(),
+            "green": support.Color.green(),
+            "yellow": support.Color.yellow(),
+            "wild": support.Color.black(),
+        }
+
+        return embed_colors[self.color.casefold()]
+
     def __str__(self):
         if self.suit:
             return f"{self.color} {self.suit}"
@@ -1181,23 +1189,14 @@ class UnoEventProcessor:
 
         self.game.suit_in_play = card.suit
 
-        embed_colors = {
-            "red": support.Color.brand_red(),
-            "blue": support.Color.blue(),
-            "green": support.Color.green(),
-            "yellow": support.Color.yellow(),
-            "wild": support.Color.black(),
-        }
-
         embed = discord.Embed(title=f"Card {'Drawn and ' if with_draw else ''}Played",
                               description=f"**{player.user.name}** {'draws and' if with_draw else ''} "
                                           f"plays a **{str(card)}**.",
-                              color=embed_colors[card.color.casefold()])
+                              color=card.get_embed_color())
 
         embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
         embed.set_footer(icon_url=player.user.display_avatar.url,
-                         text=f"{player.user.name}#{player.user.discriminator} • UNO with {self.game.host.name}! • "
-                              f"Round {self.game.current_round}")
+                         text=f"{player.user} • UNO with {self.game.host.name}! • Round {self.game.current_round}")
 
         self.game.last_move = "The last card played was a "
 
@@ -1224,8 +1223,7 @@ class UnoEventProcessor:
 
         embed.set_thumbnail(url=player.user.display_avatar.url)
         embed.set_footer(icon_url=player.user.display_avatar.url,
-                         text=f"{player.user.name}#{player.user.discriminator} • UNO with {self.game.host.name}! • "
-                              f"Round {self.game.current_round}")
+                         text=f"{player.user} • UNO with {self.game.host.name}! • Round {self.game.current_round}")
 
         self.game.turn_record.append(embed)
 
@@ -1358,7 +1356,6 @@ class UnoEventProcessor:
             self.game.turn_record.append(embed)
 
 
-# TODO stat graphs with seaborn?
 class UnoStatusCenter:
     """
     The backend of the UNO Status Center. (The frontend is :class:`uno.views.UnoStatusCenterView`.)

@@ -3,9 +3,8 @@ from discord.commands import Option, SlashCommandGroup, slash_command
 from discord.ext import commands
 from llist import dllistnode
 
-import cogs.uno.decorators
 import support
-import support.functions
+import support.helpers
 import support.views
 from cogs import about, rps, uno, chess
 
@@ -39,8 +38,7 @@ class RockPaperScissorsCog(MasterCog):
     rps_group = SlashCommandGroup("rps", "Commands for playing Rock-Paper-Scissors.")
 
     @rps_group.command(description="Challenge someone to a game of Rock-Paper-Scissors.")
-    @support.functions.bot_has_permissions(support.GamePermissions.rps())
-    @support.functions.invoked_in_text_channel()
+    @support.helpers.bot_has_permissions(support.GamePermissions.rps())
     async def challenge(
             self,
             ctx: discord.ApplicationContext,
@@ -59,42 +57,59 @@ class RockPaperScissorsCog(MasterCog):
         "Best of Five", or "Best of Nine".
         """
 
-        # the invoker cannot challenge themselves
+        # the user cannot challenge themselves
         if ctx.user == opponent:
-            await ctx.respond("You can't play with yourself!", ephemeral=True)
-            return
+            msg = "You can't play with yourself. Choose someone else to challenge."
+            embed = discord.Embed(title="Make some friends, please.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
 
-        # map game formats to the number of points needed for victory in each
-        victory_points = {
-            "Best of Three": 2,
-            "Best of Five": 3,
-            "Best of Nine": 5
-        }
+        # the user cannot challenge the bot
+        elif opponent == ctx.me:
+            msg = "Unfortunately, my creator is too merciful to allow me to utterly decimate you at " \
+                  "Rock-Paper-Scissors.\n" \
+                  "\n" \
+                  "Challenge someone else."
+            embed = discord.Embed(title="Not happening.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
 
-        # create the game object
-        rps_game = rps.RPSGame(players=[rps.RPSPlayer(ctx.user), rps.RPSPlayer(opponent)],
-                               game_format=game_format, points_to_win=victory_points[game_format])
+        # the user cannot challenge other bots
+        elif opponent.bot:
+            msg = "You can only play with real people. Choose someone else to challenge."
+            embed = discord.Embed(title="That's a bot.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
 
-        challenge_acceptance = await rps_game.issue_challenge(ctx)
+        else:
+            # map game formats to the number of points needed for victory in each
+            victory_points = {
+                "Best of Three": 2,
+                "Best of Five": 3,
+                "Best of Nine": 5
+            }
 
-        if challenge_acceptance:
+            # create the game object
+            rps_game = rps.RPSGame(players=[rps.RPSPlayer(ctx.user), rps.RPSPlayer(opponent)],
+                                   game_format=game_format, points_to_win=victory_points[game_format])
 
-            await rps_game.game_intro(ctx)
+            challenge_acceptance = await rps_game.issue_challenge(ctx)
 
-            while True:
-                move_selection_complete = await rps_game.select_player_moves(ctx)
-                if not move_selection_complete:
-                    break
-                else:
-                    await rps_game.report_round_results(ctx)
+            if challenge_acceptance:
 
-                    match_winner = rps_game.check_for_match_winner()
+                await rps_game.game_intro(ctx)
 
-                    if match_winner:
-                        await rps_game.end_match(ctx, match_winner)
+                while True:
+                    move_selection_complete = await rps_game.select_player_moves(ctx)
+                    if not move_selection_complete:
                         break
                     else:
-                        rps_game.current_round += 1
+                        await rps_game.report_round_results(ctx)
+
+                        match_winner = rps_game.check_for_match_winner()
+
+                        if match_winner:
+                            await rps_game.end_match(ctx, match_winner)
+                            break
+                        else:
+                            rps_game.current_round += 1
 
 
 class UnoCog(MasterCog):
@@ -108,9 +123,9 @@ class UnoCog(MasterCog):
     # game creation commands
 
     @create_group.command(name="public", description="Create a public UNO game.")
-    @support.functions.bot_has_permissions(support.GamePermissions.uno_public())
-    @support.functions.invoked_in_text_channel()
-    @uno.decorators.verify_host_uniqueness()
+    @support.helpers.bot_has_permissions(support.GamePermissions.uno_public())
+    @support.helpers.invoked_in_text_channel()
+    @uno.helpers.verify_host_uniqueness()
     async def create_public_game(self,
                                  ctx: discord.ApplicationContext,
                                  players: Option(
@@ -218,9 +233,9 @@ class UnoCog(MasterCog):
     # TODO implement private games
     @create_group.command(name="private",
                           description="Create a private UNO game. Requires Server Boost Level 2 or higher.")
-    @support.functions.bot_has_permissions(support.GamePermissions.uno_private())
-    @support.functions.invoked_in_text_channel()
-    @uno.decorators.verify_host_uniqueness()
+    @support.helpers.bot_has_permissions(support.GamePermissions.uno_private())
+    @support.helpers.invoked_in_text_channel()
+    @uno.helpers.verify_host_uniqueness()
     async def create_private_game(self, ctx: discord.ApplicationContext):
         if ctx.guild.premium_tier < 2:
             msg = "Discord won't let me create private UNO games in this server until it's reached Boost Level 2 " \
@@ -232,7 +247,7 @@ class UnoCog(MasterCog):
     # player commands
 
     @uno_group.command(name="join", description="Join an UNO game.")
-    @uno.decorators.verify_context(level="thread")
+    @uno.helpers.verify_context(level="thread")
     async def join(self, ctx: discord.ApplicationContext):
         """
         Joins the invoker to an UNO game. Can only be used in UNO game threads.
@@ -274,7 +289,7 @@ class UnoCog(MasterCog):
             await uno_game.add_player(ctx, ctx.user)
 
     @uno_group.command(name="leave", description="Leave an UNO game.")
-    @uno.decorators.verify_context(level="player")
+    @uno.helpers.verify_context(level="player")
     async def leave(self, ctx: discord.ApplicationContext):
         """
         Voluntarily removes the player from an UNO game. Can only be used in UNO game threads.
@@ -306,7 +321,7 @@ class UnoCog(MasterCog):
                                                             embeds=[])
 
     @uno_group.command(name="hand", description="See the UNO cards you're currently holding.")
-    @uno.decorators.verify_context(level="game")
+    @uno.helpers.verify_context(level="game")
     async def show_hand(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
@@ -314,7 +329,7 @@ class UnoCog(MasterCog):
         await player.show_hand(ctx)
 
     @uno_group.command(name="play", description="Play one of your UNO cards.")
-    @uno.decorators.verify_context(level="turn")
+    @uno.helpers.verify_context(level="turn")
     async def play_card(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
@@ -322,7 +337,7 @@ class UnoCog(MasterCog):
         await player.select_card(ctx)
 
     @uno_group.command(name="draw", description="Draw an UNO card.")
-    @uno.decorators.verify_context(level="turn")
+    @uno.helpers.verify_context(level="turn")
     async def draw_card(self, ctx: discord.ApplicationContext):
 
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
@@ -331,7 +346,7 @@ class UnoCog(MasterCog):
         await player.draw_card(ctx)
 
     @uno_group.command(name="uno", description="Say 'UNO!' when you have one card left.")
-    @uno.decorators.verify_context(level="game")
+    @uno.helpers.verify_context(level="game")
     async def say_uno(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
@@ -369,7 +384,7 @@ class UnoCog(MasterCog):
                                                             embeds=[], view=None)
 
     @uno_group.command(name="callout", description="Call out a player for failing to say 'UNO!'.")
-    @uno.decorators.verify_context(level="turn")
+    @uno.helpers.verify_context(level="turn")
     async def callout(self,
                       ctx: discord.ApplicationContext,
                       receiving_player: Option(discord.User, "Mention a player to call out.", name="player")):
@@ -393,7 +408,7 @@ class UnoCog(MasterCog):
             await player.callout(ctx=ctx, recipient=recipient)
 
     @uno_group.command(name="status", description="Open the UNO Status Center.")
-    @uno.decorators.verify_context(level="thread")
+    @uno.helpers.verify_context(level="thread")
     async def status(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
 
@@ -402,7 +417,7 @@ class UnoCog(MasterCog):
 
     # game host commands
     @gamehost_group.command(name="start", description="Start an UNO game. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread", verify_host=True)
+    @uno.helpers.verify_context(level="thread", verify_host=True)
     async def start_game(self, ctx: discord.ApplicationContext):
         """
         Starts an UNO game that has already been created and which at least one player aside from the Game Host has
@@ -450,7 +465,7 @@ class UnoCog(MasterCog):
                                                             view=None)
 
     @gamehost_group.command(name="abort", description="Abort an UNO game. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread", verify_host=True)
+    @uno.helpers.verify_context(level="thread", verify_host=True)
     async def abort_game(self, ctx: discord.ApplicationContext):
         """
         Aborts an ongoing UNO game, forcefully ending it for all players. Can only be used by UNO Game Hosts in UNO game
@@ -474,7 +489,7 @@ class UnoCog(MasterCog):
             await ctx.interaction.edit_original_message(content="Okay! The game is still on.", embeds=[], view=None)
 
     @gamehost_group.command(name="kick", description="Kick a player from an UNO game. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread", verify_host=True)
+    @uno.helpers.verify_context(level="thread", verify_host=True)
     async def kick_player(self, ctx: discord.ApplicationContext,
                           player: Option(discord.User, "Mention a player to kick.")):
         """
@@ -523,7 +538,7 @@ class UnoCog(MasterCog):
                                                             embeds=[], view=None)
 
     @gamehost_group.command(name="ban", description="Ban a user from an UNO game thread. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread", verify_host=True)
+    @uno.helpers.verify_context(level="thread", verify_host=True)
     async def ban_player(self, ctx: discord.ApplicationContext,
                          user: Option(discord.User, "Mention a user to ban.")):
         """
@@ -606,7 +621,7 @@ class UnoCog(MasterCog):
 
     @gamehost_group.command(name="transfer",
                             description="Transfer your host powers to another player. Game Hosts only.")
-    @uno.decorators.verify_context(level="thread", verify_host=True)
+    @uno.helpers.verify_context(level="thread", verify_host=True)
     async def transfer_host(self,
                             ctx: discord.ApplicationContext,
                             player: Option(discord.User, "Mention the player you want to transfer host "
@@ -684,10 +699,11 @@ class UnoCog(MasterCog):
         if uno_game:
             if discord.utils.find(lambda user: user.id == thread_member.id, uno_game.banned_users):
                 await thread_member.thread.remove_user(thread_member)
-                await thread_member.thread.purge(limit=2, check=lambda user: user.author.id == thread_member.id)
+                await thread_member.thread.purge(limit=2, check=lambda message: message.author.id == thread_member.id)
 
     @commands.Cog.listener()
     async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
+
         """
         A listener that runs whenever a user is removed from a thread. This runs whenever *any* user is removed from
         *any* thread in the server, regardless of whether they're playing an UNO game or being removed from an UNO game
@@ -728,7 +744,7 @@ class UnoCog(MasterCog):
         :param channel: The deleted channel.
         """
         # call force_close_channel_deletion() for all channel threads associated with UNO games
-        for thread in [thread for thread in channel.threads if thread.id in uno.UnoGame.__all_games__.keys()]:
+        for thread in [thread for thread in channel.threads if thread.id in uno.UnoGame.retrieve_game(thread.id)]:
             uno_game = uno.UnoGame.retrieve_game(thread.id)
             await uno_game.force_close(reason="channel_deletion")
 
@@ -740,85 +756,273 @@ class ChessCog(MasterCog):
     chess_group = SlashCommandGroup("chess", "Commands for playing chess.")
 
     @chess_group.command(description="Challenge someone to a game of chess.")
+    @support.helpers.bot_has_permissions(support.GamePermissions.chess())
+    @support.helpers.invoked_in_text_channel()
     async def challenge(self,
                         ctx: discord.ApplicationContext,
                         opponent: Option(discord.User, "Mention a user to be your opponent.")):
 
         if ctx.user == opponent:
-            await ctx.respond("You can't play with yourself!", ephemeral=True)
-            return
+            msg = "You can't play with yourself. Choose someone else to challenge."
+            embed = discord.Embed(title="Make some friends, please.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
 
-        # confirm with the challenger (i.e. the invoker of /chess challenge) that they want to issue the challenge
+        elif opponent == ctx.me:
+            msg = "Even if my creator allowed me to play with you, I would checkmate you in short order, " \
+                  "because I am better than you at everything.\n" \
+                  "\n" \
+                  "Challenge someone else."
+            embed = discord.Embed(title="No.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
 
-        msg = f"You're about to challenge {opponent.mention} to a game of chess. There are a few important things " \
-              f"you need to know:\n" \
-              f"\n" \
-              f"**Chess games are contained within [threads]" \
-              f"(https://support.discord.com/hc/en-us/articles/4403205878423-Threads-FAQ).** I'll handle the " \
-              f"creation and management of the thread for you. If you can `Manage Threads`, please refrain from " \
-              f"editing or deleting the thread until the game is over (trust me, I've got this).\n" \
-              f"\n" \
-              f"**Anyone can spectate.** Anyone who can both see and talk in this channel can spectate your game. " \
-              f"However, only you and your opponent will be able to talk in the game thread.\n" \
-              f"\n" \
-              f"**You can call it quits at any time.** Either you or your opponent can forfeit the game with " \
-              f"`/chess forfeit` or propose a stalemate with `/chess stalemate`.\n" \
-              f"\n" \
-              f"**I'm watching for inactivity.** If I determine either you or your opponent to have gone AFK, " \
-              f"I can forfeit the game on your behalves. Watch out.\n" \
-              f"\n" \
-              f"Challenge {opponent.mention} to a game of chess?"
+        elif opponent.bot:
+            msg = "You can only play with real people. Choose someone else to challenge."
+            embed = discord.Embed(title="That's a bot.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
 
-        embed = discord.Embed(title="Creating a Chess Game", description=msg, color=support.Color.orange())
+        elif chess.ChessGame.retrieve_duplicate_game(players=[ctx.user, opponent], guild=ctx.guild):
+            chess_game = chess.ChessGame.retrieve_duplicate_game(players=[ctx.user, opponent], guild=ctx.guild)
+            msg = f"You're in an ongoing chess match with {opponent.mention} in this server. " \
+                  f"You'll need to wrap it up before you can challenge them to another one."
+            embed = discord.Embed(title=f"You're already playing with {opponent.name}.", description=msg,
+                                  color=support.Color.red())
+            thread_url = f"https://discord.com/channels/{chess_game.guild.id}/{chess_game.thread.id}"
+            await ctx.respond(embed=embed, view=support.GoToGameThreadView(thread_url=thread_url), ephemeral=True)
 
-        view = support.ConfirmationView(ctx=ctx)
-        challenge_confirmation = await view.request_confirmation(
-            prompt_embeds=[embed],
-            ephemeral=True
-        )
-
-        if challenge_confirmation:
-            # ask the challenge recipient whether they accept the challenge
-            await ctx.interaction.edit_original_message(content=f"Waiting on {opponent.mention}...",
-                                                        embeds=[],
-                                                        view=None)
-
-            view = support.GameChallengeResponseView(ctx=ctx,
-                                                     target_user=opponent,
-                                                     challenger=ctx.user,
-                                                     game_name="a game of Chess"
-                                                     )
-
-            challenge_acceptance = await view.request_response()
-
-            if not challenge_acceptance:
-                return
         else:
-            if challenge_confirmation is not None:
-                await ctx.interaction.edit_original_message(content="Okay! Your challenge was canceled.",
+            # confirm with the challenger (i.e. the invoker of /chess challenge) that they want to issue the challenge
+
+            msg = f"You're about to challenge {opponent.mention} to a game of chess. There are a few important " \
+                  f"things you need to know:\n" \
+                  f"\n" \
+                  f"**Chess games are contained within [threads]" \
+                  f"(https://support.discord.com/hc/en-us/articles/4403205878423-Threads-FAQ).** I'll handle the " \
+                  f"creation and management of the thread for you. If you can `Manage Threads`, please refrain from " \
+                  f"editing or deleting the thread until the game is over (trust me, I've got this).\n" \
+                  f"\n" \
+                  f"**Anyone can spectate.** Anyone who can both see and talk in this channel can spectate your " \
+                  f"game. However, only you and your opponent will be able to talk in the game thread.\n" \
+                  f"\n" \
+                  f"**I'm watching for inactivity.** If I determine either you or your opponent to have gone AFK, " \
+                  f"I can forfeit the game on your behalves. Watch out.\n" \
+                  f"\n" \
+                  f"Challenge {opponent.mention} to a game of chess?"
+
+            embed = discord.Embed(title="Creating a Chess Game", description=msg, color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            challenge_confirmation = await view.request_confirmation(
+                prompt_embeds=[embed],
+                ephemeral=True
+            )
+
+            if challenge_confirmation:
+                # ask the challenge recipient whether they accept the challenge
+                await ctx.interaction.edit_original_message(content=f"Waiting on {opponent.mention}...",
                                                             embeds=[],
                                                             view=None)
-                return
 
-        # create a new chess game
-        game_thread = await ctx.channel.create_thread(
-            name=f"Chess - {ctx.user.name} vs. {opponent.name}",
-            type=discord.ChannelType.public_thread,
-            auto_archive_duration=1440
-        )
+                view = support.GameChallengeResponseView(ctx=ctx,
+                                                         target_user=opponent,
+                                                         challenger=ctx.user,
+                                                         game_name="chess"
+                                                         )
 
-        chess_game = chess.ChessGame(thread=game_thread, players=[ctx.user, opponent])
+                challenge_acceptance = await view.request_response()
 
-        await chess_game.open_lobby()
+                if not challenge_acceptance:
+                    return
+            else:
+                if challenge_confirmation is not None:
+                    await ctx.interaction.edit_original_message(content="Okay! Your challenge was canceled.",
+                                                                embeds=[],
+                                                                view=None)
+                    return
 
-        await game_thread.add_user(ctx.user)
-        await game_thread.add_user(opponent)
+            # create a new chess game
+            game_thread = await ctx.channel.create_thread(
+                name=f"Chess - {ctx.user.name} vs. {opponent.name}",
+                type=discord.ChannelType.public_thread,
+                auto_archive_duration=1440
+            )
 
-        embed = discord.Embed(title="A chess game has begun!",
-                              description=f"{ctx.user.mention} has challenged {opponent.mention} to a game of chess. "
-                                          f"You can spectate their match by going to the game thread.",
-                              color=support.Color.mint())
+            chess_game = chess.ChessGame(thread=game_thread, players=[ctx.user, opponent])
 
-        thread_url = f"https://discordapp.com/channels/{game_thread.guild.id}/{game_thread.id}"
+            await chess_game.open_lobby()
 
-        await ctx.send(embed=embed, view=support.GoToGameThreadView(thread_url=thread_url))
+            await game_thread.add_user(ctx.user)
+            await game_thread.add_user(opponent)
+
+            embed = discord.Embed(title="A chess game has begun!",
+                                  description=f"{ctx.user.mention} has challenged {opponent.mention} "
+                                              f"to a game of chess. You can spectate their match by going to the "
+                                              f"game thread.",
+                                  color=support.Color.mint())
+
+            thread_url = f"https://discordapp.com/channels/{game_thread.guild.id}/{game_thread.id}"
+
+            await ctx.send(embed=embed, view=support.GoToGameThreadView(thread_url=thread_url))
+
+            await chess_game.game_timer()
+
+    @chess_group.command(description="Identify yourself as ready to begin a chess match.")
+    @chess.helpers.verify_context(level="player")
+    async def ready(self, ctx: discord.ApplicationContext):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
+        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+
+        if player.is_ready:
+            msg = "You've already readied yourself with `/chess ready`."
+            embed = discord.Embed(title="You're already ready.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            msg = "The match will begin as soon as both players are ready. Make sure you really are ready to play; " \
+                  "once you select the Yes button below, you won't be able to change your mind.\n" \
+                  "\n" \
+                  "Identify yourself as ready?"
+            embed = discord.Embed(title="Ready to play?", description=msg, color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+            if confirmation:
+                await ctx.interaction.edit_original_message(content=f"You're ready to go. Waiting on "
+                                                                    f"{player.opponent.user.mention}...",
+                                                            view=None,
+                                                            embeds=[])
+                await player.ready()
+            else:
+                await ctx.interaction.edit_original_message(
+                    content=f"That's cool. Use `/chess ready` whenever you're ready.",
+                    view=None,
+                    embeds=[]
+                )
+
+    @chess_group.command(description="Make a move in a chess match.")
+    @chess.helpers.verify_context(level="turn")
+    async def move(self, ctx: discord.ApplicationContext):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
+        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+
+        await player.move(ctx)
+
+    @chess_group.command(description="View the board in a chess match.")
+    @chess.helpers.verify_context(level="game")
+    async def board(self, ctx: discord.ApplicationContext):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
+        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+
+        await player.view_board(ctx)
+
+    @chess_group.command(description="Forfeit a chess match.")
+    @chess.helpers.verify_context(level="player")
+    async def forfeit(self, ctx: discord.ApplicationContext):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
+        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+
+        if chess_game.has_started:
+            msg = f"Forfeiting will cause {player.opponent.user.mention} to be declared the winner. " \
+                  f"If this outcome is not desirable, consider proposing a draw instead.\n" \
+                  "\n" \
+                  "This can't be undone.\n" \
+                  "\n" \
+                  "" \
+                  "Forfeit this match?"
+        else:
+            msg = "Forfeiting will immediately end the match for both you and your opponent. This can't be undone.\n" \
+                  "\n" \
+                  "Forfeit this match?"
+
+        embed = discord.Embed(title="Are you sure?", description=msg, color=support.Color.orange())
+
+        view = support.ConfirmationView(ctx=ctx)
+
+        confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+        if confirmation:
+            await ctx.interaction.edit_original_message(content="Forfeiting the match...", view=None, embeds=[])
+            await player.forfeit()
+        else:
+            await ctx.interaction.edit_original_message(content=f"Okay! The game is still on.", view=None, embeds=[])
+
+    @chess_group.command(description="Propose a draw in a chess match, or rescind a proposal you've already made.")
+    @chess.helpers.verify_context(level="game")
+    async def draw(self,
+                   ctx: discord.ApplicationContext,
+                   mode: Option(str, description="Choose whether to propose a draw or rescind an existing proposal.",
+                                choices=["Propose", "Rescind"])):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
+        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+        if mode == "Propose":
+            if player.has_proposed_draw:
+                msg = "You'll need to resicind your current proposal before you can make a new one."
+                embed = discord.Embed(title="You've already proposed a draw.",
+                                      description=msg, color=support.Color.red())
+                await ctx.respond(embed=embed, ephemeral=True)
+            else:
+                msg = f"If you think it's time to wrap things up, you can propose a draw. If " \
+                      f"{player.opponent.user.mention} accepts, the match will end in a draw, with neither player " \
+                      f"being declared the winner.\n" \
+                      "\n" \
+                      "If you change your mind before your opponent accepts your proposal, you can rescind your " \
+                      "proposal by using `/chess draw` and selecting the 'Rescind' option.\n" \
+                      "\n" \
+                      "Propose a draw?"
+
+                embed = discord.Embed(title="Proposing a Draw", description=msg, color=support.Color.orange())
+
+                view = support.ConfirmationView(ctx=ctx)
+
+                confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+                if confirmation:
+                    await ctx.interaction.edit_original_message(content="Proposing a draw...", view=None, embeds=[])
+                    await player.propose_draw()
+                else:
+                    await ctx.interaction.edit_original_message(
+                        content=f"Okay! You can propose a draw at any time if you change your mind.",
+                        view=None, embeds=[])
+        elif mode == "Rescind":
+            if not player.has_proposed_draw:
+                msg = "You need to propose a draw before you can rescind one."
+                embed = discord.Embed(title="You haven't proposed a draw.", description=msg, color=support.Color.red())
+
+                await ctx.respond(embed=embed, ephemeral=True)
+            else:
+                await ctx.respond(content="Rescinding your proposal...", ephemeral=True)
+                await player.rescind_draw()
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(message.channel.id)
+
+        if chess_game and not chess_game.retrieve_player(message.author) and not message.author.bot:
+            await message.delete()
+
+    @commands.Cog.listener()
+    async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(thread_member.thread_id)
+        player: chess.ChessPlayer = chess_game.retrieve_player(thread_member)
+
+        if player:
+            await player.forfeit()
+
+            msg = f"I forfeited your chess match against {player.opponent} in {chess_game.guild} on your behalf " \
+                  f"because you left the game thread."
+
+            embed = discord.Embed(title="Chess Match Forfeited", description=msg, color=support.Color.red())
+
+            await player.user.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_raw_thread_delete(self, thread: discord.RawThreadDeleteEvent):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(thread.thread_id)
+
+        if chess_game:
+            await chess_game.force_close(reason="thread_deletion")
+
+    @commands.Cog.listener()
+    async def on_guild_channel_delete(self, channel):
+        for thread in [thread for thread in channel.threads if chess.ChessGame.retrieve_game(thread.id)]:
+            chess_game = chess.ChessGame.retrieve_game(thread.id)
+            await chess_game.force_close(reason="channel_deletion")
