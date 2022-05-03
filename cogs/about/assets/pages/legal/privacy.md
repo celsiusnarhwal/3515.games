@@ -1,4 +1,4 @@
-Discord [requires me](https://discord.com/developers/docs/policies-and-agreements/terms-of-service#a-implement-good-privacy-practices) to have a privacy policy, so here's mine.
+Discord [requires me](https://discord.com/developers/docs/policies-and-agreements/terms-of-service#a-implement-good-privacy-practices) to have a privacy policy, so here it is.
 
 When you use or share a Discord server ("server") with 3515.games, 3515.games may collect and process various information about your Discord account ("you", "your", "your account") and, if applicable, the server in which you are interacting with it.
 

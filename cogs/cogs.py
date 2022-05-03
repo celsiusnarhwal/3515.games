@@ -3,7 +3,6 @@ from discord.commands import Option, SlashCommandGroup, slash_command
 from discord.ext import commands
 from llist import dllistnode
 
-import cogs.uno.helpers
 import support
 import support.helpers
 import support.views
@@ -58,42 +57,59 @@ class RockPaperScissorsCog(MasterCog):
         "Best of Five", or "Best of Nine".
         """
 
-        # the invoker cannot challenge themselves
+        # the user cannot challenge themselves
         if ctx.user == opponent:
-            await ctx.respond("You can't play with yourself!", ephemeral=True)
-            return
+            msg = "You can't play with yourself. Choose someone else to challenge."
+            embed = discord.Embed(title="Make some friends, please.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
 
-        # map game formats to the number of points needed for victory in each
-        victory_points = {
-            "Best of Three": 2,
-            "Best of Five": 3,
-            "Best of Nine": 5
-        }
+        # the user cannot challenge the bot
+        elif opponent == ctx.me:
+            msg = "Unfortunately, my creator is too merciful to allow me to utterly decimate you at " \
+                  "Rock-Paper-Scissors.\n" \
+                  "\n" \
+                  "Challenge someone else."
+            embed = discord.Embed(title="Not happening.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
 
-        # create the game object
-        rps_game = rps.RPSGame(players=[rps.RPSPlayer(ctx.user), rps.RPSPlayer(opponent)],
-                               game_format=game_format, points_to_win=victory_points[game_format])
+        # the user cannot challenge other bots
+        elif opponent.bot:
+            msg = "You can only play with real people. Choose someone else to challenge."
+            embed = discord.Embed(title="That's a bot.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
 
-        challenge_acceptance = await rps_game.issue_challenge(ctx)
+        else:
+            # map game formats to the number of points needed for victory in each
+            victory_points = {
+                "Best of Three": 2,
+                "Best of Five": 3,
+                "Best of Nine": 5
+            }
 
-        if challenge_acceptance:
+            # create the game object
+            rps_game = rps.RPSGame(players=[rps.RPSPlayer(ctx.user), rps.RPSPlayer(opponent)],
+                                   game_format=game_format, points_to_win=victory_points[game_format])
 
-            await rps_game.game_intro(ctx)
+            challenge_acceptance = await rps_game.issue_challenge(ctx)
 
-            while True:
-                move_selection_complete = await rps_game.select_player_moves(ctx)
-                if not move_selection_complete:
-                    break
-                else:
-                    await rps_game.report_round_results(ctx)
+            if challenge_acceptance:
 
-                    match_winner = rps_game.check_for_match_winner()
+                await rps_game.game_intro(ctx)
 
-                    if match_winner:
-                        await rps_game.end_match(ctx, match_winner)
+                while True:
+                    move_selection_complete = await rps_game.select_player_moves(ctx)
+                    if not move_selection_complete:
                         break
                     else:
-                        rps_game.current_round += 1
+                        await rps_game.report_round_results(ctx)
+
+                        match_winner = rps_game.check_for_match_winner()
+
+                        if match_winner:
+                            await rps_game.end_match(ctx, match_winner)
+                            break
+                        else:
+                            rps_game.current_round += 1
 
 
 class UnoCog(MasterCog):
@@ -752,8 +768,8 @@ class ChessCog(MasterCog):
             await ctx.respond(embed=embed, ephemeral=True)
 
         elif opponent == ctx.me:
-            msg = "Even if my creator allowed me to play with you, I would checkmate you in short order. " \
-                  "That wouldn't be very fun, would it?\n" \
+            msg = "Even if my creator allowed me to play with you, I would checkmate you in short order, " \
+                  "because I am better than you at everything.\n" \
                   "\n" \
                   "Challenge someone else."
             embed = discord.Embed(title="No.", description=msg, color=support.Color.red())
@@ -882,6 +898,22 @@ class ChessCog(MasterCog):
                     embeds=[]
                 )
 
+    @chess_group.command(description="Make a move in a chess match.")
+    @chess.helpers.verify_context(level="turn")
+    async def move(self, ctx: discord.ApplicationContext):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
+        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+
+        await player.move(ctx)
+
+    @chess_group.command(description="View the board in a chess match.")
+    @chess.helpers.verify_context(level="game")
+    async def board(self, ctx: discord.ApplicationContext):
+        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
+        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+
+        await player.view_board(ctx)
+
     @chess_group.command(description="Forfeit a chess match.")
     @chess.helpers.verify_context(level="player")
     async def forfeit(self, ctx: discord.ApplicationContext):
@@ -889,7 +921,7 @@ class ChessCog(MasterCog):
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
         if chess_game.has_started:
-            msg = f"Forfeiting will cause {player.opponent.mention} to be declared the winner. " \
+            msg = f"Forfeiting will cause {player.opponent.user.mention} to be declared the winner. " \
                   f"If this outcome is not desirable, consider proposing a draw instead.\n" \
                   "\n" \
                   "This can't be undone.\n" \

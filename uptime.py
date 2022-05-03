@@ -3,6 +3,7 @@ A small module whose dedicated purpose is to track the bot's uptime.
 """
 
 from datetime import datetime
+
 import humanize
 
 startup_time = None

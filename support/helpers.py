@@ -10,6 +10,23 @@ import support
 
 # deocrators
 
+def is_celsius_narhwal():
+    """
+    A decorator that checks if the invoking user is me, celsiusnarhwal#3515.
+    """
+    async def predicate(ctx: discord.ApplicationContext):
+        if ctx.user.id == 170966436125212673:
+            return True
+        else:
+            msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
+            embed = discord.Embed(title="You can't do that.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+            return False
+
+    return commands.check(predicate)
+
+
 def bot_has_permissions(expected_permissions):
     """
     A decorator that checks if the bot has a particular set of permissions.

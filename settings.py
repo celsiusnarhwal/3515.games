@@ -6,8 +6,6 @@ import os
 
 import discord
 
-import cogs
-
 # Dev Mode
 DEV_MODE = False
 
@@ -19,7 +17,7 @@ INTENTS.members = True
 DEBUG_GUILDS = []
 
 # Disabled Cogs
-DISABLED_COGS = [cogs.ChessCog]
+DISABLED_COGS = []
 
 # Bot Token
 TOKEN = os.getenv("DEV_TOKEN" if DEV_MODE else "BOT_TOKEN")

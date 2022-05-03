@@ -7,6 +7,8 @@ from collections import Counter
 
 import chess as pychess
 import discord
+from chess import square_name
+from llist import dllist as DoublyLinkedList
 
 import support
 from cogs import chess
@@ -25,17 +27,15 @@ class ChessGame:
         self.current_player = None
         self.turn_uuid = None
         self.board = pychess.Board()
+        self.move_history = DoublyLinkedList([self.board.copy()])
+        self.turn_record: discord.Embed = None
 
-        random.shuffle(self.players)
+        for player in self.players:
+            player.opponent = self.players[0] if player == self.players[1].user else \
+                self.players[1]
 
-        self.white = self.players[0]
-        self.black = self.players[1]
-
-        self.white.color = pychess.WHITE
-        self.black.color = pychess.BLACK
-
-        self.white.opponent = self.black
-        self.black.opponent = self.white
+        self.white = None
+        self.black = None
 
         self.__all_games__[self.thread.id] = self
 
@@ -65,20 +65,18 @@ class ChessGame:
 
         async def thread_deletion():
             for player in self.players:
-                msg = f"Your chess match against {player.opponent.mention} in {self.guild} was forced to end because " \
-                      f"its game thread was deleted."
+                msg = f"Your chess match against {player.opponent.user.mention} in {self.guild} " \
+                      f"was forced to end because its game thread was deleted."
 
                 embed = discord.Embed(title="Your chess match was forced to end.", description=msg,
                                       color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-                embed.set_footer(text=discord.utils.utcnow())
 
                 await player.user.send(embed=embed)
 
         async def channel_deletion():
             for player in self.players:
-                msg = f"Your chess match against {player.opponent.mention} in {self.guild} was forced to end because " \
-                      f"the parent channel of its game thread was deleted."
+                msg = f"Your chess match against {player.opponent.user.mention} in {self.guild} was forced to " \
+                      f"end because the parent channel of its game thread was deleted."
 
                 embed = discord.Embed(title="Your chess match was forced to end.", description=msg,
                                       color=support.Color.red(), timestamp=discord.utils.utcnow())
@@ -102,12 +100,12 @@ class ChessGame:
             await self.thread.delete()
 
         reason_map = {
-            "thread_deletion": thread_deletion(),
-            "channel_deletion": channel_deletion(),
-            "time_limit": time_limit(),
+            "thread_deletion": thread_deletion,
+            "channel_deletion": channel_deletion,
+            "time_limit": time_limit,
         }
 
-        await reason_map[reason]
+        await reason_map[reason]()
 
     async def open_lobby(self):
         msg = "Your chess match will take place in this thread.\n" \
@@ -130,8 +128,19 @@ class ChessGame:
     async def start_game(self):
         self.has_started = True
 
+        random.shuffle(self.players)
+
+        self.white = self.players[0]
+        self.black = self.players[1]
+
+        for player in self.players:
+            player.populate_color_based_metadate()
+
         msg = f"In chess, your objective is to checkmate your opponent's king. Accomplish this, and you win. Yes, " \
               f"it's really that simple.\n" \
+              f"\n" \
+              f"When it's your turn, make a move with `/chess move`. When it's not your turn (or even when it is " \
+              f"your turn), you can view the board and move history with `/chess board`.\n" \
               f"\n" \
               f"Players will have two minutes to move when its their turn. Fail to move in time, and I'll " \
               f"forfeit the match on your behalf.\n" \
@@ -142,9 +151,10 @@ class ChessGame:
 
         embed = discord.Embed(title="Let's play chess!", description=msg, color=support.Color.mint())
 
-        with chess.helpers.get_board_png(self.board) as board_png:
-            embed.set_image(url=f"attachment://{board_png.filename}")
-            await self.thread.send(embed=embed, file=board_png)
+        async with self.thread.typing():
+            with chess.helpers.get_board_png(board=self.board) as board_png:
+                embed.set_image(url=f"attachment://{board_png.filename}")
+                await self.thread.send(embed=embed, file=board_png)
 
         await asyncio.sleep(3)
 
@@ -162,6 +172,19 @@ class ChessGame:
         await self.thread.send(content=f"{self.current_player.user.mention}, it's your turn.", embed=embed)
 
         await self.turn_timer()
+
+    async def end_current_turn(self):
+        async with self.thread.typing():
+            with chess.helpers.get_board_png(board=self.board) as board_png:
+                self.turn_record.set_image(url=f"attachment://{board_png.filename}")
+                await self.thread.send(embed=self.turn_record, file=board_png)
+
+        if self.board.is_checkmate():
+            await self.end_game(reason="checkmate", winner=self.current_player)
+        elif self.board.is_stalemate():
+            await self.end_game(reason="stalemate")
+        else:
+            await self.start_next_turn()
 
     async def turn_timer(self):
         turn_uuid = self.turn_uuid
@@ -246,20 +269,42 @@ class ChessGame:
             await timeout_msg.pin()
 
         async def stalemate():
-            pass
+            msg = "The match ended in a stalemate.\n" \
+                  "" \
+                  "This thread will be automatically deleted in 60 seconds.\n" \
+                  "\n" \
+                  "Thanks for playing!"
+
+            embed = discord.Embed(title="Chess: Game Over! It's a draw!", description=msg, color=support.Color.mint())
+
+            stalemate_msg = await self.thread.send(embed=embed)
+            await stalemate_msg.pin()
 
         async def checkmate():
-            pass
+            winner = kwargs.get("winner")
+
+            msg = f"{winner.user.mention} wins by checkmate. Congratulations!\n" \
+                  f"\n" \
+                  f"This thread will be automatically deleted in 60 seconds.\n" \
+                  f"\n" \
+                  f"Thanks for playing!"
+
+            embed = discord.Embed(title=f"Chess: Game Over! {winner.user.name} wins!",
+                                  description=msg,
+                                  color=support.Color.mint())
+
+            checkmate_msg = await self.thread.send(embed=embed)
+            await checkmate_msg.pin()
 
         reason_map = {
-            "forfeit": forfeit(),
-            "draw": draw(),
-            "timeout": timeout(),
-            "stalemate": stalemate(),
-            "checkmate": checkmate()
+            "forfeit": forfeit,
+            "draw": draw,
+            "timeout": timeout,
+            "stalemate": stalemate,
+            "checkmate": checkmate,
         }
 
-        await reason_map[reason]
+        await reason_map[reason]()
 
         await asyncio.sleep(60)
         await self.thread.delete()
@@ -271,9 +316,10 @@ class ChessPlayer:
         self.game = game
 
         self.is_ready = False
-        self.has_proposed_draw = False
         self.opponent = None
+        self.has_proposed_draw = False
         self.color: pychess.Color = None
+        self.piece_symbols: list[str] = None
 
     async def ready(self):
         self.is_ready = True
@@ -286,8 +332,36 @@ class ChessPlayer:
 
         await self.game.check_ready_players()
 
-    async def move(self):
-        pass
+    async def move(self, ctx: discord.ApplicationContext):
+        view = chess.ChessMoveView(ctx=ctx, player=self)
+        move = await view.initiate_selection()
+
+        processor = ChessEventProcessor(self.game)
+        processor.move_event(player=self, move=move, move_data=view.move_data)
+
+        if move.promotion:
+            processor.promotion_event(self, view.move_data)
+
+        board_copy = self.game.board.copy(stack=1)
+        board_copy.pop()
+
+        if board_copy.is_castling(move):
+            processor.castle_event(self)
+        if board_copy.is_capture(move):
+            processor.capture_event(self)
+
+        if self.game.board.is_checkmate():
+            processor.checkmate_event(self.opponent)
+        elif self.game.board.is_stalemate():
+            processor.stalemate_event()
+        elif self.game.board.is_check():
+            processor.check_event(self.opponent)
+
+        await self.end_turn()
+
+    async def view_board(self, ctx: discord.ApplicationContext):
+        view = chess.ChessBoardView(ctx=ctx, player=self)
+        await view.initiate_view()
 
     async def forfeit(self):
         await self.game.end_game(reason="forfeit", player=self)
@@ -314,6 +388,13 @@ class ChessPlayer:
         embed = discord.Embed(title="Draw Proposal Rescinded", description=msg, color=support.Color.greyple())
         await self.game.thread.send(embed=embed)
 
+    async def end_turn(self):
+        await self.game.end_current_turn()
+
+    def populate_color_based_metadate(self):
+        self.color = pychess.WHITE if self == self.game.white else pychess.BLACK
+        self.opponent = self.game.black if self.color == pychess.WHITE else self.game.white
+
     def get_embed_color(self):
         embed_colors = {
             pychess.WHITE: support.Color.white(),
@@ -324,3 +405,79 @@ class ChessPlayer:
 
     def __str__(self):
         return self.user.name
+
+
+class ChessEventProcessor:
+    def __init__(self, game: ChessGame):
+        self.game = game
+
+    def move_event(self, player: ChessPlayer, move: pychess.Move, move_data: dict):
+        self.game.board.push(move)
+        self.game.move_history.append(self.game.board.copy(stack=1))
+
+        piece_type: str = move_data["piece_type"]
+        origin: str = square_name(move_data["origin"])
+        destination: str = square_name(move_data["destination"])
+
+        msg = f"**{player.user.mention}** moves **{piece_type.capitalize()}** from {origin.capitalize()} " \
+              f"to {destination.capitalize()}."
+
+        embed = discord.Embed(title="Piece Moved", description=msg, color=player.get_embed_color())
+
+        self.game.turn_record = embed
+
+    def promotion_event(self, player: ChessPlayer, move_data: dict):
+        piece_type: str = move_data["piece_type"]
+        destination: str = move_data["destination"]
+        promotion: str = move_data["promotion"]
+
+        msg = f"**{player.user.name}** promotes " \
+              f"**{piece_type.capitalize()} ({square_name(destination).capitalize()})** " \
+              f"to a {chess.helpers.convert_piece_format(promotion, 'name').capitalize()}."
+
+        self.game.turn_record.add_field(name="Pawn Promoted", value=msg, inline=False)
+
+    def castle_event(self, player: ChessPlayer):
+        msg = f"**{player.user.name}** castles."
+
+        self.game.turn_record.add_field(name="Castle Performed", value=msg, inline=False)
+
+    def capture_event(self, player: ChessPlayer):
+        board_copy = self.game.board.copy()
+        move = board_copy.pop()
+
+        square = discord.utils.find(
+            lambda sq:
+            board_copy.piece_at(sq) and
+            (board_copy.piece_at(sq).piece_type == pychess.PAWN or not board_copy.is_en_passant(move)) and
+            board_copy.color_at(sq) is not player.color,
+
+            [move.to_square, move.to_square - 8, move.to_square + 8]
+        )
+
+        captured_piece = chess.helpers.convert_piece_format(board_copy.piece_at(square), "name")
+
+        msg = f"**{player.user.name}** captures {player.opponent.user.mention}'s **{captured_piece.capitalize()} " \
+              f"({square_name(move.to_square).capitalize()})**"
+
+        if board_copy.is_en_passant(move):
+            msg += " *en passant*"
+
+        msg += "."
+
+        self.game.turn_record.add_field(name="Piece Captured", value=msg, inline=False)
+
+    def check_event(self, player: ChessPlayer):
+        msg = f"**{player.user.name}** is in check."
+
+        self.game.turn_record.add_field(name="Check", value=msg, inline=False)
+
+    def checkmate_event(self, player: ChessPlayer):
+        msg = f"{player.user.mention} is in checkmate."
+
+        self.game.turn_record.add_field(name="Checkmate", value=msg, inline=False)
+
+    def stalemate_event(self):
+        msg = "The match reaches a stalemate."
+
+        self.game.turn_record.add_field(name="Stalemate", value=msg, inline=False)

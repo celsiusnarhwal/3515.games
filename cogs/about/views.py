@@ -4,6 +4,7 @@ import json
 import os
 import platform
 import textwrap
+import time
 
 import discord
 import toml
@@ -12,8 +13,8 @@ from discord.ext import pages as discord_pages
 from discord.ui import Button, button as discord_button
 
 import support
-from support.views import EnhancedView
 import uptime
+from support.views import EnhancedView
 
 
 class AboutView(EnhancedView):
@@ -22,18 +23,28 @@ class AboutView(EnhancedView):
 
     @discord_button(label="Credits", style=ButtonStyle.gray)
     async def credits(self, button: Button, interaction: Interaction):
+        class CreditsView(EnhancedView):
+            @discord_button(label="Back", style=ButtonStyle.red)
+            async def back(self, button: Button, interaction: Interaction):
+                await AboutView(ctx=self.ctx).show_about(interaction)
+
         with support.Assets.about():
             credits_text = open(os.path.join("pages", "credits.md")).read()
             embed = discord.Embed(title="Credits", description=credits_text, color=support.Color.mint())
 
             original_message = await self.ctx.interaction.original_message()
-            embed.set_author(name="About - Credits", icon_url=original_message.author.display_avatar.url)
+            embed.set_author(name="About", icon_url=original_message.author.display_avatar.url)
 
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.response.defer()
+            await original_message.edit(embed=embed, attachments=[], view=CreditsView(ctx=self.ctx))
 
     @discord_button(label="Legal", style=ButtonStyle.gray)
     async def legal(self, button: Button, interaction: Interaction):
         class LegalView(EnhancedView):
+            @discord_button(label="Back", style=ButtonStyle.red)
+            async def back(self, button: Button, interaction: Interaction):
+                await AboutView(ctx=self.ctx).show_about(interaction)
+
             @discord_button(label="Privacy Policy", style=ButtonStyle.gray)
             async def privacy_policy(self, button: Button, interaction: Interaction):
                 with support.Assets.about():
@@ -44,7 +55,7 @@ class AboutView(EnhancedView):
                     embed.set_author(name="Legal",
                                      icon_url=original_message.author.display_avatar.url)
 
-                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                    await interaction.response.edit_message(embed=embed)
 
             @discord_button(label="Intellectual Property", style=ButtonStyle.gray)
             async def ip_acknowledgements(self, button: Button, interaction: Interaction):
@@ -57,7 +68,7 @@ class AboutView(EnhancedView):
                     embed.set_author(name="Legal",
                                      icon_url=original_message.author.display_avatar.url)
 
-                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                    await interaction.response.edit_message(embed=embed)
 
             @discord_button(label="Software Licenses", style=ButtonStyle.gray)
             async def software_licenses(self, button: Button, interaction: Interaction):
@@ -106,7 +117,8 @@ class AboutView(EnhancedView):
             original_message = await self.ctx.interaction.original_message()
             embed.set_author(name="About", icon_url=original_message.author.display_avatar.url)
 
-            await interaction.response.send_message(embed=embed, view=LegalView(ctx=self.ctx), ephemeral=True)
+            await interaction.response.defer()
+            await interaction.edit_original_message(embed=embed, attachments=[], view=LegalView(ctx=self.ctx))
 
     @discord_button(label="Technical", style=ButtonStyle.gray)
     async def technical(self, button: Button, interaction: Interaction):
@@ -116,17 +128,22 @@ class AboutView(EnhancedView):
                 self.add_item(Button(label="Source Code", emoji="<:github:953746341413142638>",
                                      url="https://github.com/celsiusnarhwal/3515.games"))
 
-        variables = {
+            @discord_button(label="Back", style=ButtonStyle.red)
+            async def back(self, button: Button, interaction: Interaction):
+                await AboutView(ctx=self.ctx).show_about(interaction)
+
+        statistics = {
             "Bot Version": toml.load("pyproject.toml")["tool"]["poetry"]["version"],
             "Python Version": platform.python_version(),
             "Pycord Version": discord.__version__,
             "Uptime": uptime.get_uptime(),
+            "Ping": "Calculating...",
         }
 
         embed = discord.Embed(title="Technical", description="Statistics for nerds.", color=support.Color.mint())
 
-        for index, (var, value) in enumerate(variables.items()):
-            embed.add_field(name=var, value=value, inline=True)
+        for index, (stat, value) in enumerate(statistics.items()):
+            embed.add_field(name=stat, value=value, inline=True)
 
             if index % 2 == 1:
                 embed.add_field(name="\u200b", value="\u200b")
@@ -134,10 +151,15 @@ class AboutView(EnhancedView):
         original_message = await self.ctx.interaction.original_message()
         embed.set_author(name="About", icon_url=original_message.author.display_avatar.url)
 
-        await interaction.response.send_message(embed=embed, view=TechnicalView(ctx=self.ctx), ephemeral=True)
+        ping_start = time.perf_counter()
+        await interaction.response.defer()
+        await original_message.edit(embed=embed, attachments=[], view=TechnicalView(ctx=self.ctx))
+        ping_end = time.perf_counter()
 
-    async def show_about(self):
+        embed.set_field_at(index=6, name="Ping", value=f"{round(ping_end - ping_start, 3)}s")
+        await original_message.edit(embed=embed)
 
+    async def show_about(self, interaction: Interaction = None):
         with support.Assets.about():
             about_text = open(os.path.join("pages", "main.md")).read()
 
@@ -147,5 +169,8 @@ class AboutView(EnhancedView):
         with support.Assets.about():
             bot_logo = discord.File("bot_logo.png", filename="bot_logo.png")
             about_embed.set_image(url="attachment://bot_logo.png")
-
-            await self.ctx.respond(embed=about_embed, files=[bot_logo], view=self, ephemeral=True)
+            if interaction:
+                await interaction.response.defer()
+                await interaction.edit_original_message(embed=about_embed, file=bot_logo, attachments=[], view=self)
+            else:
+                await self.ctx.respond(embed=about_embed, file=bot_logo, view=self, ephemeral=True)
