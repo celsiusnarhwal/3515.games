@@ -174,6 +174,8 @@ class ChessGame:
         await self.turn_timer()
 
     async def end_current_turn(self):
+        self.turn_uuid = None
+
         async with self.thread.typing():
             with chess.helpers.get_board_png(board=self.board) as board_png:
                 self.turn_record.set_image(url=f"attachment://{board_png.filename}")
@@ -190,7 +192,7 @@ class ChessGame:
         turn_uuid = self.turn_uuid
 
         await asyncio.sleep(120)
-        if turn_uuid == self.turn_uuid:
+        if turn_uuid == self.turn_uuid and self.retrieve_game(self.thread.id):
             msg = f"{self.current_player.user.mention} took too long to move."
             embed = discord.Embed(title=f"{self.current_player.user.name} timed out.",
                                   description=msg, color=support.Color.red())
