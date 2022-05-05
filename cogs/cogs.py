@@ -900,11 +900,19 @@ class ChessCog(MasterCog):
 
     @chess_group.command(description="Make a move in a chess match.")
     @chess.helpers.verify_context(level="turn")
-    async def move(self, ctx: discord.ApplicationContext):
+    async def move(self,
+                   ctx: discord.ApplicationContext,
+                   notation: Option(str, name="move",
+                                    description="Specify a move using algebraic or UCI notation. "
+                                                "If you're confused, leave this blank.",
+                                    required=False)):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
-        await player.move(ctx)
+        if notation:
+            await player.move_with_notation(ctx, notation)
+        else:
+            await player.move_with_gui(ctx)
 
     @chess_group.command(description="View the board in a chess match.")
     @chess.helpers.verify_context(level="game")
@@ -996,7 +1004,8 @@ class ChessCog(MasterCog):
     async def on_message(self, message: discord.Message):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(message.channel.id)
 
-        if chess_game and not chess_game.retrieve_player(message.author) and not message.author.bot:
+        if (chess_game and not chess_game.retrieve_player(message.author) and not message.author.bot and
+                not support.helpers.is_celsius_narhwal(message.author)):
             await message.delete()
 
     @commands.Cog.listener()

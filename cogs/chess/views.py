@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import chess as pychess
 import discord
 from chess import square_name
@@ -35,21 +37,21 @@ class ChessMoveView(EnhancedView):
     # 3: Select promotion piece (if applicable)
     # 4: Confirm move
 
-    [PIECE_SELECTION, ORIGIN, DESTINATION, PROMOTION, CONFIRMATION] = range(5)
+    PIECE_SELECTION, ORIGIN, DESTINATION, PROMOTION, CONFIRMATION = range(5)
 
     def __init__(self, player: chess.ChessPlayer, **kwargs):
         super().__init__(**kwargs)
         self.player = player
 
         self.move_data = {
-            "piece_type": "",
+            "piece": "",
             "origin": 0,
             "destination": 0,
             "promotion": "",
         }
 
         self.board = self.player.game.board
-        self.player_legal_moves = dict()
+        self.legal_moves = dict()
 
         self.image_data = {
             "board": self.board,
@@ -64,11 +66,10 @@ class ChessMoveView(EnhancedView):
         self.stage_history = []
 
         for move in self.board.legal_moves:
-            if self.board.color_at(move.from_square) is player.color:
-                if self.player_legal_moves.get(move.from_square):
-                    self.player_legal_moves[move.from_square].append(move.to_square)
-                else:
-                    self.player_legal_moves[move.from_square] = [move.to_square]
+            if self.legal_moves.get(move.from_square):
+                self.legal_moves[move.from_square].append(move.to_square)
+            else:
+                self.legal_moves[move.from_square] = [move.to_square]
 
         self.stages = [
             ChessSelect(
@@ -129,7 +130,7 @@ class ChessMoveView(EnhancedView):
 
     async def back_button_callback(self, interaction: Interaction):
         move_data_keys = {
-            self.PIECE_SELECTION: "piece_type",
+            self.PIECE_SELECTION: "piece",
             self.ORIGIN: "origin",
             self.DESTINATION: "destination",
             self.PROMOTION: "promotion",
@@ -149,9 +150,8 @@ class ChessMoveView(EnhancedView):
     async def next_button_callback(self, interaction: Interaction):
         def determine_next_stage():
             def from_piece_selection():
-                squares = [square for square in self.player_legal_moves.keys() if
-                           chess.helpers.convert_piece_format(self.board.piece_at(square), "name") == self.move_data[
-                               "piece_type"]]
+                squares = [square for square in self.legal_moves.keys() if self.board.piece_at(square) ==
+                           chess.ChessPiece.from_symbol(self.move_data["piece"])]
 
                 if len(squares) > 1:
                     return self.ORIGIN
@@ -160,31 +160,22 @@ class ChessMoveView(EnhancedView):
                     return from_origin()
 
             def from_origin():
-                if len(self.player_legal_moves[self.move_data["origin"]]) > 1:
+                if len(self.legal_moves[self.move_data["origin"]]) > 1:
                     return self.DESTINATION
                 else:
-                    self.move_data["destination"] = self.player_legal_moves[self.move_data["origin"]][0]
+                    self.move_data["destination"] = self.legal_moves[self.move_data["origin"]][0]
                     return from_destination()
 
             def from_destination():
-                if self.move_data["piece_type"] == "pawn":
-                    origin = self.move_data["origin"]
-                    destination = self.move_data["destination"]
+                origin = self.move_data["origin"]
+                destination = self.move_data["destination"]
 
-                    promotion = False
-                    try:
-                        # it doesn't actually matter what piece we check for here as long it's not a pawn. if a pawn
-                        # can promote to one piece, it can promote to any of them.
-                        self.board.find_move(origin, destination, promotion=6)
-                    except ValueError:
-                        pass
-                    else:
-                        promotion = True
-
-                    if promotion:
-                        return self.PROMOTION
-
-                return self.CONFIRMATION
+                try:
+                    self.board.find_move(origin, destination, promotion=pychess.QUEEN)
+                except ValueError:
+                    return self.CONFIRMATION
+                else:
+                    return self.PROMOTION
 
             stages = {
                 self.PIECE_SELECTION: from_piece_selection,
@@ -198,7 +189,7 @@ class ChessMoveView(EnhancedView):
                 return self.current_stage + 1
 
         move_data_keys = {
-            self.PIECE_SELECTION: "piece_type",
+            self.PIECE_SELECTION: "piece",
             self.ORIGIN: "origin",
             self.DESTINATION: "destination",
             self.PROMOTION: "promotion",
@@ -224,7 +215,7 @@ class ChessMoveView(EnhancedView):
         self.stop()
 
     def configure_buttons(self):
-        if self.current_stage > self.PIECE_SELECTION:
+        if self.stage_history:
             back_button = Button(label="Back", style=ButtonStyle.red)
             back_button.callback = self.back_button_callback
             self.add_item(back_button)
@@ -259,13 +250,12 @@ class ChessMoveView(EnhancedView):
         async def piece_selection():
             menu = self.stages[self.PIECE_SELECTION]
 
-            for square in self.player_legal_moves.keys():
-                symbol = self.board.piece_at(square).symbol()
-                piece_name = chess.helpers.convert_piece_format(symbol, "name")
+            for square in self.legal_moves.keys():
+                piece = self.board.piece_at(square)
 
                 menu.add_option(
-                    label=piece_name.capitalize(),
-                    value=piece_name
+                    label=piece.name().capitalize(),
+                    value=piece.symbol(),
                 )
 
             msg = "Select a piece from the dropdown menu below. Only pieces you can move on this turn " \
@@ -276,12 +266,12 @@ class ChessMoveView(EnhancedView):
 
         async def origin():
             menu = self.stages[self.ORIGIN]
-            piece_name = self.move_data["piece_type"]
+            selected_piece = chess.ChessPiece.from_symbol(self.move_data["piece"])
 
-            for square in self.player_legal_moves.keys():
-                if chess.helpers.convert_piece_format(self.board.piece_at(square), "name") == piece_name:
+            for square in self.legal_moves.keys():
+                if self.board.piece_at(square) == selected_piece:
                     menu.add_option(
-                        label=f"{piece_name.capitalize()} ({square_name(square).capitalize()})",
+                        label=f"{selected_piece.name().capitalize()} ({square_name(square).capitalize()})",
                         value=str(square)
                     )
 
@@ -291,8 +281,8 @@ class ChessMoveView(EnhancedView):
                 key=lambda option: ["abcdefgh12345678".index(char) for char in square_name(int(option.value))]
             )
 
-            msg = f"Select a **{piece_name.capitalize()}** to move. Only **{piece_name.capitalize()}s** you can move " \
-                  f"on this turn are displayed."
+            msg = f"Select a **{selected_piece}** to move. " \
+                  f"Only **{selected_piece}s** you can move on this turn are displayed."
 
             menu.embed = discord.Embed(title="Piece Selection", description=msg, color=support.Color.mint())
 
@@ -302,7 +292,7 @@ class ChessMoveView(EnhancedView):
             menu = self.stages[self.DESTINATION]
             orig = self.move_data["origin"]
 
-            for dest in self.player_legal_moves[orig]:
+            for dest in self.legal_moves[orig]:
                 menu.add_option(
                     label=f"{square_name(dest).capitalize()}",
                     value=str(dest),
@@ -312,14 +302,15 @@ class ChessMoveView(EnhancedView):
                 key=lambda option: ["abcdefgh12345678".index(char) for char in square_name(int(option.value))]
             )
 
-            msg = f"Select a square to move **{self.move_data['piece_type'].capitalize()} " \
+            selected_piece = chess.ChessPiece.from_symbol(self.move_data["piece"])
+            msg = f"Select a square to move **{selected_piece} " \
                   f"({square_name(orig).capitalize()})** " \
                   f"to. Only legal destinations are displayed."
 
             menu.embed = discord.Embed(title="Destination Square", description=msg, color=support.Color.mint())
 
             self.image_data["squares"] = pychess.SquareSet(
-                [square for square in self.player_legal_moves[orig]]
+                [square for square in self.legal_moves[orig]]
             )
             self.image_data["fill"].clear()
             self.image_data["fill"][self.move_data["origin"]] = "#ced179"
@@ -329,15 +320,18 @@ class ChessMoveView(EnhancedView):
         async def promotion():
             menu = self.stages[self.PROMOTION]
 
-            for piece_type in pychess.PIECE_TYPES:
-                if piece_type != pychess.PAWN:
+            for piece_symbol in pychess.PIECE_SYMBOLS:
+                if piece_symbol != "p":
                     menu.add_option(
-                        label=f"{chess.helpers.convert_piece_format(piece_type, 'name').capitalize()}",
-                        value=str(piece_type)
+                        label=piece.name().capitalize(),
+                        value=piece_symbol,
                     )
 
-            msg = f"**{self.move_data['piece_type'].capitalize()} " \
-                  f"({square_name(self.move_data['origin']).capitalize()})** " \
+            selected_piece = chess.ChessPiece.from_symbol(self.move_data["piece"])
+            orig = self.move_data["origin"]
+
+            msg = f"**{selected_piece} " \
+                  f"({square_name(orig).capitalize()})** " \
                   f"will reach its last rank and must be promoted. Choose a piece to promote it to."
 
             menu.embed = discord.Embed(title="Pawn Promotion", description=msg, color=support.Color.mint())
@@ -373,17 +367,17 @@ class ChessMoveView(EnhancedView):
                     await self.ctx.defer(ephemeral=True)
                     await self.ctx.respond(embed=select_menu.embed, file=board_png, view=self, ephemeral=True)
         else:
-            piece_type = self.move_data["piece_type"]
+            piece = chess.ChessPiece.from_symbol(self.move_data["piece"])
             origin_square = self.move_data["origin"]
             destination_square = self.move_data["destination"]
-            promotion_piece = self.move_data["promotion"]
 
-            move_str = f"- Move **{piece_type.capitalize()} ({square_name(origin_square).capitalize()})** to " \
+            move_str = f"- Move **{piece} ({square_name(origin_square).capitalize()})** to " \
                        f"**{square_name(destination_square).capitalize()}**"
 
-            if promotion_piece:
-                move_str += f"\n- Promote aforementioned {piece_type.capitalize()} to " \
-                            f"**{chess.helpers.convert_piece_format(promotion_piece, 'name').capitalize()}**"
+            if self.move_data["promotion"]:
+                promotion_piece = chess.ChessPiece.from_symbol(self.move_data["promotion"])
+                move_str += f"\n- Promote aforementioned {piece} to " \
+                            f"**{promotion_piece}**"
 
             self.clear_items()
             self.configure_buttons()
@@ -401,7 +395,7 @@ class ChessMoveView(EnhancedView):
                 await interaction.response.defer()
                 await interaction.edit_original_message(embed=embed, file=board_png, attachments=[], view=self)
 
-    async def initiate_selection(self):
+    async def initiate_view(self):
         await self.present()
         await self.wait()
 
@@ -413,17 +407,21 @@ class ChessBoardView(EnhancedView):
         def __init__(self, move_history: DoublyLinkedList):
             self.move_history = move_history
             self.current_page = self.move_history.last
-            self.page_number = len(move_history)
+            self.page_number = len(move_history) - 1
 
         def indicator(self):
-            return f"{self.page_number}/{len(self.move_history)}"
+            if self.page_number == 0:
+                return "Match Start"
+
+            color = "White" if self.page_number % 2 != 0 else "Black"
+            return f"Turn {math.ceil(self.page_number / 2)} of {math.ceil((len(self.move_history) - 1) / 2)} ({color})"
 
         def current(self):
             return self.current_page.value
 
         def first(self):
             self.current_page = self.move_history.first
-            self.page_number = 1
+            self.page_number = 0
 
         def previous(self):
             self.current_page = self.current_page.prev
@@ -435,7 +433,7 @@ class ChessBoardView(EnhancedView):
 
         def last(self):
             self.current_page = self.move_history.last
-            self.page_number = len(self.move_history)
+            self.page_number = len(self.move_history) - 1
 
         def has_next(self):
             return self.current_page.next is not None

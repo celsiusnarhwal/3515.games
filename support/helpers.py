@@ -8,14 +8,19 @@ from discord.ext import pages, commands
 import support
 
 
-# deocrators
+# decorators
 
-def is_celsius_narhwal():
+def is_celsius_narhwal(user: discord.User = None):
     """
-    A decorator that checks if the invoking user is me, celsiusnarhwal#3515.
+    A function that checks if a given user is celsiusnarhwal#3515.
+
+    If the ``user`` parameter is not provided, this function will act as a command decorator and check against
+    the invocation context.
     """
+    celsius_id = 170966436125212673
+
     async def predicate(ctx: discord.ApplicationContext):
-        if ctx.user.id == 170966436125212673:
+        if ctx.user.id == celsius_id:
             return True
         else:
             msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
@@ -24,7 +29,7 @@ def is_celsius_narhwal():
 
             return False
 
-    return commands.check(predicate)
+    return user.id == celsius_id if user else commands.check(predicate)
 
 
 def bot_has_permissions(expected_permissions):
