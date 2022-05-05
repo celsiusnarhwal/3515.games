@@ -175,7 +175,7 @@ class ChessGame:
 
         await self.thread.send(content=f"{self.current_player.user.mention}, it's your turn.", embed=embed)
 
-        # await self.turn_timer()
+        await self.turn_timer()
 
     async def end_current_turn(self):
         self.turn_uuid = None

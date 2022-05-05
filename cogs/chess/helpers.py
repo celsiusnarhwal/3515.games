@@ -23,7 +23,7 @@ def verify_context(level: str):
     order, they are:
 
     - "thread" (verifies that the context is an chess game thread)
-    - "player" (verifies that the invoker is a player in the chess mach)
+    - "player" (verifies that the invoker is a player in the chess match)
     - "game" (verifies that the game has been started)
     - "turn" (verifies that it's the invoking players turn)
 
