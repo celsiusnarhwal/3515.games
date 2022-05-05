@@ -78,7 +78,7 @@ class UnoCardSelectView(UnoTerminableView):
         self.game = self.player.game
         self.selected_card: uno.UnoCard = None
         self.paginator = self.UnoCardSelectPaginator(
-            pages=DoublyLinkedList([self.cards[i:i + 23] for i in range(0, len(self.cards), 23)])
+            pages=DoublyLinkedList(support.helpers.split_list(self.cards, 23))
         )
 
     async def interaction_check(self, interaction: Interaction) -> bool:

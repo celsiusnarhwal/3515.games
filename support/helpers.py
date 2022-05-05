@@ -116,3 +116,13 @@ def posessive(string: str) -> str:
     :param string: The string to append the possessive ending to.
     """
     return f"{string}'" if string.endswith("s") else f"{string}'s"
+
+
+def split_list(list: list, size: int) -> list:
+    """
+    Splits a list into smaller lists of the specified size.
+
+    :param list: The list to split.
+    :param size: The size of each sublist.
+    """
+    return [list[i:i + size] for i in range(0, len(list), size)]
