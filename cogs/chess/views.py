@@ -42,6 +42,7 @@ class ChessMoveView(EnhancedView):
     def __init__(self, player: chess.ChessPlayer, **kwargs):
         super().__init__(**kwargs)
         self.player = player
+        self.uuid = player.game.turn_uuid
 
         self.move_data = {
             "piece": "",
@@ -105,12 +106,17 @@ class ChessMoveView(EnhancedView):
             menu.callback = self.select_menu_callback
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        if chess.ChessGame.retrieve_game(self.player.game.thread.id):
-            return super().interaction_check(interaction)
-        else:
+        if not chess.ChessGame.retrieve_game(self.player.game.thread.id):
             for child in self.children:
                 child.disabled = True
                 await interaction.response.edit_message(view=self)
+        elif self.uuid != self.player.game.turn_uuid:
+            msg = "Looks like this message is outdated. You'll have to use `/chess move` again to make a move."
+            embed = discord.Embed(title="Whoops.", description=msg, color=support.Color.red())
+
+            await interaction.response.edit_message(embed=embed, view=None, attachments=[])
+        else:
+            return super().interaction_check(interaction)
 
     async def select_menu_callback(self, interaction: Interaction):
         menu: ChessSelect = discord.utils.find(
@@ -413,7 +419,7 @@ class ChessBoardView(EnhancedView):
             if self.page_number == 0:
                 return "Match Start"
 
-            color = "White" if self.page_number % 2 != 0 else "Black"
+            color = "White" if not self.current().turn else "Black"
             return f"Turn {math.ceil(self.page_number / 2)} of {math.ceil((len(self.move_history) - 1) / 2)} ({color})"
 
         def current(self):
