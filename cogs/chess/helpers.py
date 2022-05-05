@@ -4,7 +4,6 @@ import os
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 
-import chess as pychess
 import chess.svg as pychess_svg
 import discord
 from discord.ext import commands
@@ -119,87 +118,3 @@ def get_board_png(**kwargs) -> discord.File:
             open("board.svg", "w+").write(pychess_svg.board(**kwargs, size=1800))
             renderPM.drawToFile(svg2rlg("board.svg"), "board.png", fmt="png")
             yield discord.File(os.path.abspath("board.png"))
-
-
-# miscellaneous
-
-
-def convert_piece_format(piece: pychess.Piece | str | int, output: str) -> pychess.Piece | str | int:
-    def from_piece():
-        def to_symbol():
-            return piece.symbol()
-
-        def to_name():
-            return pychess.PIECE_NAMES[to_int()]
-
-        def to_int():
-            return piece.piece_type
-
-        return {
-            "symbol": to_symbol(),
-            "name": to_name(),
-            "int": to_int()
-        }[output]
-
-    def from_symbol():
-        def to_piece():
-            return pychess.Piece.from_symbol(piece)
-
-        def to_name():
-            return pychess.PIECE_NAMES[to_int()]
-
-        def to_int():
-            return to_piece().piece_type
-
-        return {
-            "piece": to_piece(),
-            "name": to_name(),
-            "int": to_int()
-        }[output]
-
-    def from_name():
-        def to_piece():
-            return pychess.Piece.from_symbol(to_symbol())
-
-        def to_symbol():
-            return pychess.PIECE_SYMBOLS[pychess.PIECE_NAMES.index(piece)]
-
-        def to_int():
-            return to_piece().piece_type
-
-        return {
-            "piece": to_piece(),
-            "symbol": to_symbol(),
-            "int": to_int()
-        }[output]
-
-    def from_int():
-        def to_piece():
-            return pychess.Piece.from_symbol(to_symbol())
-
-        def to_symbol():
-            return pychess.PIECE_SYMBOLS[piece]
-
-        def to_name():
-            return pychess.PIECE_NAMES[piece]
-
-        return {
-            "piece": to_piece(),
-            "symbol": to_symbol(),
-            "name": to_name()
-        }[output]
-
-    if isinstance(piece, pychess.Piece):
-        return from_piece()
-    elif isinstance(piece, int):
-        return from_int()
-
-    elif isinstance(piece, str):
-        if piece.casefold() in pychess.PIECE_SYMBOLS:
-            return from_symbol()
-        elif piece.casefold() in pychess.PIECE_NAMES:
-            return from_name()
-        else:
-            raise ValueError(f"{piece} is not a valid piece")
-    else:
-        raise TypeError(f"piece must be a pychess.Piece, str, or int, not {type(piece)}")

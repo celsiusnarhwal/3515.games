@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import math
 import random
 import uuid
 from collections import Counter
@@ -25,8 +26,9 @@ class ChessGame:
         self.has_started = False
         self.players = [ChessPlayer(player, self) for player in players]
         self.current_player = None
+        self.turn_number = 0
         self.turn_uuid = None
-        self.board = pychess.Board()
+        self.board = ChessBoard()
         self.move_history = DoublyLinkedList([self.board.copy()])
         self.turn_record: discord.Embed = None
 
@@ -161,7 +163,9 @@ class ChessGame:
         await self.start_next_turn()
 
     async def start_next_turn(self):
+        self.turn_number += 1
         self.turn_uuid = uuid.uuid4()
+
         self.current_player = self.white if self.current_player != self.white else self.black
 
         embed = discord.Embed(title="New Turn", description=f"It's {posessive(self.current_player.user.name)} turn.",
@@ -171,7 +175,7 @@ class ChessGame:
 
         await self.thread.send(content=f"{self.current_player.user.mention}, it's your turn.", embed=embed)
 
-        await self.turn_timer()
+        # await self.turn_timer()
 
     async def end_current_turn(self):
         self.turn_uuid = None
@@ -334,32 +338,70 @@ class ChessPlayer:
 
         await self.game.check_ready_players()
 
-    async def move(self, ctx: discord.ApplicationContext):
+    async def move_with_gui(self, ctx: discord.ApplicationContext):
         view = chess.ChessMoveView(ctx=ctx, player=self)
-        move = await view.initiate_selection()
+
+        move = await view.initiate_view()
+
+        self.game.board.push(move)
 
         processor = ChessEventProcessor(self.game)
         processor.move_event(player=self, move=move, move_data=view.move_data)
 
-        if move.promotion:
-            processor.promotion_event(self, view.move_data)
-
-        board_copy = self.game.board.copy(stack=1)
-        board_copy.pop()
-
-        if board_copy.is_castling(move):
-            processor.castle_event(self)
-        if board_copy.is_capture(move):
-            processor.capture_event(self)
-
-        if self.game.board.is_checkmate():
-            processor.checkmate_event(self.opponent)
-        elif self.game.board.is_stalemate():
-            processor.stalemate_event()
-        elif self.game.board.is_check():
-            processor.check_event(self.opponent)
-
         await self.end_turn()
+
+    async def move_with_notation(self, ctx: discord.ApplicationContext, notation: str):
+        def parse_move(move_str: str) -> pychess.Move | None:
+            try:
+                parsed_move = self.game.board.parse_san(move_str)
+            except ValueError:
+                try:
+                    parsed_move = self.game.board.parse_uci(move_str)
+                except ValueError:
+                    return None
+
+            return parsed_move if self.game.board.is_legal(parsed_move) else None
+
+        move = parse_move(notation)
+
+        if move:
+            await ctx.respond("Making move...", ephemeral=True)
+
+            self.game.board.push(move)
+
+            board_copy = self.game.board.copy()
+            board_copy.pop()
+
+            move_data = {
+                "piece": board_copy.piece_at(move.from_square).symbol(),
+                "origin": move.from_square,
+                "destination": move.to_square,
+                "promotion": ChessPiece.from_piece_type(move.promotion, self.color)
+            }
+
+            processor = ChessEventProcessor(self.game)
+            processor.move_event(player=self, move=move, move_data=move_data)
+
+            await self.end_turn()
+        else:
+            msg = "The move you entered is invalid. You must enter an valid move using either algebraic or " \
+                  "Universal Chess Interface (UCI) notation. If you're having trouble, here are some pointers to " \
+                  "keep in mind:\n" \
+                  "\n" \
+                  "— **Moves must be legal.** Take a good look at `/chess board` and make sure the move you're " \
+                  "trying to make is actually legal. Remember that if you're in check, you must defend your " \
+                  "king, and if you're moving a pawn to its last rank, you must promote it.\n" \
+                  "\n" \
+                  "— **Moves are case-sensitive.** Be sure to use uppercase and lowercase letters as your " \
+                  "chosen notation format requires.\n" \
+                  "\n" \
+                  "— **Moves must be unambiguous**. The move you enter must be sufficiently specific for me to be " \
+                  "able to tell what you're trying to do. I'll accept even the most minimal notation, but when " \
+                  "in doubt — overspecific is __always__ better than underspecific." \
+
+            embed = discord.Embed(title="Invalid Move", description=msg, color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
 
     async def view_board(self, ctx: discord.ApplicationContext):
         view = chess.ChessBoardView(ctx=ctx, player=self)
@@ -409,33 +451,78 @@ class ChessPlayer:
         return self.user.name
 
 
+class ChessBoard(pychess.Board):
+    def piece_at(self, square) -> ChessPiece | None:
+        piece = super().piece_at(square)
+        return ChessPiece.from_base_piece(piece) if piece else None
+
+
+class ChessPiece(pychess.Piece):
+    def name(self) -> str:
+        return pychess.PIECE_NAMES[self.piece_type]
+
+    def emoji(self):
+        pass
+
+    @classmethod
+    def from_base_piece(cls, piece: pychess.Piece):
+        return cls(piece.piece_type, piece.color)
+
+    @classmethod
+    def from_piece_type(cls, piece_type: int, color: int):
+        return cls(piece_type, color)
+
+    def __str__(self):
+        return self.unicode_symbol() + self.name().capitalize()
+
+
 class ChessEventProcessor:
     def __init__(self, game: ChessGame):
         self.game = game
 
     def move_event(self, player: ChessPlayer, move: pychess.Move, move_data: dict):
-        self.game.board.push(move)
         self.game.move_history.append(self.game.board.copy(stack=1))
 
-        piece_type: str = move_data["piece_type"]
+        piece: ChessPiece = ChessPiece.from_symbol(move_data["piece"])
         origin: str = square_name(move_data["origin"])
         destination: str = square_name(move_data["destination"])
 
-        msg = f"**{player.user.mention}** moves **{piece_type.capitalize()}** from {origin.capitalize()} " \
+        msg = f"**{player.user.mention}** moves **{piece}** from {origin.capitalize()} " \
               f"to {destination.capitalize()}."
 
         embed = discord.Embed(title="Piece Moved", description=msg, color=player.get_embed_color())
 
+        embed.set_footer(icon_url=player.user.display_avatar.url,
+                         text=f"{player.user} • {self.game.thread.name} • Turn {math.ceil(self.game.turn_number / 2)}")
+
         self.game.turn_record = embed
 
+        if move.promotion:
+            self.promotion_event(self, move_data)
+
+        board_copy = self.game.board.copy(stack=1)
+        board_copy.pop()
+
+        if board_copy.is_castling(move):
+            self.castle_event(player)
+        if board_copy.is_capture(move):
+            self.capture_event(player)
+
+        if self.game.board.is_checkmate():
+            self.checkmate_event(player.opponent)
+        elif self.game.board.is_stalemate():
+            self.stalemate_event()
+        elif self.game.board.is_check():
+            self.check_event(player.opponent)
+
     def promotion_event(self, player: ChessPlayer, move_data: dict):
-        piece_type: str = move_data["piece_type"]
+        piece: ChessPiece = ChessPiece.from_symbol(move_data["piece"])
         destination: str = move_data["destination"]
-        promotion: str = move_data["promotion"]
+        promotion: ChessPiece = ChessPiece.from_symbol(move_data["promotion"])
 
         msg = f"**{player.user.name}** promotes " \
-              f"**{piece_type.capitalize()} ({square_name(destination).capitalize()})** " \
-              f"to a {chess.helpers.convert_piece_format(promotion, 'name').capitalize()}."
+              f"**{piece} ({square_name(destination).capitalize()})** " \
+              f"to a {promotion}."
 
         self.game.turn_record.add_field(name="Pawn Promoted", value=msg, inline=False)
 
@@ -457,9 +544,9 @@ class ChessEventProcessor:
             [move.to_square, move.to_square - 8, move.to_square + 8]
         )
 
-        captured_piece = chess.helpers.convert_piece_format(board_copy.piece_at(square), "name")
+        captured_piece = board_copy.piece_at(square)
 
-        msg = f"**{player.user.name}** captures {player.opponent.user.mention}'s **{captured_piece.capitalize()} " \
+        msg = f"**{player.user.name}** captures {player.opponent.user.mention}'s **{captured_piece} " \
               f"({square_name(move.to_square).capitalize()})**"
 
         if board_copy.is_en_passant(move):

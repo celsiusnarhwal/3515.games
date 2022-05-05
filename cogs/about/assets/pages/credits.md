@@ -1,4 +1,4 @@
-I hail from the mind of my creator, <@170966436125212673>. He designed and developed me all by himself. Pretty impressive, right?
+I hail from the mind of my creator, <@170966436125212673>. He designed and developed me all by himself. Pretty cool, right?
 
 My creator would like to personally thank the following people for their time, patience, and valuable feedback, which helped refine me into the bot I am today:
 
