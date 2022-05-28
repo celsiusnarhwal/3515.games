@@ -804,7 +804,7 @@ class UnoPlayer:
 
         :param ctx: A discord.ApplicationContext object.
         """
-        split_cards = [self.hand[i:i + 23] for i in range(0, len(self.hand), 23)]
+        split_cards = support.helpers.split_list(self.hand, 23)
         pages = [
             discord.Embed(
                 title="Your Hand",

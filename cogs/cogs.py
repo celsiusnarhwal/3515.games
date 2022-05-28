@@ -4,8 +4,6 @@ from discord.ext import commands
 from llist import dllistnode
 
 import support
-import support.helpers
-import support.views
 from cogs import about, rps, uno, chess
 
 
@@ -760,7 +758,11 @@ class ChessCog(MasterCog):
     @support.helpers.invoked_in_text_channel()
     async def challenge(self,
                         ctx: discord.ApplicationContext,
-                        opponent: Option(discord.User, "Mention a user to be your opponent.")):
+                        opponent: Option(discord.User, "Mention a user to be your opponent."),
+                        saving: Option(str, "Choose whether to enable game saving. Defaults to Enabled.",
+                                       choices=["Enabled", "Disabled"], default="Enabled")):
+
+        saving = True if saving == "Enabled" else False
 
         if ctx.user == opponent:
             msg = "You can't play with yourself. Choose someone else to challenge."
@@ -846,7 +848,7 @@ class ChessCog(MasterCog):
                 auto_archive_duration=1440
             )
 
-            chess_game = chess.ChessGame(thread=game_thread, players=[ctx.user, opponent])
+            chess_game = chess.ChessGame(thread=game_thread, players=[ctx.user, opponent], saving_enabled=saving)
 
             await chess_game.open_lobby()
 
@@ -1000,38 +1002,44 @@ class ChessCog(MasterCog):
                 await ctx.respond(content="Rescinding your proposal...", ephemeral=True)
                 await player.rescind_draw()
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    @chess_group.command(description="Revisit your past chess matches.")
+    async def replay(self, ctx: discord.ApplicationContext):
+        view = chess.ChessReplayMenuView(ctx=ctx)
+        await view.initiate_view()
+
+    @commands.Cog.listener(name="on_message")
+    async def delete_non_player_messages(self, message: discord.Message):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(message.channel.id)
 
         if (chess_game and not chess_game.retrieve_player(message.author) and not message.author.bot and
                 not support.helpers.is_celsius_narhwal(message.author)):
             await message.delete()
 
-    @commands.Cog.listener()
-    async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
+    @commands.Cog.listener(name="on_thread_member_remove")
+    async def sync_game_thread_removal(self, thread_member: discord.ThreadMember):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(thread_member.thread_id)
         player: chess.ChessPlayer = chess_game.retrieve_player(thread_member)
 
         if player:
             await player.forfeit()
 
-            msg = f"I forfeited your chess match against {player.opponent} in {chess_game.guild} on your behalf " \
-                  f"because you left the game thread."
+            msg = f"I forfeited your chess match against {player.opponent.user.mention} in {chess_game.guild} " \
+                  f"on your behalf because you left the game thread."
 
-            embed = discord.Embed(title="Chess Match Forfeited", description=msg, color=support.Color.red())
+            embed = discord.Embed(title="Chess Match Forfeited", description=msg, color=support.Color.red(),
+                                  timestamp=discord.utils.utcnow())
 
             await player.user.send(embed=embed)
 
-    @commands.Cog.listener()
-    async def on_raw_thread_delete(self, thread: discord.RawThreadDeleteEvent):
+    @commands.Cog.listener(name="on_raw_thread_delete")
+    async def force_close_thread_deletion(self, thread: discord.RawThreadDeleteEvent):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(thread.thread_id)
 
         if chess_game:
             await chess_game.force_close(reason="thread_deletion")
 
-    @commands.Cog.listener()
-    async def on_guild_channel_delete(self, channel):
+    @commands.Cog.listener(name="on_guild_channel_delete")
+    async def force_close_channel_deletion(self, channel):
         for thread in [thread for thread in channel.threads if chess.ChessGame.retrieve_game(thread.id)]:
             chess_game = chess.ChessGame.retrieve_game(thread.id)
             await chess_game.force_close(reason="channel_deletion")

@@ -5,11 +5,11 @@ import math
 import random
 import uuid
 from collections import Counter
+from typing import TypedDict
 
 import chess as pychess
 import discord
 from chess import square_name
-from llist import dllist as DoublyLinkedList
 
 import support
 from cogs import chess
@@ -19,8 +19,9 @@ from support import posessive
 class ChessGame:
     __all_games__ = dict()
 
-    def __init__(self, players, thread: discord.Thread):
+    def __init__(self, players, thread: discord.Thread, saving_enabled: bool):
         self.thread = thread
+        self.saving_enabled = saving_enabled
 
         self.guild = thread.guild
         self.has_started = False
@@ -29,12 +30,10 @@ class ChessGame:
         self.turn_number = 0
         self.turn_uuid = None
         self.board = ChessBoard()
-        self.move_history = DoublyLinkedList([self.board.copy()])
         self.turn_record: discord.Embed = None
 
         for player in self.players:
-            player.opponent = self.players[0] if player == self.players[1].user else \
-                self.players[1]
+            player.opponent = self.players[0] if player == self.players[1] else self.players[1]
 
         self.white = None
         self.black = None
@@ -120,6 +119,11 @@ class ChessGame:
                               description=msg,
                               color=support.Color.mint())
 
+        if self.saving_enabled:
+            embed.set_footer(text="Game saving is enabled. Please review /about > Legal > Privacy Policy.")
+        else:
+            embed.set_footer(text="Game saving is disabled.")
+
         intro = await self.thread.send(embed=embed)
         await intro.pin()
 
@@ -136,7 +140,9 @@ class ChessGame:
         self.black = self.players[1]
 
         for player in self.players:
-            player.populate_color_based_metadate()
+            player.set_color()
+
+        await self.thread.edit(name=f"Chess - {self.white.user.name} vs. {self.black.user.name}")
 
         msg = f"In chess, your objective is to checkmate your opponent's king. Accomplish this, and you win. Yes, " \
               f"it's really that simple.\n" \
@@ -195,14 +201,21 @@ class ChessGame:
     async def turn_timer(self):
         turn_uuid = self.turn_uuid
 
-        await asyncio.sleep(120)
+        await asyncio.sleep(90)
         if turn_uuid == self.turn_uuid and self.retrieve_game(self.thread.id):
-            msg = f"{self.current_player.user.mention} took too long to move."
-            embed = discord.Embed(title=f"{self.current_player.user.name} timed out.",
-                                  description=msg, color=support.Color.red())
+            msg = f"{self.current_player.user.mention} has 30 seconds left to move."
+            embed = discord.Embed(title="30 Second Warning", description=msg,
+                                  color=support.Color.orange())
             await self.thread.send(embed=embed)
 
-            await self.end_game(reason="timeout", player=self.current_player)
+            await asyncio.sleep(30)
+            if turn_uuid == self.turn_uuid and self.retrieve_game(self.thread.id):
+                msg = f"{self.current_player.user.mention} took too long to move."
+                embed = discord.Embed(title=f"{self.current_player.user.name} timed out.",
+                                      description=msg, color=support.Color.red())
+                await self.thread.send(embed=embed)
+
+                await self.end_game(reason="timeout", player=self.current_player)
 
     async def end_game(self, reason: str, **kwargs):
         self.__all_games__.pop(self.thread.id)
@@ -215,15 +228,11 @@ class ChessGame:
             if self.has_started:
                 winner = forfeiter.opponent
 
-                msg = f"{winner.user.mention} wins by forfeit.\n" \
-                      f"\n" \
-                      f"This thread will be automatically deleted in 60 seconds.\n" \
-                      f"\n" \
-                      f"Thanks for playing!"
+                msg = f"{winner.user.mention} wins by forfeit."
 
-                embed = discord.Embed(title=f"Chess: Game Over! {winner.user.name} wins!",
-                                      description=msg,
-                                      color=support.Color.mint())
+                return discord.Embed(title=f"Chess: Game Over! {winner.user.name} wins!",
+                                     description=msg,
+                                     color=support.Color.mint())
             else:
                 msg = f"{forfeiter.user.mention} forfeited the match, forcing it to end.\n" \
                       f"\n" \
@@ -233,22 +242,15 @@ class ChessGame:
                                       description=msg,
                                       color=support.Color.red())
 
-            forfeit_msg = await self.thread.send(embed=embed)
-            await forfeit_msg.pin()
+                forfeit_msg = await self.thread.send(embed=embed)
+                await forfeit_msg.pin()
 
         async def draw():
             await self.thread.edit(name=f"{self.thread.name} - Game Over!")
 
-            msg = "Both players agreed to a draw.\n" \
-                  "\n" \
-                  "This thread will be automatically deleted in 60 seconds.\n" \
-                  "\n" \
-                  "Thanks for playing!"
+            msg = "Both players agreed to a draw."
 
-            embed = discord.Embed(title="Chess: Game Over! It's a draw!", description=msg, color=support.Color.mint())
-
-            draw_msg = await self.thread.send(embed=embed)
-            await draw_msg.pin()
+            return discord.Embed(title="Chess: Game Over! It's a draw!", description=msg, color=support.Color.mint())
 
         async def timeout():
             offender: ChessPlayer = kwargs.get("player")
@@ -262,45 +264,24 @@ class ChessGame:
 
             await self.thread.edit(name=f"{self.thread.name} - Game Over!")
 
-            msg = f"{offender.opponent.user.mention} wins on time.\n" \
-                  f"\n" \
-                  f"This thread will be automatically deleted in 60 seconds.\n" \
-                  f"\n" \
-                  f"Thanks for playing!"
+            msg = f"{offender.opponent.user.mention} wins on time."
 
-            embed = discord.Embed(title=f"Chess: Game Over! {offender.opponent.user.name} wins!",
-                                  description=msg, color=support.Color.mint())
-
-            timeout_msg = await self.thread.send(embed=embed)
-            await timeout_msg.pin()
+            return discord.Embed(title=f"Chess: Game Over! {offender.opponent.user.name} wins!",
+                                 description=msg, color=support.Color.mint())
 
         async def stalemate():
-            msg = "The match ended in a stalemate.\n" \
-                  "" \
-                  "This thread will be automatically deleted in 60 seconds.\n" \
-                  "\n" \
-                  "Thanks for playing!"
+            msg = "The match ended in a stalemate."
 
-            embed = discord.Embed(title="Chess: Game Over! It's a draw!", description=msg, color=support.Color.mint())
-
-            stalemate_msg = await self.thread.send(embed=embed)
-            await stalemate_msg.pin()
+            return discord.Embed(title="Chess: Game Over! It's a draw!", description=msg, color=support.Color.mint())
 
         async def checkmate():
             winner = kwargs.get("winner")
 
-            msg = f"{winner.user.mention} wins by checkmate. Congratulations!\n" \
-                  f"\n" \
-                  f"This thread will be automatically deleted in 60 seconds.\n" \
-                  f"\n" \
-                  f"Thanks for playing!"
+            msg = f"{winner.user.mention} wins by checkmate. Congratulations!"
 
-            embed = discord.Embed(title=f"Chess: Game Over! {winner.user.name} wins!",
-                                  description=msg,
-                                  color=support.Color.mint())
-
-            checkmate_msg = await self.thread.send(embed=embed)
-            await checkmate_msg.pin()
+            return discord.Embed(title=f"Chess: Game Over! {winner.user.name} wins!",
+                                 description=msg,
+                                 color=support.Color.mint())
 
         reason_map = {
             "forfeit": forfeit,
@@ -310,7 +291,23 @@ class ChessGame:
             "checkmate": checkmate,
         }
 
-        await reason_map[reason]()
+        embed_to_send = await reason_map[reason]()
+
+        if embed_to_send:
+
+            if self.saving_enabled and self.board.move_stack:
+                embed_to_send.description += f"\n\nPlayers can save a record of this game with the Save Game button " \
+                                             f"below and revisit it at any time via `/chess replay`."
+
+            embed_to_send.description += f"\n\nThis thread will be automatically deleted in 60 seconds.\n" \
+                                         f"\n" \
+                                         f"Thanks for playing!"
+
+            view = chess.ChessEndgameView(game=self) if self.saving_enabled else None
+
+            message = await self.thread.send(embed=embed_to_send, view=view)
+
+            await message.pin()
 
         await asyncio.sleep(60)
         await self.thread.delete()
@@ -372,8 +369,8 @@ class ChessPlayer:
             board_copy = self.game.board.copy()
             board_copy.pop()
 
-            move_data = {
-                "piece": board_copy.piece_at(move.from_square).symbol(),
+            move_data: ChessMoveData = {
+                "piece": board_copy.piece_at(move.from_square),
                 "origin": move.from_square,
                 "destination": move.to_square,
                 "promotion": ChessPiece.from_piece_type(move.promotion, self.color)
@@ -388,7 +385,7 @@ class ChessPlayer:
                   "Universal Chess Interface (UCI) notation. If you're having trouble, here are some pointers to " \
                   "keep in mind:\n" \
                   "\n" \
-                  "— **Moves must be legal.** Take a good look at `/chess board` and make sure the move you're " \
+                  "— **Moves must be legal.** Take a good look at the `/chess board` and make sure the move you're " \
                   "trying to make is actually legal. Remember that if you're in check, you must defend your " \
                   "king, and if you're moving a pawn to its last rank, you must promote it.\n" \
                   "\n" \
@@ -397,7 +394,7 @@ class ChessPlayer:
                   "\n" \
                   "— **Moves must be unambiguous**. The move you enter must be sufficiently specific for me to be " \
                   "able to tell what you're trying to do. I'll accept even the most minimal notation, but when " \
-                  "in doubt — overspecific is __always__ better than underspecific." \
+                  "in doubt — overspecific is __always__ better than underspecific."
 
             embed = discord.Embed(title="Invalid Move", description=msg, color=support.Color.red())
 
@@ -435,9 +432,8 @@ class ChessPlayer:
     async def end_turn(self):
         await self.game.end_current_turn()
 
-    def populate_color_based_metadate(self):
+    def set_color(self):
         self.color = pychess.WHITE if self == self.game.white else pychess.BLACK
-        self.opponent = self.game.black if self.color == pychess.WHITE else self.game.white
 
     def get_embed_color(self):
         embed_colors = {
@@ -465,25 +461,40 @@ class ChessPiece(pychess.Piece):
         pass
 
     @classmethod
-    def from_base_piece(cls, piece: pychess.Piece):
+    def from_base_piece(cls, piece: pychess.Piece) -> ChessPiece:
         return cls(piece.piece_type, piece.color)
 
     @classmethod
-    def from_piece_type(cls, piece_type: int, color: int):
+    def from_piece_type(cls, piece_type: int, color: int) -> ChessPiece:
         return cls(piece_type, color)
+
+    @classmethod
+    def from_symbol(cls, symbol: str) -> ChessPiece:
+        try:
+            return super().from_symbol(symbol) if symbol is not None else None
+        except AttributeError:
+            return None
 
     def __str__(self):
         return self.unicode_symbol() + self.name().capitalize()
+
+    def __eq__(self, other):
+        return self.symbol() == other.symbol()
+
+
+class ChessMoveData(TypedDict):
+    piece: chess.ChessPiece
+    origin: int
+    destination: int
+    promotion: chess.ChessPiece
 
 
 class ChessEventProcessor:
     def __init__(self, game: ChessGame):
         self.game = game
 
-    def move_event(self, player: ChessPlayer, move: pychess.Move, move_data: dict):
-        self.game.move_history.append(self.game.board.copy(stack=1))
-
-        piece: ChessPiece = ChessPiece.from_symbol(move_data["piece"])
+    def move_event(self, player: ChessPlayer, move: pychess.Move, move_data: ChessMoveData):
+        piece: ChessPiece = move_data["piece"]
         origin: str = square_name(move_data["origin"])
         destination: str = square_name(move_data["destination"])
 

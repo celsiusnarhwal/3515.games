@@ -6,6 +6,7 @@ import discord
 import cogs
 import settings
 import uptime
+from database.models import db
 
 bot = discord.Bot(intents=settings.INTENTS, debug_guilds=settings.DEBUG_GUILDS)
 
@@ -45,8 +46,17 @@ def cog_setup():
             bot.add_cog(cog(bot=bot))
 
 
+def configure_database():
+    """
+    Configures the database.
+    """
+    db.bind(**settings.DATABASE_SETTINGS)
+    db.generate_mapping(create_tables=True)
+
+
 if __name__ == '__main__':
     configure_logging()
+    configure_database()
     cog_setup()
     uptime.mark_startup()
     bot.run(settings.TOKEN)

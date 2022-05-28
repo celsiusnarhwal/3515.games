@@ -17,6 +17,9 @@ path = "^16.4.0"
 alianator = "^2.0.0"
 py-cord = {git = "https://github.com/Pycord-Development/pycord"}
 humanize = "^4.0.0"
+PyGithub = "^1.55"
+shortuuid = "^1.0.8"
+pony = "^0.7.16"
 
 [tool.poetry.dev-dependencies]
 pip-licenses = "^3.5.3"
