@@ -11,6 +11,7 @@ from path import Path
 from reportlab.graphics import renderPM
 from svglib.svglib import svg2rlg
 
+import database.models as db
 import support
 from cogs import chess
 
@@ -118,3 +119,11 @@ def get_board_png(**kwargs) -> discord.File:
             open("board.svg", "w+").write(pychess_svg.board(**kwargs, size=1800))
             renderPM.drawToFile(svg2rlg("board.svg"), "board.png", fmt="png")
             yield discord.File(os.path.abspath("board.png"))
+
+
+# miscellaneous
+
+
+@db.db_session
+def get_saved_games(user: discord.User):
+    return db.ChessGame.select(lambda g: g.user_id == user.id).order_by(lambda g: db.desc(g.date_saved))

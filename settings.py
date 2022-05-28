@@ -19,6 +19,9 @@ DEBUG_GUILDS = []
 # Disabled Cogs
 DISABLED_COGS = []
 
+# Database Settings
+DATABASE_SETTINGS = {}
+
 # Bot Token
 TOKEN = os.getenv("DEV_TOKEN" if DEV_MODE else "BOT_TOKEN")
 

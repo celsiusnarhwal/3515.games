@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import os
+
 import alianator
 import discord
 from discord import ButtonStyle
 from discord.ext import pages, commands
+from github import Github as GitHub
 
 import support
 
@@ -118,11 +121,16 @@ def posessive(string: str) -> str:
     return f"{string}'" if string.endswith("s") else f"{string}'s"
 
 
-def split_list(list: list, size: int) -> list:
+def split_list(seq: list, size: int) -> list:
     """
     Splits a list into smaller lists of the specified size.
 
-    :param list: The list to split.
+    :param seq: The list to split.
     :param size: The size of each sublist.
     """
-    return [list[i:i + size] for i in range(0, len(list), size)]
+    return [seq[i:i + size] for i in range(0, len(seq), size)]
+
+
+def get_repo():
+    gh = GitHub(os.getenv("GITHUB_TOKEN"))
+    return gh.get_repo("celsiusnarhwal/3515.games")

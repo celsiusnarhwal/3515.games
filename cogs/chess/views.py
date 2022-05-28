@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import math
+import re
+from collections import deque
+from io import StringIO
+from tempfile import TemporaryDirectory
 
 import chess as pychess
+import chess.pgn as pychess_pgn
 import discord
 from chess import square_name
 from discord import Interaction, ButtonStyle
-from discord.ui import Select, Button, button as discord_button
-from llist import dllist as DoublyLinkedList
+from discord.ui import Select, Modal, InputText, Button, button as discord_button
+from path import Path
 
+import database.models as db
 import support
 from cogs import chess
 from support import EnhancedView
@@ -32,7 +38,7 @@ class ChessMoveView(EnhancedView):
     """
     # Stages
     # 0: Select piece type
-    # 1: Select piece (if multiple)
+    # 1: Select piece (if muliple)
     # 2: Select destination square
     # 3: Select promotion piece (if applicable)
     # 4: Confirm move
@@ -44,11 +50,11 @@ class ChessMoveView(EnhancedView):
         self.player = player
         self.uuid = player.game.turn_uuid
 
-        self.move_data = {
-            "piece": "",
+        self.move_data: chess.ChessMoveData = {
+            "piece": None,
             "origin": 0,
             "destination": 0,
-            "promotion": "",
+            "promotion": None,
         }
 
         self.board = self.player.game.board
@@ -156,13 +162,14 @@ class ChessMoveView(EnhancedView):
     async def next_button_callback(self, interaction: Interaction):
         def determine_next_stage():
             def from_piece_selection():
-                squares = [square for square in self.legal_moves.keys() if self.board.piece_at(square) ==
-                           chess.ChessPiece.from_symbol(self.move_data["piece"])]
+                origin_squares = [square for square in self.legal_moves.keys() if
+                                  self.board.piece_at(square).piece_type ==
+                                  self.move_data["piece"].piece_type]
 
-                if len(squares) > 1:
+                if len(origin_squares) > 1:
                     return self.ORIGIN
                 else:
-                    self.move_data["origin"] = squares[0]
+                    self.move_data["origin"] = origin_squares[0]
                     return from_origin()
 
             def from_origin():
@@ -201,10 +208,21 @@ class ChessMoveView(EnhancedView):
             self.PROMOTION: "promotion",
         }
 
-        try:
-            self.move_data[move_data_keys[self.current_stage]] = int(self.stages[self.current_stage].values[0])
-        except ValueError:
-            self.move_data[move_data_keys[self.current_stage]] = self.stages[self.current_stage].values[0]
+        self.move_data[move_data_keys[self.current_stage]] = self.stages[self.current_stage].values[0]
+
+        move_data_values = {
+            self.PIECE_SELECTION: chess.ChessPiece.from_symbol(self.move_data["piece"]),
+            self.ORIGIN: int(self.move_data["origin"]),
+            self.DESTINATION: int(self.move_data["destination"]),
+            self.PROMOTION: chess.ChessPiece.from_symbol(self.move_data["promotion"]),
+        }
+
+        self.move_data[move_data_keys[self.current_stage]] = move_data_values[self.current_stage]
+
+        # try:
+        #     self.move_data[move_data_keys[self.current_stage]] = int(self.stages[self.current_stage].values[0])
+        # except ValueError:
+        #     self.move_data[move_data_keys[self.current_stage]] = self.stages[self.current_stage].values[0]
 
         self.stage_history.append(self.current_stage)
 
@@ -272,7 +290,7 @@ class ChessMoveView(EnhancedView):
 
         async def origin():
             menu = self.stages[self.ORIGIN]
-            selected_piece = chess.ChessPiece.from_symbol(self.move_data["piece"])
+            selected_piece = self.move_data["piece"]
 
             for square in self.legal_moves.keys():
                 if self.board.piece_at(square) == selected_piece:
@@ -308,7 +326,7 @@ class ChessMoveView(EnhancedView):
                 key=lambda option: ["abcdefgh12345678".index(char) for char in square_name(int(option.value))]
             )
 
-            selected_piece = chess.ChessPiece.from_symbol(self.move_data["piece"])
+            selected_piece = self.move_data["piece"]
             msg = f"Select a square to move **{selected_piece} " \
                   f"({square_name(orig).capitalize()})** " \
                   f"to. Only legal destinations are displayed."
@@ -329,11 +347,11 @@ class ChessMoveView(EnhancedView):
             for piece_symbol in pychess.PIECE_SYMBOLS:
                 if piece_symbol != "p":
                     menu.add_option(
-                        label=piece.name().capitalize(),
+                        label=chess.ChessPiece.from_symbol(piece_symbol).name().capitalize(),
                         value=piece_symbol,
                     )
 
-            selected_piece = chess.ChessPiece.from_symbol(self.move_data["piece"])
+            selected_piece = self.move_data["piece"]
             orig = self.move_data["origin"]
 
             msg = f"**{selected_piece} " \
@@ -373,7 +391,7 @@ class ChessMoveView(EnhancedView):
                     await self.ctx.defer(ephemeral=True)
                     await self.ctx.respond(embed=select_menu.embed, file=board_png, view=self, ephemeral=True)
         else:
-            piece = chess.ChessPiece.from_symbol(self.move_data["piece"])
+            piece = self.move_data["piece"]
             origin_square = self.move_data["origin"]
             destination_square = self.move_data["destination"]
 
@@ -381,7 +399,7 @@ class ChessMoveView(EnhancedView):
                        f"**{square_name(destination_square).capitalize()}**"
 
             if self.move_data["promotion"]:
-                promotion_piece = chess.ChessPiece.from_symbol(self.move_data["promotion"])
+                promotion_piece = self.move_data["promotion"]
                 move_str += f"\n- Promote aforementioned {piece} to " \
                             f"**{promotion_piece}**"
 
@@ -410,52 +428,57 @@ class ChessMoveView(EnhancedView):
 
 class ChessBoardView(EnhancedView):
     class MoveHistoryPaginator:
-        def __init__(self, move_history: DoublyLinkedList):
-            self.move_history = move_history
-            self.current_page = self.move_history.last
-            self.page_number = len(move_history) - 1
+        def __init__(self, board: chess.ChessBoard):
+            self.board = board
+            self.page_number = len(board.move_stack)
+            self.popped_moves = deque()
 
         def indicator(self):
             if self.page_number == 0:
                 return "Match Start"
 
             color = "White" if not self.current().turn else "Black"
-            return f"Turn {math.ceil(self.page_number / 2)} of {math.ceil((len(self.move_history) - 1) / 2)} ({color})"
+            return f"Turn {math.ceil(self.page_number / 2)} of {math.ceil(len(self) / 2)} ({color})"
 
         def current(self):
-            return self.current_page.value
+            return self.board
 
         def first(self):
-            self.current_page = self.move_history.first
+            while self.board.move_stack:
+                self.popped_moves.appendleft(self.board.pop())
+
+            self.board.reset()
             self.page_number = 0
 
         def previous(self):
-            self.current_page = self.current_page.prev
+            self.popped_moves.appendleft(self.board.pop())
             self.page_number -= 1
 
         def next(self):
-            self.current_page = self.current_page.next
+            self.board.push(self.popped_moves.popleft())
             self.page_number += 1
 
         def last(self):
-            self.current_page = self.move_history.last
-            self.page_number = len(self.move_history) - 1
+            while self.popped_moves:
+                self.board.push(self.popped_moves.popleft())
+
+            self.page_number = len(self)
 
         def has_next(self):
-            return self.current_page.next is not None
+            return len(self.popped_moves) > 0
 
         def has_previous(self):
-            return self.current_page.prev is not None
+            return self.page_number > 0
 
         def __len__(self):
-            return len(self.move_history)
+            return len(self.board.move_stack) + len(self.popped_moves)
 
     def __init__(self, player: chess.ChessPlayer, **kwargs):
         super().__init__(**kwargs)
         self.player = player
 
         self.game = self.player.game
-        self.history = self.MoveHistoryPaginator(self.game.move_history)
+        self.history = self.MoveHistoryPaginator(self.game.board.copy())
         self.highlight_last_move = False
 
         self.image_data = {
@@ -472,7 +495,8 @@ class ChessBoardView(EnhancedView):
 
         await self.present(interaction)
 
-    async def toggle_coordinates(self, interaction: Interaction):
+    @discord_button(label="Hide Coordinates", custom_id="coordinates", style=ButtonStyle.gray, row=2)
+    async def toggle_coordinates(self, button: Button, interaction: Interaction):
         self.image_data["coordinates"] = not self.image_data["coordinates"]
 
         button = discord.utils.find(lambda b: b.custom_id == "coordinates", self.children)
@@ -507,11 +531,13 @@ class ChessBoardView(EnhancedView):
             move_history_button.label = "Hide Move History"
             last_move_button.label = last_move_button.label.replace("Last ", "")
 
-            first_button = Button(label="", emoji="⏮", style=ButtonStyle.gray, custom_id="history_first", row=1)
+            first_button = Button(label="", emoji="⏮", style=ButtonStyle.gray, custom_id="history_first", row=1,
+                                  disabled=not self.history.has_previous())
             first_button.callback = self.history_first
             self.add_item(first_button)
 
-            previous_button = Button(label="", emoji="⏪", style=ButtonStyle.gray, custom_id="history_previous", row=1)
+            previous_button = Button(label="", emoji="⏪", style=ButtonStyle.gray, custom_id="history_previous", row=1,
+                                     disabled=not self.history.has_previous())
             previous_button.callback = self.history_previous
             self.add_item(previous_button)
 
@@ -520,12 +546,12 @@ class ChessBoardView(EnhancedView):
             self.add_item(indicator_button)
 
             next_button = Button(label="", emoji="⏩", style=ButtonStyle.gray, custom_id="history_next", row=1,
-                                 disabled=True)
+                                 disabled=not self.history.has_next())
             next_button.callback = self.history_next
             self.add_item(next_button)
 
             last_button = Button(label="", emoji="⏭", style=ButtonStyle.gray, custom_id="history_last", row=1,
-                                 disabled=True)
+                                 disabled=not self.history.has_next())
             last_button.callback = self.history_last
             self.add_item(last_button)
 
@@ -608,11 +634,7 @@ class ChessBoardView(EnhancedView):
                 await self.ctx.respond(file=board_png, view=self, ephemeral=True)
 
     async def initiate_view(self):
-        coordinates_button = Button(label="Hide Coordinates", custom_id="coordinates", style=ButtonStyle.gray, row=2)
-        coordinates_button.callback = self.toggle_coordinates
-        self.add_item(coordinates_button)
-
-        if len(self.history) > 1:
+        if len(self.history) > 0:
             last_move_button = Button(label="Highlight Last Move", custom_id="last_move", style=ButtonStyle.gray, row=3)
             last_move_button.callback = self.toggle_move_highlight
             self.add_item(last_move_button)
@@ -623,3 +645,382 @@ class ChessBoardView(EnhancedView):
             self.add_item(move_history_button)
 
         await self.present()
+
+
+class ChessEndgameView(EnhancedView):
+    def __init__(self, game: chess.ChessGame):
+        super().__init__()
+        self.game = game
+        self.has_saved = []
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        player: chess.ChessPlayer = self.game.retrieve_player(interaction.user)
+        if not player:
+            msg = "Only users who played in this game can save it to their history."
+            embed = discord.Embed(title="You didn't play in this game.", description=msg, color=support.Color.red())
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        elif interaction.user in self.has_saved:
+            msg = "You've already saved this game. You can't save it again."
+            embed = discord.Embed(title="You did that already.", description=msg, color=support.Color.red())
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        else:
+            return super().interaction_check(interaction)
+
+    @discord_button(label="Save Game", style=ButtonStyle.gray)
+    async def save_game(self, button: Button, interaction: Interaction):
+        pgn = pychess_pgn.Game.from_board(self.game.board)
+
+        headers = {
+            "Event": f"{self.game.white.user.name} vs. {self.game.black.user.name}",
+            "Site": self.game.guild.name,
+            "Date": self.game.thread.created_at.strftime("%Y.%m.%d"),
+            "White": f"{self.game.white.user.name}#{self.game.white.user.discriminator}",
+            "Black": f"{self.game.black.user.name}#{self.game.black.user.discriminator}",
+        }
+
+        for header, content in headers.items():
+            pgn.headers[header] = content
+
+        if self.game.board.result() == "1-0":
+            result = f"{self.game.white.user.name} wins"
+        elif self.game.board.result() == "0-1":
+            result = f"{self.game.black.user.name} wins"
+        else:
+            result = "Draw"
+
+        with db.db_session:
+            saved_games = chess.helpers.get_saved_games(interaction.user)
+            if saved_games.count() >= 25:
+                saved_games.first().delete()
+
+            db.ChessGame(user_id=str(interaction.user.id),
+                         white=self.game.white.user.name,
+                         black=self.game.black.user.name,
+                         server=self.game.guild.name,
+                         result=result,
+                         date=self.game.thread.created_at.strftime("%Y-%m-%d"),
+                         pgn=pgn.accept(chess.pychess_pgn.StringExporter()).replace('\n[Round "?"]\n', ""))
+
+        self.has_saved.append(interaction.user)
+
+        await interaction.response.send_message("Game saved! Revisit it with `/chess replay`.", ephemeral=True)
+
+
+class ChessReplayMenuView(EnhancedView):
+    async def select_menu_callback(self, interaction: Interaction):
+        menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+
+        for option in menu.options:
+            option.default = False
+
+        chosen_option = discord.utils.find(lambda x: x.value == menu.values[0], menu.options)
+        chosen_option.default = True
+
+        for button in [child for child in self.children if isinstance(child, Button)]:
+            button.disabled = False
+
+        await interaction.response.edit_message(view=self)
+
+    @db.db_session
+    def get_menu(self) -> Select:
+        menu = Select(
+            min_values=1,
+            max_values=1,
+            placeholder="Select a game",
+            custom_id="game_menu",
+            row=1
+        )
+
+        menu.callback = self.select_menu_callback
+
+        for game in chess.helpers.get_saved_games(self.ctx.user):
+            menu.add_option(label=f"{game.white} vs. {game.black}",
+                            description=f"{game.server} / {game.result} / {game.date}",
+                            value=str(game.id))
+
+        return menu
+
+    @discord_button(label="Replay Game", style=ButtonStyle.gray, custom_id="replay", disabled=True, row=2)
+    async def replay_game(self, button: Button, interaction: Interaction):
+        select_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        game_id = int(select_menu.values[0])
+
+        with db.db_session:
+            game = db.ChessGame.get(id=game_id)
+
+        view = ChessReplayView(game.pgn)
+        await view.initiate_view(interaction)
+
+    @discord_button(label="Export PGN", style=ButtonStyle.gray, custom_id="export", disabled=True, row=2)
+    async def export_game(self, button: Button, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True)
+
+        select_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        game_id = int(select_menu.values[0])
+
+        with db.db_session:
+            game = db.ChessGame.get(id=game_id)
+
+        with TemporaryDirectory() as tmp:
+            with Path(tmp):
+                filename = f"({game.server}) {game.white} vs. {game.black} [{game.date}].pgn"
+                open(filename, "w+").write(game.pgn)
+                pgn_file = discord.File(filename)
+                await interaction.followup.send(content="Your PGN is ready!", file=pgn_file, ephemeral=True)
+
+    @discord_button(label="Import PGN", style=ButtonStyle.gray, custom_id="import", disabled=False, row=2)
+    async def import_game(self, button: Button, interaction: Interaction):
+        class PGNImportModal(Modal):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+
+                self.add_item(InputText(label="PGN", custom_id="pgn_input",
+                                        min_length=1,
+                                        max_length=4000,
+                                        value="",
+                                        placeholder="PGNs must be 4000 characters or fewer. Discord limitation, sorry!",
+                                        style=discord.InputTextStyle.multiline))
+
+            async def callback(self, interaction: Interaction):
+                pgn = re.sub("\n{2,}", "\n", self.children[0].value)
+                view = ChessReplayView(pgn)
+                await view.initiate_view(interaction)
+
+        modal = PGNImportModal(title="Import PGN", custom_id="import_modal")
+
+        await interaction.response.send_modal(modal)
+
+    @discord_button(label="Delete Game", style=ButtonStyle.red, custom_id="delete", disabled=True, row=3)
+    async def delete_game(self, button: Button, interaction: Interaction):
+        select_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        game_id = int(select_menu.values[0])
+
+        with db.db_session:
+            db.ChessGame[game_id].delete()
+
+        self.remove_item(select_menu)
+        self.add_item(self.get_menu())
+
+        replay_button = discord.utils.find(lambda b: isinstance(b, Button) and b.custom_id == "replay", self.children)
+        delete_button = discord.utils.find(lambda b: isinstance(b, Button) and b.custom_id == "delete", self.children)
+        replay_button.disabled = delete_button.disabled = True
+
+        with db.db_session:
+            if chess.helpers.get_saved_games(self.ctx.user):
+                await interaction.response.edit_message(view=self)
+                await interaction.followup.send("Game deleted!", ephemeral=True)
+            else:
+                await interaction.response.edit_message(content="All games deleted!", embed=None, view=None)
+
+    @discord_button(label="Delete All Games", style=ButtonStyle.red, custom_id="delete_all", disabled=False, row=3)
+    async def delete_all_games(self, button: Button, interaction: Interaction):
+        with db.db_session:
+            db.ChessGame.select(lambda g: g.user_id == interaction.user.id).delete(bulk=True)
+
+        await interaction.response.edit_message(content="All games deleted!", embed=None, view=None)
+
+    async def initiate_view(self):
+        with db.db_session:
+            if not chess.helpers.get_saved_games(self.ctx.user):
+                msg = "You haven't saved any games. Save a game or two, then check back here."
+                embed = discord.Embed(title="Nothing to see here.", description=msg, color=support.Color.red())
+                await self.ctx.respond(embed=embed, ephemeral=True)
+            else:
+                menu = self.get_menu()
+                self.add_item(menu)
+
+                msg = "Select a game from the menu below. You can save up to 25 games at a time.\n" \
+                      "\n" \
+                      "Alternatively, you can import your own PGN using the Import PGN button - even if " \
+                      "you played the game somewhere else."
+
+                embed = discord.Embed(title="Saved Chess Games", description=msg, color=support.Color.mint())
+
+                await self.ctx.respond(embed=embed, view=self, ephemeral=True)
+
+
+class ChessReplayView(EnhancedView):
+    class MoveHistoryPaginator:
+        def __init__(self, board: pychess.Board):
+            self.board = board
+            self.page_number = 0
+            self.popped_moves = deque()
+
+        def indicator(self):
+            if self.page_number == 0:
+                return "Match Start"
+
+            color = "White" if not self.current().turn else "Black"
+            return f"Turn {math.ceil(self.page_number / 2)} of {math.ceil(len(self) / 2)} ({color})"
+
+        def current(self):
+            return self.board
+
+        def first(self):
+            while self.board.move_stack:
+                self.popped_moves.appendleft(self.board.pop())
+
+            self.board.reset()
+            self.page_number = 0
+
+        def previous(self):
+            self.popped_moves.appendleft(self.board.pop())
+            self.page_number -= 1
+
+        def next(self):
+            self.board.push(self.popped_moves.popleft())
+            self.page_number += 1
+
+        def last(self):
+            while self.popped_moves:
+                self.board.push(self.popped_moves.popleft())
+
+            self.page_number = len(self)
+
+        def has_next(self):
+            return len(self.popped_moves) > 0
+
+        def has_previous(self):
+            return self.page_number > 0
+
+        def __len__(self):
+            return len(self.board.move_stack) + len(self.popped_moves)
+
+    def __init__(self, pgn: str, **kwargs):
+        super().__init__(**kwargs)
+        board = pychess_pgn.read_game(StringIO(pgn), Visitor=pychess_pgn.BoardBuilder)
+        self.history = self.MoveHistoryPaginator(board)
+        self.highlight_last_move = False
+        self.show_analysis = False
+
+        self.image_data = {
+            "board": self.history.current(),
+            "orientation": True,
+            "arrows": [],
+            "lastmove": None,
+            "coordinates": True,
+        }
+
+    @discord_button(label="Flip Orientation", custom_id="orientation", style=ButtonStyle.gray, row=2)
+    async def flip_orientation(self, button: Button, interaction: Interaction):
+        self.image_data["orientation"] = not self.image_data["orientation"]
+
+        await self.present(interaction)
+
+    @discord_button(label="Hide Coordinates", custom_id="coordinates", style=ButtonStyle.gray, row=2)
+    async def toggle_coordinates(self, button: Button, interaction: Interaction):
+        self.image_data["coordinates"] = not self.image_data["coordinates"]
+
+        button = discord.utils.find(lambda b: b.custom_id == "coordinates", self.children)
+        button.label = "Hide Coordinates" if self.image_data["coordinates"] else "Show Coordinates"
+
+        await self.present(interaction)
+
+    @discord_button(label="Highlight Move", custom_id="last_move", style=ButtonStyle.gray, row=2, disabled=True)
+    async def toggle_move_highlight(self, button: Button, interaction: Interaction):
+        self.highlight_last_move = not self.highlight_last_move
+
+        board = self.history.current()
+        move = board.peek()
+
+        if self.highlight_last_move:
+            self.image_data["lastmove"] = move
+            self.image_data["arrows"] = [(move.from_square, move.to_square)]
+        else:
+            self.image_data["lastmove"] = None
+            self.image_data["arrows"] = []
+
+        button = discord.utils.find(lambda b: b.custom_id == "last_move", self.children)
+        button.label = button.label.replace("Highlight", "Unhighlight") if self.image_data[
+            "lastmove"] else button.label.replace("Unhighlight", "Highlight")
+
+        await self.present(interaction)
+
+    async def history_first(self, interaction: Interaction):
+        self.history.first()
+        self.refresh_page()
+        await self.present(interaction)
+
+    async def history_previous(self, interaction: Interaction):
+        self.history.previous()
+        self.refresh_page()
+        await self.present(interaction)
+
+    async def history_next(self, interaction: Interaction):
+        self.history.next()
+        self.refresh_page()
+        await self.present(interaction)
+
+    async def history_last(self, interaction: Interaction):
+        self.history.last()
+        self.refresh_page()
+        await self.present(interaction)
+
+    def refresh_page(self):
+        board = self.history.current()
+
+        self.image_data["board"] = board
+
+        last_move_button = discord.utils.find(lambda b: b.custom_id == "last_move", self.children)
+
+        try:
+            move = board.peek()
+        except IndexError:
+            last_move_button.disabled = True
+            self.image_data["lastmove"] = None
+            self.image_data["arrows"] = []
+        else:
+            last_move_button.disabled = False
+            if self.highlight_last_move:
+                self.image_data["lastmove"] = move
+                self.image_data["arrows"] = [(move.from_square, move.to_square)]
+            else:
+                self.image_data["lastmove"] = None
+                self.image_data["arrows"] = []
+
+        indicator_button = discord.utils.find(lambda b: b.custom_id == "history_indicator", self.children)
+        indicator_button.label = self.history.indicator()
+
+        first_button = discord.utils.find(lambda b: b.custom_id == "history_first", self.children)
+        previous_button = discord.utils.find(lambda b: b.custom_id == "history_previous", self.children)
+        first_button.disabled = previous_button.disabled = not self.history.has_previous()
+
+        next_button = discord.utils.find(lambda b: b.custom_id == "history_next", self.children)
+        last_button = discord.utils.find(lambda b: b.custom_id == "history_last", self.children)
+        next_button.disabled = last_button.disabled = not self.history.has_next()
+
+    async def present(self, interaction):
+        with chess.helpers.get_board_png(**self.image_data) as board_png:
+            await interaction.response.defer()
+            await interaction.edit_original_message(file=board_png, attachments=[], view=self)
+
+    async def initiate_view(self, interaction: Interaction):
+        self.history.first()
+
+        first_button = Button(label="", emoji="⏮", style=ButtonStyle.gray, custom_id="history_first", row=1,
+                              disabled=not self.history.has_previous())
+        first_button.callback = self.history_first
+        self.add_item(first_button)
+
+        previous_button = Button(label="", emoji="⏪", style=ButtonStyle.gray, custom_id="history_previous", row=1,
+                                 disabled=not self.history.has_previous())
+        previous_button.callback = self.history_previous
+        self.add_item(previous_button)
+
+        indicator_button = Button(label=self.history.indicator(), style=ButtonStyle.gray,
+                                  custom_id="history_indicator", disabled=True, row=1)
+        self.add_item(indicator_button)
+
+        next_button = Button(label="", emoji="⏩", style=ButtonStyle.gray, custom_id="history_next", row=1,
+                             disabled=not self.history.has_next())
+        next_button.callback = self.history_next
+        self.add_item(next_button)
+
+        last_button = Button(label="", emoji="⏭", style=ButtonStyle.gray, custom_id="history_last", row=1,
+                             disabled=not self.history.has_next())
+        last_button.callback = self.history_last
+        self.add_item(last_button)
+
+        with chess.helpers.get_board_png(**self.image_data) as board_png:
+            await interaction.response.defer(ephemeral=True)
+            await interaction.followup.send(file=board_png, embed=None, view=self, ephemeral=True)
