@@ -20,6 +20,7 @@ humanize = "^4.0.0"
 PyGithub = "^1.55"
 shortuuid = "^1.0.8"
 pony = "^0.7.16"
+psycopg2 = "^2.9.3"
 
 [tool.poetry.dev-dependencies]
 pip-licenses = "^3.5.3"
