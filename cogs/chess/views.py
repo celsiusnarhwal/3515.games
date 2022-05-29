@@ -815,7 +815,7 @@ class ChessReplayMenuView(EnhancedView):
     @discord_button(label="Delete All Games", style=ButtonStyle.red, custom_id="delete_all", disabled=False, row=3)
     async def delete_all_games(self, button: Button, interaction: Interaction):
         with db.db_session:
-            db.ChessGame.select(lambda g: g.user_id == interaction.user.id).delete(bulk=True)
+            db.ChessGame.select(lambda g: g.user_id == str(interaction.user.id)).delete(bulk=True)
 
         await interaction.response.edit_message(content="All games deleted!", embed=None, view=None)
 
