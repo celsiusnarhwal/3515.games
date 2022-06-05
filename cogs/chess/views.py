@@ -219,11 +219,6 @@ class ChessMoveView(EnhancedView):
 
         self.move_data[move_data_keys[self.current_stage]] = move_data_values[self.current_stage]
 
-        # try:
-        #     self.move_data[move_data_keys[self.current_stage]] = int(self.stages[self.current_stage].values[0])
-        # except ValueError:
-        #     self.move_data[move_data_keys[self.current_stage]] = self.stages[self.current_stage].values[0]
-
         self.stage_history.append(self.current_stage)
 
         self.current_stage = determine_next_stage()
