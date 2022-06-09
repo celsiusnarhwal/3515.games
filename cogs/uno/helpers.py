@@ -137,8 +137,8 @@ def verify_host_uniqueness():
                       "either complete, end, or transfer host powers for your current game.\n"
             embed = discord.Embed(title="You're already hosting a game.", description=message,
                                   color=support.Color.red())
-            game_thread_url = f"https://discord.com/channels/{user_hosted_game.guild.id}/{user_hosted_game.thread.id}"
-            await ctx.respond(embed=embed, view=support.views.GoToGameThreadView(game_thread_url), ephemeral=True)
+            await ctx.respond(embed=embed, view=support.views.GoToGameThreadView(thread=user_hosted_game.thread),
+                              ephemeral=True)
 
             return False
 

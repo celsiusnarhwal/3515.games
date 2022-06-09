@@ -111,6 +111,15 @@ def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary) -
     ]
 
 
+def get_thread_url(thread: discord.Thread) -> str:
+    """
+    Returns the URL of a thread.
+
+    :param thread: The thread to get the URL of.
+    """
+    return f"https://discord.com/channels/{thread.guild.id}/{thread.id}"
+
+
 def posessive(string: str) -> str:
     """
     Returns a string with a possessive ending. Strings ending in "s" will be appended with a sole apostrophe; other

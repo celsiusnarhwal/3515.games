@@ -16,10 +16,10 @@ from sortedcontainers import SortedKeyList
 
 import support
 from cogs import uno
-from support import posessive
+from support import HostedMultiplayerGame, posessive
 
 
-class UnoGame:
+class UnoGame(HostedMultiplayerGame):
     """
     Represents an UNO game.
     """
@@ -38,9 +38,9 @@ class UnoGame:
         :param host: The user who is the Game Host.
         :param settings: The UnoGameSettings object representing the game's settings.
         """
-        self.guild: discord.Guild = guild
-        self.thread: discord.Thread = thread
-        self.host: discord.User = host
+        self.name = "UNO"
+
+        super().__init__(guild, thread, host)
         self.settings: UnoGameSettings = settings
 
         self.players = DoublyLinkedList()
@@ -69,166 +69,166 @@ class UnoGame:
         if self.retrieve_game(self.thread.id):
             await self.force_close(reason="time_limit")
 
-    @classmethod
-    def retrieve_game(cls, thread_id) -> Union[UnoGame, None]:
-        """
-        Retrieves an UnoGame object given the unique identifier of its associated game thread.
+    # @classmethod
+    # def retrieve_game(cls, thread_id) -> Union[UnoGame, None]:
+    #     """
+    #     Retrieves an UnoGame object given the unique identifier of its associated game thread.
+    #
+    #     :param thread_id: The unique identifier of the game's associated thread.
+    #     :return: The UnoGame object associated with the passed-in thread ID if one exists; otherwise None.
+    #     """
+    #     return cls.__all_games__.get(thread_id)
+    #
+    # @classmethod
+    # def find_hosted_games(cls, user: discord.User, guild_id: int) -> Union[UnoGame, None]:
+    #     """
+    #     Retrieves an ``UnoGame`` objects where the Game Host is a particular user and that are taking place in a
+    #     particular server.
+    #
+    #     :param user: The Game Host to look for.
+    #     :param guild_id: The unique identifier of the server to search for games in.
+    #     :return: An ``UnoGame`` object associated with the specified Game Host and server if one exists; otherwise None.
+    #     """
+    #     return next((game for game in cls.__all_games__.values() if
+    #                  game.host == user and game.guild.id == guild_id),
+    #                 None)
 
-        :param thread_id: The unique identifier of the game's associated thread.
-        :return: The UnoGame object associated with the passed-in thread ID if one exists; otherwise None.
-        """
-        return cls.__all_games__.get(thread_id)
-
-    @classmethod
-    def find_hosted_games(cls, user: discord.User, guild_id: int) -> Union[UnoGame, None]:
-        """
-        Retrieves an ``UnoGame`` objects where the Game Host is a particular user and that are taking place in a
-        particular server.
-
-        :param user: The Game Host to look for.
-        :param guild_id: The unique identifier of the server to search for games in.
-        :return: An ``UnoGame`` object associated with the specified Game Host and server if one exists; otherwise None.
-        """
-        return next((game for game in cls.__all_games__.values() if
-                     game.host == user and game.guild.id == guild_id),
-                    None)
-
-    async def force_close(self, reason=None):
-        """
-        Force closes an UNO game.
-        :param reason: The reason why the game is being closed ("thread_deletion", "channel_deletion", "host_left",
-        "players_left", "inactivity", or "time_limit").
-        """
-
-        self.__all_games__.pop(self.thread.id)
-
-        async def thread_deletion():
-            """
-            Force closes an UNO game in the event that its associated thread is deleted.
-            """
-            msg = f"Your UNO game in {self.guild.name} was automatically closed because its game thread was deleted."
-            embed = discord.Embed(title="Your UNO game was automatically closed.", description=msg,
-                                  color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            await self.host.send(embed=embed)
-
-        async def channel_deletion():
-            """
-            Force closes an UNO game in the event that the parent channel of its associated thread is deleted.
-            """
-            msg = f"Your UNO game in {self.guild.name} was automatically closed because the parent channel of its " \
-                  f"game thread was deleted."
-            embed = discord.Embed(title="Your UNO game was automatically closed.", description=msg,
-                                  color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            await self.host.send(embed=embed)
-
-        async def host_left():
-            """
-            Force closes an UNO game in the event that the Game Host leaves its associated thread.
-            """
-            thread_msg = f"This UNO game has been automatically closed because the Game Host, {self.host.mention}, " \
-                         f"left.\n" \
-                         f"\n" \
-                         f"This thread has been locked and will be automatically deleted in 60 seconds."
-            thread_embed = discord.Embed(title="This UNO game has been automatically closed.", description=thread_msg,
-                                         color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            host_msg = f"Your UNO game in {self.guild.name} was automatically closed because you left either the " \
-                       f"game or its associated thread."
-            host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
-                                       color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
-            msg = await self.thread.send(embed=thread_embed)
-            await msg.pin()
-            await self.thread.archive(locked=True)
-
-            await self.host.send(embed=host_embed)
-
-            await asyncio.sleep(60)
-            await self.thread.delete()
-
-        async def players_left():
-            """
-            Force closes an UNO game in the event that all players aside from the Game Host leave the game.
-            """
-            thread_msg = f"This UNO game has been automatically closed because all players left.\n" \
-                         f"\n" \
-                         f"This thread has been locked and will be automatically deleted in 60 seconds."
-            thread_embed = discord.Embed(title="This UNO game has been automatically closed.",
-                                         description=thread_msg,
-                                         color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            host_msg = f"Your UNO game in {self.guild.name} was automatically closed because all other players left."
-            host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
-                                       color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
-            msg = await self.thread.send(embed=thread_embed)
-            await msg.pin()
-            await self.thread.archive(locked=True)
-
-            await self.host.send(embed=host_embed)
-
-            await asyncio.sleep(60)
-            await self.thread.delete()
-
-        async def inactivity():
-            thread_msg = "This UNO game has been automatically closed because all players were found to be " \
-                         "inactive.\n" \
-                         "\n" \
-                         "This thread has been locked and will be automatically deleted in 60 seconds."
-            thread_embed = discord.Embed(title="This UNO game has been automatically closed.", description=thread_msg,
-                                         color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            host_msg = f"Your UNO game in {self.guild.name} was automatically closed because all players were found " \
-                       f"to be inactive.\n"
-            host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
-                                       color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
-            msg = await self.thread.send(embed=thread_embed)
-            await msg.pin()
-            await self.thread.archive(locked=True)
-
-            await self.host.send(embed=host_embed)
-
-            await asyncio.sleep(60)
-            await self.thread.delete()
-
-        async def time_limit():
-            thread_msg = "This UNO game has been automatically closed because it took too long to complete.\n" \
-                         "\n" \
-                         "This thread has been locked and will be automatically deleted in 60 seconds."
-            thread_embed = discord.Embed(title="This UNO game has been automatically closed.", description=thread_msg,
-                                         color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            host_msg = f"Your UNO game in {self.guild.name} was automatically closed because it took too long " \
-                       f"to complete.\n"
-            host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
-                                       color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-            await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
-            msg = await self.thread.send(embed=thread_embed)
-            await msg.pin()
-            await self.thread.archive(locked=True)
-
-            await self.host.send(embed=host_embed)
-
-            await asyncio.sleep(60)
-            await self.thread.delete()
-
-        reason_map = {
-            "channel_deletion": channel_deletion(),
-            "thread_deletion": thread_deletion(),
-            "host_left": host_left(),
-            "players_left": players_left(),
-            "inactivity": inactivity(),
-            "time_limit": time_limit(),
-        }
-
-        await reason_map[reason]
+    # async def force_close(self, reason=None):
+    #     """
+    #     Force closes an UNO game.
+    #     :param reason: The reason why the game is being closed ("thread_deletion", "channel_deletion", "host_left",
+    #     "players_left", "inactivity", or "time_limit").
+    #     """
+    #
+    #     self.__all_games__.pop(self.thread.id)
+    #
+    #     async def thread_deletion():
+    #         """
+    #         Force closes an UNO game in the event that its associated thread is deleted.
+    #         """
+    #         msg = f"Your UNO game in {self.guild.name} was automatically closed because its game thread was deleted."
+    #         embed = discord.Embed(title="Your UNO game was automatically closed.", description=msg,
+    #                               color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         await self.host.send(embed=embed)
+    #
+    #     async def channel_deletion():
+    #         """
+    #         Force closes an UNO game in the event that the parent channel of its associated thread is deleted.
+    #         """
+    #         msg = f"Your UNO game in {self.guild.name} was automatically closed because the parent channel of its " \
+    #               f"game thread was deleted."
+    #         embed = discord.Embed(title="Your UNO game was automatically closed.", description=msg,
+    #                               color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         await self.host.send(embed=embed)
+    #
+    #     async def host_left():
+    #         """
+    #         Force closes an UNO game in the event that the Game Host leaves its associated thread.
+    #         """
+    #         thread_msg = f"This UNO game has been automatically closed because the Game Host, {self.host.mention}, " \
+    #                      f"left.\n" \
+    #                      f"\n" \
+    #                      f"This thread has been locked and will be automatically deleted in 60 seconds."
+    #         thread_embed = discord.Embed(title="This UNO game has been automatically closed.", description=thread_msg,
+    #                                      color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         host_msg = f"Your UNO game in {self.guild.name} was automatically closed because you left either the " \
+    #                    f"game or its associated thread."
+    #         host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
+    #                                    color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
+    #         msg = await self.thread.send(embed=thread_embed)
+    #         await msg.pin()
+    #         await self.thread.archive(locked=True)
+    #
+    #         await self.host.send(embed=host_embed)
+    #
+    #         await asyncio.sleep(60)
+    #         await self.thread.delete()
+    #
+    #     async def players_left():
+    #         """
+    #         Force closes an UNO game in the event that all players aside from the Game Host leave the game.
+    #         """
+    #         thread_msg = f"This UNO game has been automatically closed because all players left.\n" \
+    #                      f"\n" \
+    #                      f"This thread has been locked and will be automatically deleted in 60 seconds."
+    #         thread_embed = discord.Embed(title="This UNO game has been automatically closed.",
+    #                                      description=thread_msg,
+    #                                      color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         host_msg = f"Your UNO game in {self.guild.name} was automatically closed because all other players left."
+    #         host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
+    #                                    color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
+    #         msg = await self.thread.send(embed=thread_embed)
+    #         await msg.pin()
+    #         await self.thread.archive(locked=True)
+    #
+    #         await self.host.send(embed=host_embed)
+    #
+    #         await asyncio.sleep(60)
+    #         await self.thread.delete()
+    #
+    #     async def inactivity():
+    #         thread_msg = "This UNO game has been automatically closed because all players were found to be " \
+    #                      "inactive.\n" \
+    #                      "\n" \
+    #                      "This thread has been locked and will be automatically deleted in 60 seconds."
+    #         thread_embed = discord.Embed(title="This UNO game has been automatically closed.", description=thread_msg,
+    #                                      color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         host_msg = f"Your UNO game in {self.guild.name} was automatically closed because all players were found " \
+    #                    f"to be inactive.\n"
+    #         host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
+    #                                    color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
+    #         msg = await self.thread.send(embed=thread_embed)
+    #         await msg.pin()
+    #         await self.thread.archive(locked=True)
+    #
+    #         await self.host.send(embed=host_embed)
+    #
+    #         await asyncio.sleep(60)
+    #         await self.thread.delete()
+    #
+    #     async def time_limit():
+    #         thread_msg = "This UNO game has been automatically closed because it took too long to complete.\n" \
+    #                      "\n" \
+    #                      "This thread has been locked and will be automatically deleted in 60 seconds."
+    #         thread_embed = discord.Embed(title="This UNO game has been automatically closed.", description=thread_msg,
+    #                                      color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         host_msg = f"Your UNO game in {self.guild.name} was automatically closed because it took too long " \
+    #                    f"to complete.\n"
+    #         host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
+    #                                    color=support.Color.red(), timestamp=discord.utils.utcnow())
+    #
+    #         await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
+    #         msg = await self.thread.send(embed=thread_embed)
+    #         await msg.pin()
+    #         await self.thread.archive(locked=True)
+    #
+    #         await self.host.send(embed=host_embed)
+    #
+    #         await asyncio.sleep(60)
+    #         await self.thread.delete()
+    #
+    #     reason_map = {
+    #         "channel_deletion": channel_deletion(),
+    #         "thread_deletion": thread_deletion(),
+    #         "host_left": host_left(),
+    #         "players_left": players_left(),
+    #         "inactivity": inactivity(),
+    #         "time_limit": time_limit(),
+    #     }
+    #
+    #     await reason_map[reason]
 
     def retrieve_player(self, user, return_node=False) -> Union[UnoPlayer, dllistnode]:
         """

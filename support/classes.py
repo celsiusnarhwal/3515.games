@@ -1,9 +1,189 @@
 from __future__ import annotations
 
+import asyncio
 import os
+from typing import Union
 
 import discord
 from path import Path
+
+
+class HostedMultiplayerGame:
+    __all_games__ = dict()
+
+    def __init__(self, guild: discord.Guild, thread: discord.Thread, host: discord.User):
+        self.guild = guild
+        self.thread = thread
+        self.host = host
+
+        self.name = ""
+
+        self.__all_games__[self.thread.id] = self
+
+    @classmethod
+    def retrieve_game(cls, thread_id) -> Union[HostedMultiplayerGame, None]:
+        """
+        Retrieves a game given the unique identifier of its associated game thread.
+
+        :param thread_id: The unique identifier of the game's associated thread.
+        :return: The UnoGame object associated with the passed-in thread ID if one exists; otherwise None.
+        """
+        return cls.__all_games__.get(thread_id)
+
+    @classmethod
+    def find_hosted_games(cls, user: discord.User, guild_id: int) -> Union[HostedMultiplayerGame, None]:
+        """
+        Retrieves games where the Game Host is a particular user and that are taking place in a
+        particular server.
+
+        :param user: The Game Host to look for.
+        :param guild_id: The unique identifier of the server to search for games in.
+        :return: An ``UnoGame`` object associated with the specified Game Host and server if one exists; otherwise None.
+        """
+        return next((game for game in cls.__all_games__.values() if
+                     game.host == user and game.guild.id == guild_id),
+                    None)
+
+    async def force_close(self, reason=None):
+        """
+        Force closes a game.
+        :param reason: The reason why the game is being closed ("thread_deletion", "channel_deletion", "host_left",
+        "players_left", "inactivity", or "time_limit").
+        """
+
+        self.__all_games__.pop(self.thread.id)
+
+        async def thread_deletion():
+            """
+            Force closes z game in the event that its associated thread is deleted.
+            """
+            msg = f"Your {self.name} game in {self.guild.name} was automatically closed because its game " \
+                  f"thread was deleted."
+            embed = discord.Embed(title=f"Your {self.name} game was automatically closed.", description=msg,
+                                  color=Color.red(), timestamp=discord.utils.utcnow())
+
+            await self.host.send(embed=embed)
+
+        async def channel_deletion():
+            """
+            Force closes a game in the event that the parent channel of its associated thread is deleted.
+            """
+            msg = f"Your {self.name} game in {self.guild.name} was automatically closed because the parent " \
+                  f"channel of its game thread was deleted."
+            embed = discord.Embed(title="Your {self.name} game was automatically closed.", description=msg,
+                                  color=Color.red(), timestamp=discord.utils.utcnow())
+
+            await self.host.send(embed=embed)
+
+        async def host_left():
+            """
+            Force closes a game in the event that the Game Host leaves its associated thread.
+            """
+            thread_msg = f"This {self.name} game has been automatically closed because the Game Host, " \
+                         f"{self.host.mention}, left.\n" \
+                         f"\n" \
+                         f"This thread has been locked and will be automatically deleted in 60 seconds."
+            thread_embed = discord.Embed(title=f"This {self.name} game has been automatically closed.",
+                                         description=thread_msg,
+                                         color=Color.red(), timestamp=discord.utils.utcnow())
+
+            host_msg = f"Your {self.name} game in {self.guild.name} was automatically closed because you left " \
+                       f"either the game or its associated thread."
+            host_embed = discord.Embed(title=f"Your {self.name} game was automatically closed.", description=host_msg,
+                                       color=Color.red(), timestamp=discord.utils.utcnow())
+
+            await self.thread.edit(name=f"{self.name} with {self.host.name} - Game Over!")
+            msg = await self.thread.send(embed=thread_embed)
+            await msg.pin()
+            await self.thread.archive(locked=True)
+
+            await self.host.send(embed=host_embed)
+
+            await asyncio.sleep(60)
+            await self.thread.delete()
+
+        async def players_left():
+            """
+            Force closes a game in the event that all players aside from the Game Host leave the game.
+            """
+            thread_msg = f"This {self.name} game has been automatically closed because all players left.\n" \
+                         f"\n" \
+                         f"This thread has been locked and will be automatically deleted in 60 seconds."
+            thread_embed = discord.Embed(title=f"This {self.name} game has been automatically closed.",
+                                         description=thread_msg,
+                                         color=Color.red(), timestamp=discord.utils.utcnow())
+
+            host_msg = f"Your {self.name} game in {self.guild.name} was automatically closed due to insufficient " \
+                       f"players."
+            host_embed = discord.Embed(title="Your {self.name} game was automatically closed.", description=host_msg,
+                                       color=Color.red(), timestamp=discord.utils.utcnow())
+
+            await self.thread.edit(name=f"{self.name} with {self.host.name} - Game Over!")
+            msg = await self.thread.send(embed=thread_embed)
+            await msg.pin()
+            await self.thread.archive(locked=True)
+
+            await self.host.send(embed=host_embed)
+
+            await asyncio.sleep(60)
+            await self.thread.delete()
+
+        async def inactivity():
+            thread_msg = f"This {self.name} game has been automatically closed due to inactivity.\n" \
+                         "\n" \
+                         "This thread has been locked and will be automatically deleted in 60 seconds."
+            thread_embed = discord.Embed(title="This {self.name} game has been automatically closed.",
+                                         description=thread_msg,
+                                         color=Color.red(), timestamp=discord.utils.utcnow())
+
+            host_msg = f"Your {self.name} game in {self.guild.name} was automatically closed due to inactivity."
+            host_embed = discord.Embed(title="Your {self.name} game was automatically closed.", description=host_msg,
+                                       color=Color.red(), timestamp=discord.utils.utcnow())
+
+            await self.thread.edit(name=f"{self.name} with {self.host.name} - Game Over!")
+            msg = await self.thread.send(embed=thread_embed)
+            await msg.pin()
+            await self.thread.archive(locked=True)
+
+            await self.host.send(embed=host_embed)
+
+            await asyncio.sleep(60)
+            await self.thread.delete()
+
+        async def time_limit():
+            thread_msg = f"This {self.name} game has been automatically closed because it took " \
+                         f"too long to complete.\n" \
+                         f"\n" \
+                         "This thread has been locked and will be automatically deleted in 60 seconds."
+            thread_embed = discord.Embed(title="This {self.name} game has been automatically closed.",
+                                         description=thread_msg,
+                                         color=Color.red(), timestamp=discord.utils.utcnow())
+
+            host_msg = f"Your {self.name} game in {self.guild.name} was automatically closed because it took " \
+                       f"too long to complete.\n"
+            host_embed = discord.Embed(title="Your {self.name} game was automatically closed.", description=host_msg,
+                                       color=Color.red(), timestamp=discord.utils.utcnow())
+
+            await self.thread.edit(name=f"{self.name} with {self.host.name} - Game Over!")
+            msg = await self.thread.send(embed=thread_embed)
+            await msg.pin()
+            await self.thread.archive(locked=True)
+
+            await self.host.send(embed=host_embed)
+
+            await asyncio.sleep(60)
+            await self.thread.delete()
+
+            reason_map = {
+                "channel_deletion": channel_deletion,
+                "thread_deletion": thread_deletion,
+                "host_left": host_left,
+                "players_left": players_left,
+                "inactivity": inactivity,
+                "time_limit": time_limit,
+            }
+
+            await reason_map[reason]()
 
 
 class Color(discord.Color):
