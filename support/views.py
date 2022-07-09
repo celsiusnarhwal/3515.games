@@ -4,6 +4,8 @@ import discord
 from discord import Interaction, ButtonStyle
 from discord.ui import Button, button as discord_button
 
+import support.helpers
+
 
 class EnhancedView(discord.ui.View):
     """
@@ -57,6 +59,7 @@ class ConfirmationView(EnhancedView):
         if self.target_user != interaction.user and self.target_user is not None:
             await interaction.response.send_message("You can't do that.", ephemeral=True)
         else:
+            await interaction.response.defer()
             return await super().interaction_check(interaction)
 
     @discord_button(label="Yes", style=ButtonStyle.green)
@@ -144,9 +147,9 @@ class GoToGameThreadView(EnhancedView):
     Provides a URL button that points to a newly-created game thread.
     """
 
-    def __init__(self, thread_url, **kwargs):
+    def __init__(self, thread, **kwargs):
         super().__init__(**kwargs)
-        self.add_item(Button(label="Go to game thread", url=thread_url))
+        self.add_item(Button(label="Go to game thread", url=support.helpers.get_thread_url(thread)))
 
 
 class ServerBoostURLView(EnhancedView):
