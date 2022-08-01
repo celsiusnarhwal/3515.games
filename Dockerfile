@@ -19,4 +19,4 @@ RUN poetry install --no-dev
 
 
 # Start it up!
-CMD ["doppler", "run", "--", "poetry", "run", "python3", "main.py"]
+ENTRYPOINT ["doppler", "run", "--", "poetry", "run", "python3", "main.py"]
