@@ -119,27 +119,3 @@ def verify_context(level: str, verify_host: bool = False):
         return success
 
     return commands.check(predicate)
-
-
-def verify_host_uniqueness():
-    """
-    A decorator used to check that a user attempting to create an UNO game is not already hosting one in the same
-    server.
-    """
-
-    async def predicate(ctx: discord.ApplicationContext):
-        user_hosted_game = uno.UnoGame.find_hosted_games(user=ctx.user, guild_id=ctx.guild_id)
-
-        if not user_hosted_game:
-            return True
-        else:
-            message = "You're already hosting an UNO game in this server. Before you can create a new one, you must " \
-                      "either complete, end, or transfer host powers for your current game.\n"
-            embed = discord.Embed(title="You're already hosting a game.", description=message,
-                                  color=support.Color.red())
-            game_thread_url = f"https://discord.com/channels/{user_hosted_game.guild.id}/{user_hosted_game.thread.id}"
-            await ctx.respond(embed=embed, view=support.views.GoToGameThreadView(game_thread_url), ephemeral=True)
-
-            return False
-
-    return commands.check(predicate)

@@ -79,7 +79,7 @@ def verify_context(level: str):
         async def is_player_turn():
             game = chess.ChessGame.retrieve_game(ctx.channel.id)
 
-            if game.current_player.user == ctx.user:
+            if game.card_czar.user == ctx.user:
                 return True
             else:
                 message = f"You can only use {command_name} when it's your turn. Wait your turn, then try again."
