@@ -13,9 +13,9 @@ RUN apt-get update && apt-get install -y apt-transport-https ca-certificates cur
     apt-get -y install doppler
 
 # Install Poetry and Dependencies
-RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    poetry config virtualenvs.create false &&  \
+    poetry install --no-dev
 
 
 # Start it up!
