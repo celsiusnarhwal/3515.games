@@ -17,6 +17,5 @@ RUN curl -sSL https://install.python-poetry.org | python3 - && \
     poetry config virtualenvs.create false &&  \
     poetry install --no-dev
 
-
 # Start it up!
 ENTRYPOINT ["doppler", "run", "--", "poetry", "run", "python3", "main.py"]
