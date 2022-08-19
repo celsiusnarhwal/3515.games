@@ -160,7 +160,7 @@ class ChessGame:
         embed = discord.Embed(title="Let's play chess!", description=msg, color=support.Color.mint())
 
         async with self.thread.typing():
-            with chess.helpers.get_board_png(board=self.board) as board_png:
+            with chess.get_board_png(board=self.board) as board_png:
                 embed.set_image(url=f"attachment://{board_png.filename}")
                 await self.thread.send(embed=embed, file=board_png)
 
@@ -175,7 +175,7 @@ class ChessGame:
         self.current_player = self.white if self.current_player != self.white else self.black
 
         embed = discord.Embed(title="New Turn", description=f"It's {posessive(self.current_player.user.name)} turn.",
-                              color=self.current_player.get_embed_color())
+                              color=self.current_player.embed_color())
 
         embed.set_thumbnail(url=self.current_player.user.display_avatar.url)
 
@@ -187,7 +187,7 @@ class ChessGame:
         self.turn_uuid = None
 
         async with self.thread.typing():
-            with chess.helpers.get_board_png(board=self.board) as board_png:
+            with chess.get_board_png(board=self.board) as board_png:
                 self.turn_record.set_image(url=f"attachment://{board_png.filename}")
                 await self.thread.send(embed=self.turn_record, file=board_png)
 

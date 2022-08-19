@@ -372,7 +372,7 @@ class ChessMoveView(EnhancedView):
             self.clear_items()
 
             select_menu = await stages[self.current_stage]()
-            with chess.helpers.get_board_png(**self.image_data) as board_png:
+            with chess.get_board_png(**self.image_data) as board_png:
                 select_menu.embed.set_image(url=f"attachment://{board_png.filename}")
                 self.add_item(select_menu)
 
@@ -409,7 +409,7 @@ class ChessMoveView(EnhancedView):
             self.image_data["lastmove"] = self.get_move()
             self.image_data["arrows"] = [(origin_square, destination_square)]
 
-            with chess.helpers.get_board_png(**self.image_data) as board_png:
+            with chess.get_board_png(**self.image_data) as board_png:
                 embed.set_image(url=f"attachment://{board_png.filename}")
                 await interaction.response.defer()
                 await interaction.edit_original_message(embed=embed, file=board_png, attachments=[], view=self)
@@ -620,7 +620,7 @@ class ChessBoardView(EnhancedView):
         next_button.disabled = last_button.disabled = not self.history.has_next()
 
     async def present(self, interaction: Interaction = None):
-        with chess.helpers.get_board_png(**self.image_data) as board_png:
+        with chess.get_board_png(**self.image_data) as board_png:
             if interaction:
                 await interaction.response.defer()
                 await interaction.edit_original_message(file=board_png, attachments=[], view=self)
@@ -684,7 +684,7 @@ class ChessEndgameView(EnhancedView):
             result = "Draw"
 
         with db.db_session:
-            saved_games = chess.helpers.get_saved_games(interaction.user)
+            saved_games = chess.get_saved_games(interaction.user)
             if saved_games.count() >= 25:
                 saved_games.first().delete()
 
@@ -728,7 +728,7 @@ class ChessReplayMenuView(EnhancedView):
 
         menu.callback = self.select_menu_callback
 
-        for game in chess.helpers.get_saved_games(self.ctx.user):
+        for game in chess.get_saved_games(self.ctx.user):
             menu.add_option(label=f"{game.white} vs. {game.black}",
                             description=f"{game.server} / {game.result} / {game.date}",
                             value=str(game.id))
@@ -801,7 +801,7 @@ class ChessReplayMenuView(EnhancedView):
         replay_button.disabled = delete_button.disabled = True
 
         with db.db_session:
-            if chess.helpers.get_saved_games(self.ctx.user):
+            if chess.get_saved_games(self.ctx.user):
                 await interaction.response.edit_message(view=self)
                 await interaction.followup.send("Game deleted!", ephemeral=True)
             else:
@@ -816,7 +816,7 @@ class ChessReplayMenuView(EnhancedView):
 
     async def initiate_view(self):
         with db.db_session:
-            if not chess.helpers.get_saved_games(self.ctx.user):
+            if not chess.get_saved_games(self.ctx.user):
                 msg = "You haven't saved any games. Save a game or two, then check back here."
                 embed = discord.Embed(title="Nothing to see here.", description=msg, color=support.Color.red())
                 await self.ctx.respond(embed=embed, ephemeral=True)
@@ -985,7 +985,7 @@ class ChessReplayView(EnhancedView):
         next_button.disabled = last_button.disabled = not self.history.has_next()
 
     async def present(self, interaction):
-        with chess.helpers.get_board_png(**self.image_data) as board_png:
+        with chess.get_board_png(**self.image_data) as board_png:
             await interaction.response.defer()
             await interaction.edit_original_message(file=board_png, attachments=[], view=self)
 
@@ -1016,6 +1016,6 @@ class ChessReplayView(EnhancedView):
         last_button.callback = self.history_last
         self.add_item(last_button)
 
-        with chess.helpers.get_board_png(**self.image_data) as board_png:
+        with chess.get_board_png(**self.image_data) as board_png:
             await interaction.response.defer(ephemeral=True)
             await interaction.followup.send(file=board_png, embed=None, view=self, ephemeral=True)

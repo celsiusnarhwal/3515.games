@@ -9,7 +9,7 @@ import uuid
 from typing import Union
 
 import discord
-import inflect
+import inflect as ifl
 from discord.ext import pages as discord_pages
 from llist import dllistnode, dllist as DoublyLinkedList
 from sortedcontainers import SortedKeyList
@@ -18,18 +18,16 @@ import support
 from cogs import uno
 from support import HostedMultiplayerGame, posessive
 
+inflect = ifl.engine()
+
 
 class UnoGame(HostedMultiplayerGame):
     """
     Represents an UNO game.
     """
-    __all_games__ = dict()
+    name = "UNO"
 
-    def __init__(self,
-                 guild: discord.Guild,
-                 thread: discord.Thread,
-                 host: discord.User,
-                 settings: UnoGameSettings):
+    def __init__(self, settings: UnoGameSettings, *args, **kwargs):
         """
         The constructor for ``UnoGame``.
 
@@ -38,13 +36,12 @@ class UnoGame(HostedMultiplayerGame):
         :param host: The user who is the Game Host.
         :param settings: The UnoGameSettings object representing the game's settings.
         """
-        self.name = "UNO"
 
-        super().__init__(guild, thread, host)
+        super().__init__(*args, **kwargs)
+
         self.settings: UnoGameSettings = settings
 
         self.players = DoublyLinkedList()
-        self.banned_users = set()
         self.is_joinable: bool = True
         self.current_round: int = 0
         self.current_player = dllistnode()
@@ -68,167 +65,6 @@ class UnoGame(HostedMultiplayerGame):
 
         if self.retrieve_game(self.thread.id):
             await self.force_close(reason="time_limit")
-
-    # @classmethod
-    # def retrieve_game(cls, thread_id) -> Union[UnoGame, None]:
-    #     """
-    #     Retrieves an UnoGame object given the unique identifier of its associated game thread.
-    #
-    #     :param thread_id: The unique identifier of the game's associated thread.
-    #     :return: The UnoGame object associated with the passed-in thread ID if one exists; otherwise None.
-    #     """
-    #     return cls.__all_games__.get(thread_id)
-    #
-    # @classmethod
-    # def find_hosted_games(cls, user: discord.User, guild_id: int) -> Union[UnoGame, None]:
-    #     """
-    #     Retrieves an ``UnoGame`` objects where the Game Host is a particular user and that are taking place in a
-    #     particular server.
-    #
-    #     :param user: The Game Host to look for.
-    #     :param guild_id: The unique identifier of the server to search for games in.
-    #     :return: An ``UnoGame`` object associated with the specified Game Host and server if one exists; otherwise None.
-    #     """
-    #     return next((game for game in cls.__all_games__.values() if
-    #                  game.host == user and game.guild.id == guild_id),
-    #                 None)
-
-    # async def force_close(self, reason=None):
-    #     """
-    #     Force closes an UNO game.
-    #     :param reason: The reason why the game is being closed ("thread_deletion", "channel_deletion", "host_left",
-    #     "players_left", "inactivity", or "time_limit").
-    #     """
-    #
-    #     self.__all_games__.pop(self.thread.id)
-    #
-    #     async def thread_deletion():
-    #         """
-    #         Force closes an UNO game in the event that its associated thread is deleted.
-    #         """
-    #         msg = f"Your UNO game in {self.guild.name} was automatically closed because its game thread was deleted."
-    #         embed = discord.Embed(title="Your UNO game was automatically closed.", description=msg,
-    #                               color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         await self.host.send(embed=embed)
-    #
-    #     async def channel_deletion():
-    #         """
-    #         Force closes an UNO game in the event that the parent channel of its associated thread is deleted.
-    #         """
-    #         msg = f"Your UNO game in {self.guild.name} was automatically closed because the parent channel of its " \
-    #               f"game thread was deleted."
-    #         embed = discord.Embed(title="Your UNO game was automatically closed.", description=msg,
-    #                               color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         await self.host.send(embed=embed)
-    #
-    #     async def host_left():
-    #         """
-    #         Force closes an UNO game in the event that the Game Host leaves its associated thread.
-    #         """
-    #         thread_msg = f"This UNO game has been automatically closed because the Game Host, {self.host.mention}, " \
-    #                      f"left.\n" \
-    #                      f"\n" \
-    #                      f"This thread has been locked and will be automatically deleted in 60 seconds."
-    #         thread_embed = discord.Embed(title="This UNO game has been automatically closed.", description=thread_msg,
-    #                                      color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         host_msg = f"Your UNO game in {self.guild.name} was automatically closed because you left either the " \
-    #                    f"game or its associated thread."
-    #         host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
-    #                                    color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
-    #         msg = await self.thread.send(embed=thread_embed)
-    #         await msg.pin()
-    #         await self.thread.archive(locked=True)
-    #
-    #         await self.host.send(embed=host_embed)
-    #
-    #         await asyncio.sleep(60)
-    #         await self.thread.delete()
-    #
-    #     async def players_left():
-    #         """
-    #         Force closes an UNO game in the event that all players aside from the Game Host leave the game.
-    #         """
-    #         thread_msg = f"This UNO game has been automatically closed because all players left.\n" \
-    #                      f"\n" \
-    #                      f"This thread has been locked and will be automatically deleted in 60 seconds."
-    #         thread_embed = discord.Embed(title="This UNO game has been automatically closed.",
-    #                                      description=thread_msg,
-    #                                      color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         host_msg = f"Your UNO game in {self.guild.name} was automatically closed because all other players left."
-    #         host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
-    #                                    color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
-    #         msg = await self.thread.send(embed=thread_embed)
-    #         await msg.pin()
-    #         await self.thread.archive(locked=True)
-    #
-    #         await self.host.send(embed=host_embed)
-    #
-    #         await asyncio.sleep(60)
-    #         await self.thread.delete()
-    #
-    #     async def inactivity():
-    #         thread_msg = "This UNO game has been automatically closed because all players were found to be " \
-    #                      "inactive.\n" \
-    #                      "\n" \
-    #                      "This thread has been locked and will be automatically deleted in 60 seconds."
-    #         thread_embed = discord.Embed(title="This UNO game has been automatically closed.", description=thread_msg,
-    #                                      color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         host_msg = f"Your UNO game in {self.guild.name} was automatically closed because all players were found " \
-    #                    f"to be inactive.\n"
-    #         host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
-    #                                    color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
-    #         msg = await self.thread.send(embed=thread_embed)
-    #         await msg.pin()
-    #         await self.thread.archive(locked=True)
-    #
-    #         await self.host.send(embed=host_embed)
-    #
-    #         await asyncio.sleep(60)
-    #         await self.thread.delete()
-    #
-    #     async def time_limit():
-    #         thread_msg = "This UNO game has been automatically closed because it took too long to complete.\n" \
-    #                      "\n" \
-    #                      "This thread has been locked and will be automatically deleted in 60 seconds."
-    #         thread_embed = discord.Embed(title="This UNO game has been automatically closed.", description=thread_msg,
-    #                                      color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         host_msg = f"Your UNO game in {self.guild.name} was automatically closed because it took too long " \
-    #                    f"to complete.\n"
-    #         host_embed = discord.Embed(title="Your UNO game was automatically closed.", description=host_msg,
-    #                                    color=support.Color.red(), timestamp=discord.utils.utcnow())
-    #
-    #         await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
-    #         msg = await self.thread.send(embed=thread_embed)
-    #         await msg.pin()
-    #         await self.thread.archive(locked=True)
-    #
-    #         await self.host.send(embed=host_embed)
-    #
-    #         await asyncio.sleep(60)
-    #         await self.thread.delete()
-    #
-    #     reason_map = {
-    #         "channel_deletion": channel_deletion(),
-    #         "thread_deletion": thread_deletion(),
-    #         "host_left": host_left(),
-    #         "players_left": players_left(),
-    #         "inactivity": inactivity(),
-    #         "time_limit": time_limit(),
-    #     }
-    #
-    #     await reason_map[reason]
 
     def retrieve_player(self, user, return_node=False) -> Union[UnoPlayer, dllistnode]:
         """
@@ -282,9 +118,8 @@ class UnoGame(HostedMultiplayerGame):
         Starts an UNO game.
         """
         self.is_joinable = False
-        await self.thread.edit(name=f"UNO with {self.host.name}!")
+        await self.thread.edit(name=f"{self.short_name} with {self.host.name}!")
 
-        # noinspection PyTypeChecker
         random.shuffle(self.players)
 
         with support.Assets.uno():
@@ -308,9 +143,6 @@ class UnoGame(HostedMultiplayerGame):
                "You can view a range of information about this UNO game with `/uno status`, including the " \
                "current turn order and score leaderboard.\n" \
                "\n" \
-               "New to UNO, or just need a refresher? Learn everything you need to know about how to play with " \
-               "`/help UNO`.\n" \
-               "\n" \
                "Let's play!"
 
         embed = discord.Embed(title="Let's play UNO!", description=msg, color=support.Color.mint())
@@ -324,26 +156,6 @@ class UnoGame(HostedMultiplayerGame):
         await asyncio.sleep(3)
 
         await self.start_new_round()
-
-    async def abort_game(self):
-        """
-        Aborts an UNO game.
-        """
-        self.__all_games__.pop(self.thread.id)
-
-        thread_msg = f"The Game Host, {self.host.mention}, has ended this UNO game.\n" \
-                     f"\n" \
-                     f"This thread has been locked and will be automatically deleted in 60 seconds."
-        thread_embed = discord.Embed(title="The Game Host has ended this UNO game.", description=thread_msg,
-                                     color=support.Color.red(), timestamp=discord.utils.utcnow())
-
-        await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
-        msg = await self.thread.send(embed=thread_embed)
-        await msg.pin()
-        await self.thread.archive(locked=True)
-
-        await asyncio.sleep(60)
-        await self.thread.delete()
 
     async def add_player(self, ctx: discord.ApplicationContext, user: discord.User, is_host=False):
         """
@@ -365,18 +177,12 @@ class UnoGame(HostedMultiplayerGame):
         await self.thread.send(embed=join_message_embed)
 
         if not is_host:
-            msg = "If you're new to UNO, read up on how to play with `/help UNO`. If you're not new " \
-                  "to UNO, you're still advised to check out `/help UNO`, as some of the game's " \
-                  "rules deviate from the standard UNO ruleset.\n" \
-                  "\n" \
-                  "If you didn't mean to join, you can leave the game with `/uno leave.` You can " \
-                  "leave the game at any time, but if the game has already started, you won't be " \
-                  "able to rejoin.\n" \
-                  "\n" \
-                  f"The Game Host, {self.host.mention}, has the power to remove you from this game " \
-                  f"at any time. Furthermore, you may be automatically removed by me, " \
-                  f"<@939972078323519488>, in case of inactivity. If you're going AFK, be courteous " \
-                  f"to your fellow players and leave the game voluntarily first.\n" \
+            msg = f"If you didn't mean to join, you can leave the game with `/uno leave`. You can leave at any time, " \
+                  f"but if the game has already started, you won't be able to rejoin.\n" \
+                  f"\n" \
+                  f"Be advised that the Game Host, {self.host.mention}, can kick you at any time, " \
+                  f"and if you go AFK mid-game, I'll have you automatically removed for inactivity. Please remember " \
+                  f"to be courteous to your fellow players.\n" \
                   f"\n" \
                   f"Have fun!"
 
@@ -405,8 +211,8 @@ class UnoGame(HostedMultiplayerGame):
             await self.force_close(reason="host_left")
 
         # if there are fewer than two players remaining in the game and the game has started, the game is force closed
-        elif len(self.players) - 1 < 2 and not self.is_joinable:
-            await self.force_close(reason="players_left")
+        elif len(self.players) - 1 < self.min_players and not self.is_joinable:
+            await self.force_close(reason="insufficient_players")
 
         elif not self.current_player == player_node and not self.is_joinable:
             await player.end_turn()
@@ -561,6 +367,7 @@ class UnoGame(HostedMultiplayerGame):
 
         embed = discord.Embed(title=f"UNO: Game Over! {game_winner.user.name} Wins!", description=msg,
                               color=support.Color.mint())
+        embed.set_thumbnail(url=game_winner.user.display_avatar.url)
         await self.thread.edit(name=f"UNO with {self.host.name} - Game Over!")
         msg = await self.thread.send(content="@everyone", embed=embed, view=uno.UnoGameEndView(game=self))
         await msg.pin()
@@ -584,8 +391,7 @@ class UnoGame(HostedMultiplayerGame):
             player: UnoPlayer = self.current_player.value
             player.timeout_counter += 1
 
-            # if *every* player times out in a row (i.e. the sum of all players' timeout counters is greater than
-            # or equal to the number of players), the game is force closed for inactivity
+            # if *every* player times out consecutively, the game is force closed for inactivity
             if sum(player.timeout_counter for player in self.players.itervalues()) >= len(self.players):
                 await self.force_close(reason="inactivity")
 
@@ -643,58 +449,6 @@ class UnoGame(HostedMultiplayerGame):
         embed.timestamp = discord.utils.utcnow()
 
         await player_node.value.user.send(embed=embed)
-
-    async def ban_player(self, player_node: dllistnode):
-        """
-        Bans a player from the game. This method is not called when banning spectators.
-
-        :param player_node: The node of the player to ban.
-        """
-        embed = discord.Embed(title="Player Banned",
-                              description=f"{player_node.value.user.mention} was banned from this UNO game by "
-                                          f"the Game Host.",
-                              color=support.Color.red())
-
-        await self.thread.send(embed=embed)
-
-        await self.thread.remove_user(player_node.value.user)
-        self.banned_users.add(player_node.value.user)
-
-        embed = discord.Embed(title=f"You were banned from {posessive(self.host.name)} UNO game.",
-                              description=f"You were banned from {self.host.name}'s UNO game in "
-                                          f"{self.guild.name}. You can continue to spectate silently, but you won't "
-                                          f"be able to play in the game or talk in its thread.",
-                              color=support.Color.red())
-
-        embed.timestamp = discord.utils.utcnow()
-
-        await player_node.value.user.send(embed=embed)
-
-    async def ban_spectator(self, user: discord.User):
-        """
-        Bans a spectator from the game.
-
-        :param user: The :class:`discord.User` object of the spectator to ban.
-        """
-        embed = discord.Embed(title="Spectator Banned",
-                              description=f"{user.mention} was banned from this UNO game by "
-                                          f"the Game Host.",
-                              color=support.Color.red())
-
-        await self.thread.send(embed=embed)
-
-        self.banned_users.add(user)
-        await self.thread.remove_user(user)
-
-        embed = discord.Embed(title=f"You were banned from {posessive(self.host.name)} UNO game.",
-                              description=f"You were banned from {self.host.name}'s UNO game in "
-                                          f"{self.guild.name}. You can continue to spectate silently, but you won't "
-                                          f"be able to play in the game or talk in its thread.",
-                              color=support.Color.red())
-
-        embed.timestamp = discord.utils.utcnow()
-
-        await user.send(embed=embed)
 
     async def transfer_host(self, new_host: discord.User):
         """
@@ -800,11 +554,11 @@ class UnoPlayer:
 
     async def show_hand(self, ctx: discord.ApplicationContext):
         """
-        Show's the player the cards they're currently holding.
+        Shows the player the cards they're currently holding.
 
         :param ctx: A discord.ApplicationContext object.
         """
-        split_cards = support.helpers.split_list(self.hand, 23)
+        split_cards = support.split_list(self.hand, 23)
         pages = [
             discord.Embed(
                 title="Your Hand",
@@ -925,7 +679,7 @@ class UnoPlayer:
                 # play the card if it can be played on the current turn and isn't a wild or wild draw four
                 embed = discord.Embed(title="Card Drawn and Played",
                                       description=f"You drew and played a **{str(card)}**.",
-                                      color=card.get_embed_color())
+                                      color=card.embed_color())
                 embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
@@ -941,7 +695,7 @@ class UnoPlayer:
                 await self.play_card(card, with_draw=True)
             else:
                 embed = discord.Embed(title="Card Drawn", description=f"You drew a **{str(card)}**.",
-                                      color=card.get_embed_color())
+                                      color=card.embed_color())
                 embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
@@ -1041,9 +795,9 @@ class UnoPlayer:
         instead of added to it.
         """
         if use_subtraction:
-            self.hand_value -= card.get_point_value()
+            self.hand_value -= card.point_value()
         else:
-            self.hand_value += card.get_point_value()
+            self.hand_value += card.point_value()
 
     async def reset_timeouts(self):
         """
@@ -1099,7 +853,7 @@ class UnoCard:
         """
 
         # this card generation algorithm has an equal chance of generating any one of the 54 distinct UNO cards
-        # included in a standard deck (approx 1.85% for any given card). this differs from a standard UNO game - in a
+        # included in a standard deck (approx. 1.85% for any given card). this differs from a standard UNO game - in a
         # real, physical, UNO deck, not all cards appear with the same frequency.
 
         with support.Assets.uno():
@@ -1127,11 +881,9 @@ class UnoCard:
 
         return cards_to_return
 
-    def get_point_value(self):
+    def point_value(self):
         """
-        Calculates the point value of an UNO card.
-
-        :return: The point value of the card.
+        Returns the point value of an UNO card.
         """
 
         # reverse, skip, and draw two cards are worth 20 points
@@ -1146,7 +898,7 @@ class UnoCard:
         else:
             return int(self.suit)
 
-    def get_embed_color(self):
+    def embed_color(self):
         """
         Returns the embed color associated with the card.
         """
@@ -1192,7 +944,7 @@ class UnoEventProcessor:
         embed = discord.Embed(title=f"Card {'Drawn and ' if with_draw else ''}Played",
                               description=f"**{player.user.name}** {'draws and' if with_draw else ''} "
                                           f"plays a **{str(card)}**.",
-                              color=card.get_embed_color())
+                              color=card.embed_color())
 
         embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
         embed.set_footer(icon_url=player.user.display_avatar.url,
@@ -1430,14 +1182,14 @@ class UnoStatusCenter:
         format "Xth of Y (tied with Z others)".
         """
         leaderboard_group = discord.utils.find(lambda group: player in group, self.get_leaderboard())
-        ranking = inflect.engine().ordinal(self.get_leaderboard().index(leaderboard_group) + 1)
+        ranking = inflect.ordinal(self.get_leaderboard().index(leaderboard_group) + 1)
 
         if with_string:
             ranking += f" of {len(self.game.players)}"
             ties = len(leaderboard_group) - 1
 
             if ties > 0:
-                ranking += f" (tied with {f'{ties} others' if ties > 1 else '1 other'})"
+                ranking += f" (tied with {ties} {inflect.plural('other', ties)})"
 
         return ranking
 

@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-import json
 import os
 import platform
-import textwrap
 import time
 
 import discord
 import toml
 from discord import Interaction, ButtonStyle
-from discord.ext import pages as discord_pages
 from discord.ui import Button, button as discord_button
 
 import support
@@ -20,8 +17,12 @@ from support.views import EnhancedView
 class AboutView(EnhancedView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.add_item(Button(label="3515.games", emoji="🌐", url="https://3515.games", row=0))
+        self.add_item(Button(label="Add me to your server!", emoji="👋🏾", url="https://invite.3515.games", row=1))
+        self.add_item(Button(label="Support my development!", emoji="🔨", url="https://3515.games/donate", row=1))
+        self.add_item(Button(label="Legal Information", emoji="🏛", url="https://3515.games/legal", row=2))
 
-    @discord_button(label="Credits", style=ButtonStyle.gray)
+    @discord_button(label="Credits", emoji="🎬", style=ButtonStyle.gray)
     async def credits(self, button: Button, interaction: Interaction):
         class CreditsView(EnhancedView):
             @discord_button(label="Back", style=ButtonStyle.red)
@@ -38,95 +39,13 @@ class AboutView(EnhancedView):
             await interaction.response.defer()
             await original_message.edit(embed=embed, attachments=[], view=CreditsView(ctx=self.ctx))
 
-    @discord_button(label="Legal", style=ButtonStyle.gray)
-    async def legal(self, button: Button, interaction: Interaction):
-        class LegalView(EnhancedView):
-            @discord_button(label="Back", style=ButtonStyle.red)
-            async def back(self, button: Button, interaction: Interaction):
-                await AboutView(ctx=self.ctx).show_about(interaction)
-
-            @discord_button(label="Privacy Policy", style=ButtonStyle.gray)
-            async def privacy_policy(self, button: Button, interaction: Interaction):
-                with support.Assets.about():
-                    privacy_text = open(os.path.join("pages", "legal", "privacy.md")).read()
-                    embed = discord.Embed(title="Privacy Policy", description=privacy_text, color=support.Color.mint())
-
-                    original_message = await self.ctx.interaction.original_message()
-                    embed.set_author(name="Legal",
-                                     icon_url=original_message.author.display_avatar.url)
-
-                    await interaction.response.edit_message(embed=embed)
-
-            @discord_button(label="Intellectual Property", style=ButtonStyle.gray)
-            async def ip_acknowledgements(self, button: Button, interaction: Interaction):
-                with support.Assets.about():
-                    ip_text = open(os.path.join("pages", "legal", "ip.md")).read()
-                    embed = discord.Embed(title="Intellectual Property", description=ip_text,
-                                          color=support.Color.mint())
-
-                    original_message = await self.ctx.interaction.original_message()
-                    embed.set_author(name="Legal",
-                                     icon_url=original_message.author.display_avatar.url)
-
-                    await interaction.response.edit_message(embed=embed)
-
-            @discord_button(label="Software Licenses", style=ButtonStyle.gray)
-            async def software_licenses(self, button: Button, interaction: Interaction):
-                with support.Assets.about():
-                    oss_text = open(os.path.join("pages", "legal", "oss.md")).read()
-                    embed = discord.Embed(title="Software Licenses", description=oss_text, color=support.Color.mint())
-
-                    original_message = await self.ctx.interaction.original_message()
-                    embed.set_author(name="Legal",
-                                     icon_url=original_message.author.display_avatar.url)
-
-                    licenses = json.load(open("licenses.json"))
-
-                    pages = [embed]
-
-                    for oss_license in licenses:
-                        page_title = oss_license["Name"]
-                        page_text = f"**{oss_license['License']}**\n\n{oss_license['LicenseText']}"
-
-                        split_page_text = textwrap.wrap(page_text, 2000, break_long_words=False,
-                                                        replace_whitespace=False)
-
-                        embeds = []
-                        for index, text in enumerate(split_page_text):
-
-                            if index == 1:
-                                page_title += " (cont.)"
-
-                            e = discord.Embed(title=page_title, description=text, color=support.Color.mint())
-                            e.set_author(name="Software Licenses",
-                                         icon_url=original_message.author.display_avatar.url)
-
-                            embeds.append(e)
-
-                        pages.extend(embeds)
-
-                    paginator = discord_pages.Paginator(pages=pages, use_default_buttons=False,
-                                                        custom_buttons=support.paginator_emoji_buttons())
-
-                    await paginator.respond(interaction, ephemeral=True)
-
-        with support.Assets.about():
-            legal_text = open(os.path.join("pages", "legal.md")).read()
-            embed = discord.Embed(title="Legal", description=legal_text, color=support.Color.mint())
-
-            original_message = await self.ctx.interaction.original_message()
-            embed.set_author(name="About", icon_url=original_message.author.display_avatar.url)
-
-            await interaction.response.defer()
-            await interaction.edit_original_message(embed=embed, attachments=[], view=LegalView(ctx=self.ctx))
-
-    @discord_button(label="Technical", style=ButtonStyle.gray)
+    @discord_button(label="Technical Data", emoji="💻", style=ButtonStyle.gray)
     async def technical(self, button: Button, interaction: Interaction):
         class TechnicalView(EnhancedView):
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
                 self.add_item(Button(label="Source Code", emoji="<:github:953746341413142638>",
-                                     url="https://github.com/celsiusnarhwal/3515.games"))
+                                     url="https://code.3515.games"))
 
             @discord_button(label="Back", style=ButtonStyle.red)
             async def back(self, button: Button, interaction: Interaction):
@@ -140,7 +59,7 @@ class AboutView(EnhancedView):
             "Ping": "Calculating...",
         }
 
-        embed = discord.Embed(title="Technical", description="Statistics for nerds.", color=support.Color.mint())
+        embed = discord.Embed(title="Technical Data", description="Statistics for nerds.", color=support.Color.mint())
 
         for index, (stat, value) in enumerate(statistics.items()):
             embed.add_field(name=stat, value=value, inline=True)
@@ -158,6 +77,39 @@ class AboutView(EnhancedView):
 
         embed.set_field_at(index=6, name="Ping", value=f"{round(ping_end - ping_start, 3)}s")
         await original_message.edit(embed=embed)
+
+    # @discord_button(label="Add me to your server!", style=ButtonStyle.gray, row=2)
+    # async def invite(self, button: Button, interaction: Interaction):
+    #     class InviteView(EnhancedView):
+    #         def __init__(self, **kwargs):
+    #             super().__init__(**kwargs)
+    #
+    #             oauth_url = "https://discordapp.com/oauth2/authorize?"
+    #             params = {
+    #                 "client_id": self.ctx.bot.user.id,
+    #                 "scope": "bot",
+    #                 "permissions": support.GamePermissions.everything().value,
+    #             }
+    #
+    #             self.add_item(Button(label="Invite Me", emoji="🔗", url=oauth_url + urllib.parse.urlencode(params)))
+    #
+    #         @discord_button(label="Back", style=ButtonStyle.red)
+    #         async def back(self, button: Button, interaction: Interaction):
+    #             await AboutView(ctx=self.ctx).show_about(interaction)
+    #
+    #     msg = "Wanna add me to your server? I'm flattered. 😊\n" \
+    #           "\n" \
+    #           "To invite me, use the button below or visit [3515.games/invite](https://3515.games/invite) " \
+    #           "in your browser. (Note that everyone in the server you invite me to will become subject to " \
+    #           "my [Privacy Policy](https://3515.games/privacy).)"
+    #
+    #     embed = discord.Embed(title="Invite Me", description=msg, color=support.Color.mint())
+    #
+    #     original_message = await self.ctx.interaction.original_message()
+    #     embed.set_author(name="About", icon_url=original_message.author.display_avatar.url)
+    #
+    #     await interaction.response.defer()
+    #     await interaction.edit_original_message(embed=embed, attachments=[], view=InviteView(ctx=self.ctx))
 
     async def show_about(self, interaction: Interaction = None):
         with support.Assets.about():
