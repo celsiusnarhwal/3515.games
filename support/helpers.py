@@ -15,15 +15,14 @@ import support
 
 def is_celsius_narhwal(user: discord.User = None):
     """
-    A function that checks if a given user is celsiusnarhwal#3515.
+    A function that checks if a given user is 3515.games' owner, celsiusnarhwal#3515.
 
     If the ``user`` parameter is not provided, this function will act as a command decorator and check against
     the invocation context.
     """
-    celsius_id = 170966436125212673
 
     async def predicate(ctx: discord.ApplicationContext):
-        if ctx.user.id == celsius_id:
+        if ctx.bot.is_owner(ctx.user):
             return True
         else:
             msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
@@ -32,34 +31,31 @@ def is_celsius_narhwal(user: discord.User = None):
 
             return False
 
-    return user.id == celsius_id if user else commands.check(predicate)
+    return user.id == 170966436125212673 if user else commands.check(predicate)
 
 
-def bot_has_permissions(expected_permissions):
+def bot_has_permissions(expected_permissions: discord.Permissions, context: discord.ApplicationContext = None):
     """
-    A decorator that checks if the bot has a particular set of permissions.
+    A function that checks if the bot has a particular set of permissions at the channel level.
 
-    :param expected_permissions: A ``discord.Permissions`` object representing the permissions to check for.
+    If the ``context`` parameter is not
+    provided, this function will act as a command decorator and check against the invocation context.
+
+    :param expected_permissions: A discord.Permissions object representing the permissions to check for.
+    the channel level.
+    :param context: The context to check the permissions against.
     """
 
-    async def predicate(ctx):
-
+    async def predicate(ctx: discord.ApplicationContext):
         actual_permissions = ctx.channel.permissions_for(ctx.me)
 
-        # the actual permissions granted to the bot must be a superset of (i.e. greater than or equal to) the expected
-        # permissions
-        if actual_permissions.is_superset(expected_permissions):
+        if actual_permissions >= expected_permissions:
             return True
         else:
-            # the missing permissions are represented by the intersection of the expected permissions and the
-            # complement of the actual permissions (in english, it's the set of permissions that the bot both needs
-            # and doesn't have)
-            missing_permissions = discord.Permissions(expected_permissions.value & ~actual_permissions.value)
-
             message = f"I'm missing the following permissions that I need in order to use " \
                       f"`/{ctx.command.qualified_name}` in this channel: \n\n"
 
-            message += "\n".join(f"- {p}" for p in alianator.resolve(missing_permissions))
+            message += "\n".join(f"- {p}" for p in alianator.resolve(expected_permissions - actual_permissions))
 
             message += "\n\n Once I've been given those permissions, try again."
 
@@ -69,7 +65,7 @@ def bot_has_permissions(expected_permissions):
 
             return False
 
-    return commands.check(predicate)
+    return predicate(context) if context else commands.check(predicate)
 
 
 def invoked_in_text_channel():
@@ -140,6 +136,6 @@ def split_list(seq: list, size: int) -> list:
     return [seq[i:i + size] for i in range(0, len(seq), size)]
 
 
-def get_repo():
+def github():
     gh = GitHub(os.getenv("GITHUB_TOKEN"))
-    return gh.get_repo("celsiusnarhwal/3515.games")
+    return gh.get_user("celsiusnarhwal")

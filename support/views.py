@@ -4,7 +4,7 @@ import discord
 from discord import Interaction, ButtonStyle
 from discord.ui import Button, button as discord_button
 
-import support.helpers
+import support
 
 
 class EnhancedView(discord.ui.View):
@@ -142,14 +142,14 @@ class GameChallengeResponseView(ConfirmationView):
         return self.success
 
 
-class GoToGameThreadView(EnhancedView):
+class GameThreadURLView(EnhancedView):
     """
     Provides a URL button that points to a newly-created game thread.
     """
 
-    def __init__(self, thread, **kwargs):
+    def __init__(self, thread: discord.Thread, **kwargs):
         super().__init__(**kwargs)
-        self.add_item(Button(label="Go to game thread", url=support.helpers.get_thread_url(thread)))
+        self.add_item(Button(label="Go to game thread", url=support.get_thread_url(thread)))
 
 
 class ServerBoostURLView(EnhancedView):

@@ -1,4 +1,9 @@
+"""
+All of 3515.games' commands and listeners are defined in this module.
+"""
+
 import discord
+import inflect as ifl
 from discord.commands import Option, SlashCommandGroup, slash_command
 from discord.ext import commands
 from llist import dllistnode
@@ -6,14 +11,14 @@ from llist import dllistnode
 import support
 from cogs import about, rps, uno, chess, cah
 
+inflect = ifl.engine()
+
 
 class MasterCog(commands.Cog):
     """
     A subclass of :class:`commands.Cog` that all of 3515.games' cogs inherit from.
     """
 
-    # pycord requires that all cogs use this exact constructor, so we save a little bit of typing by having them all
-    # inherit from MasterCog. yay!
     def __init__(self, bot: discord.Bot):
         self.bot = bot
 
@@ -36,7 +41,7 @@ class RockPaperScissorsCog(MasterCog):
     rps_group = SlashCommandGroup("rps", "Commands for playing Rock-Paper-Scissors.")
 
     @rps_group.command(description="Challenge someone to a game of Rock-Paper-Scissors.")
-    @support.helpers.bot_has_permissions(support.GamePermissions.rps())
+    @support.bot_has_permissions(support.GamePermissions.rps())
     async def challenge(
             self,
             ctx: discord.ApplicationContext,
@@ -115,28 +120,27 @@ class UnoCog(MasterCog):
     The cog for the UNO module, which facilitates UNO games with up to 20 members of the same Discord server.
     """
     uno_group = SlashCommandGroup("uno", "Commands for playing UNO.")
-    create_group = uno_group.create_subgroup("create", "Commands for creating UNO games.")
     host_group = uno_group.create_subgroup("host", "Commands for UNO Game Hosts.")
 
     # game creation commands
 
-    @create_group.command(name="public", description="Create a public UNO game.")
-    @support.helpers.bot_has_permissions(support.GamePermissions.uno_public())
-    @support.helpers.invoked_in_text_channel()
-    @uno.helpers.verify_host_uniqueness()
-    async def create_public_game(self,
-                                 ctx: discord.ApplicationContext,
-                                 players: Option(
-                                     int,
-                                     "Choose how many players can join your game (min. 2, max. 20). "
-                                     "This includes you. The default is 20.", min_value=2, max_value=20, default=20
-                                 ),
-                                 points: Option(int, "Choose the number of points required to win "
-                                                     "(max. 1000). The default is 500.",
-                                                min_value=0, max_value=1000, default=500),
-                                 timeout: Option(int, "Choose how many seconds players must finish their turns in "
-                                                      "(min. 30, max. 120). The default is 60.",
-                                                 min_value=30, max_value=120, default=60)):
+    @uno_group.command(name="create", description="Create a UNO game.")
+    @support.bot_has_permissions(support.GamePermissions.uno())
+    @support.invoked_in_text_channel()
+    @uno.UnoGame.verify_unique_host()
+    async def create_game(self,
+                          ctx: discord.ApplicationContext,
+                          players: Option(
+                              int,
+                              "Choose how many players can join your game (min. 2, max. 20). "
+                              "This includes you. The default is 20.", min_value=2, max_value=20, default=20
+                          ),
+                          points: Option(int, "Choose the number of points required to win "
+                                              "(max. 1000). The default is 500.",
+                                         min_value=0, max_value=1000, default=500),
+                          timeout: Option(int, "Choose how many seconds players must finish their turns in "
+                                               "(min. 30, max. 120). The default is 60.",
+                                          min_value=30, max_value=120, default=60)):
         """
         Creates an UNO game and corresponding game thread.
 
@@ -149,7 +153,7 @@ class UnoCog(MasterCog):
         """
 
         # tell the user important information about creating an UNO game
-        msg = f"You're about to create a **public** UNO game. There are a few important things you need to " \
+        msg = f"You're about to create an UNO game. There are a few important things you need to " \
               f"know:\n" \
               f"\n" \
               f"**UNO games are contained within " \
@@ -158,12 +162,11 @@ class UnoCog(MasterCog):
               f"``Manage Threads``, please refrain from editing or deleting the thread until the game is " \
               f"over (trust me, I've got this).\n" \
               f"\n" \
-              f"**Anyone can join.** Since you're creating a public UNO game, anyone who can both see and " \
-              f"talk in this channel will be able to join or spectate your game.\n" \
+              f"**Anyone can join.** Anyone who can both see and talk in this channel will be able to " \
+              f"join or spectate your game.\n" \
               f"\n" \
               f"**You're in control.** You'll be the Game Host for this UNO game. This entitles you to " \
-              f"certain special powers, like removing players from the game or the thread it's hosted in, " \
-              f"or ending the game early. However...\n" \
+              f"certain special powers, like removing players from the game or ending the game early. However...\n " \
               f"\n" \
               f"**With power comes responsibility.** The game won't start until you use " \
               f"``/uno host start``, and if you leave the game or its thread at any time, the game will immediately " \
@@ -182,13 +185,11 @@ class UnoCog(MasterCog):
               f"**Points to Win**: {points}\n" \
               f"**Timeout**: {timeout} seconds\n" \
               f"\n" \
-              f"If these settings aren't correct, hit the No button below and rerun " \
-              f"`/uno create public` with your intended settings. Once the game has been created, these " \
-              f"settings can't be changed.\n" \
+              f"Once the game has been created, these settings can't be changed.\n" \
               f"\n" \
               f"Proceed with creating this UNO game?"
 
-        embed = discord.Embed(title="Creating a Public UNO Game", description=msg,
+        embed = discord.Embed(title="Creating an UNO Game", description=msg,
                               color=support.Color.orange())
 
         # confirm game creation with user
@@ -213,7 +214,7 @@ class UnoCog(MasterCog):
                                               f"game thread.",
                                   color=support.Color.mint())
 
-            await ctx.send(embed=embed, view=support.GoToGameThreadView(thread=game_thread))
+            await ctx.send(embed=embed, view=support.GameThreadURLView(thread=game_thread))
 
             await uno_game.game_timer()
 
@@ -226,25 +227,11 @@ class UnoCog(MasterCog):
 
             await ctx.interaction.edit_original_message(embeds=[cancellation_embed], view=None)
 
-    # TODO implement private games
-    @create_group.command(name="private",
-                          description="Create a private UNO game. Requires Server Boost Level 2 or higher.")
-    @support.helpers.bot_has_permissions(support.GamePermissions.uno_private())
-    @support.helpers.invoked_in_text_channel()
-    @uno.helpers.verify_host_uniqueness()
-    async def create_private_game(self, ctx: discord.ApplicationContext):
-        if ctx.guild.premium_tier < 2:
-            msg = "Discord won't let me create private UNO games in this server until it's reached Boost Level 2 " \
-                  "or higher."
-            embed = discord.Embed(title="Boost your server first.", description=msg, color=support.Color.red())
-
-            await ctx.respond(embed=embed, view=support.ServerBoostURLView(), ephemeral=True)
-
     # player commands
 
     @uno_group.command(name="join", description="Join an UNO game.")
-    @uno.helpers.verify_context(level="thread")
-    async def join(self, ctx: discord.ApplicationContext):
+    @uno.verify_context(level="thread")
+    async def join_game(self, ctx: discord.ApplicationContext):
         """
         Joins the invoker to an UNO game. Can only be used in UNO game threads.
 
@@ -257,13 +244,6 @@ class UnoCog(MasterCog):
             msg = "You can't join an UNO game you're already a player in. If you meant to leave, use `/uno leave` " \
                   "instead."
             embed = discord.Embed(title="You're already in this game.", description=msg,
-                                  color=support.Color.red())
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        # users can't join games they're banned from
-        elif ctx.user in uno_game.banned_users:
-            msg = "You're banned from this game, so you can't play in it."
-            embed = discord.Embed(title="You're banned from this game.", description=msg,
                                   color=support.Color.red())
             await ctx.respond(embed=embed, ephemeral=True)
 
@@ -285,8 +265,8 @@ class UnoCog(MasterCog):
             await uno_game.add_player(ctx, ctx.user)
 
     @uno_group.command(name="leave", description="Leave an UNO game.")
-    @uno.helpers.verify_context(level="player")
-    async def leave(self, ctx: discord.ApplicationContext):
+    @uno.verify_context(level="player")
+    async def leave_game(self, ctx: discord.ApplicationContext):
         """
         Voluntarily removes the player from an UNO game. Can only be used in UNO game threads.
 
@@ -296,10 +276,19 @@ class UnoCog(MasterCog):
         player_node = uno_game.retrieve_player(ctx.user, return_node=True)
 
         if uno_game and player_node:
-            msg = "If the game has already started, you won't be able to rejoin. If you're the " \
-                  "Game Host, leaving the game will end it for everyone else - consider " \
-                  "transferring your host powers to another player with `/uno host transfer` " \
-                  "beforehand."
+            if ctx.user == uno_game.host:
+                msg = "You're the Game Host, so your departure will end the game for everyone else - " \
+                      "consider transferring your host powers to another player with `/uno host transfer` " \
+                      "beforehand."
+            else:
+                if uno_game.is_joinable:
+                    msg = "You can rejoin at any time before the game starts."
+                else:
+                    if len(uno_game.players) - 1 < uno_game.min_players:
+                        msg = "Your departure will leave too few players for the game to continue on, forcing it " \
+                              "to end for everyone else."
+                    else:
+                        msg = "Since the game has already started, you won't be able to rejoin."
 
             embed = discord.Embed(title="Leave this UNO game?", description=msg,
                                   color=support.Color.orange())
@@ -317,7 +306,7 @@ class UnoCog(MasterCog):
                                                             embeds=[])
 
     @uno_group.command(name="hand", description="See the UNO cards you're currently holding.")
-    @uno.helpers.verify_context(level="game")
+    @uno.verify_context(level="game")
     async def show_hand(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
@@ -325,7 +314,7 @@ class UnoCog(MasterCog):
         await player.show_hand(ctx)
 
     @uno_group.command(name="play", description="Play one of your UNO cards.")
-    @uno.helpers.verify_context(level="turn")
+    @uno.verify_context(level="turn")
     async def play_card(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
@@ -333,7 +322,7 @@ class UnoCog(MasterCog):
         await player.select_card(ctx)
 
     @uno_group.command(name="draw", description="Draw an UNO card.")
-    @uno.helpers.verify_context(level="turn")
+    @uno.verify_context(level="turn")
     async def draw_card(self, ctx: discord.ApplicationContext):
 
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
@@ -342,7 +331,7 @@ class UnoCog(MasterCog):
         await player.draw_card(ctx)
 
     @uno_group.command(name="uno", description="Say 'UNO!' when you have one card left.")
-    @uno.helpers.verify_context(level="game")
+    @uno.verify_context(level="game")
     async def say_uno(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
@@ -380,7 +369,7 @@ class UnoCog(MasterCog):
                                                             embeds=[], view=None)
 
     @uno_group.command(name="callout", description="Call out a player for failing to say 'UNO!'.")
-    @uno.helpers.verify_context(level="turn")
+    @uno.verify_context(level="turn")
     async def callout(self,
                       ctx: discord.ApplicationContext,
                       receiving_player: Option(discord.User, "Mention a player to call out.", name="player")):
@@ -404,7 +393,7 @@ class UnoCog(MasterCog):
             await player.callout(ctx=ctx, recipient=recipient)
 
     @uno_group.command(name="status", description="Open the UNO Status Center.")
-    @uno.helpers.verify_context(level="thread")
+    @uno.verify_context(level="thread")
     async def status(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
 
@@ -413,7 +402,7 @@ class UnoCog(MasterCog):
 
     # game host commands
     @host_group.command(name="start", description="Start an UNO game. Game Hosts only.")
-    @uno.helpers.verify_context(level="thread", verify_host=True)
+    @uno.verify_context(level="thread", verify_host=True)
     async def start_game(self, ctx: discord.ApplicationContext):
         """
         Starts an UNO game that has already been created and which at least one player aside from the Game Host has
@@ -433,10 +422,11 @@ class UnoCog(MasterCog):
 
             await ctx.respond(embed=embed, ephemeral=True)
 
-        # the host can't start a game that fewer than two players have joined
-        elif len(uno_game.players) < 2:
+        # the host can't start a game that two few players have joined
+        elif len(uno_game.players) < uno_game.min_players:
             embed = discord.Embed(title="You need more players.",
-                                  description="You can't start this game until at least two players, including "
+                                  description=f"You can't start this game until at least "
+                                              f"{inflect.number_to_words(uno_game.min_players)} players, including "
                                               "yourself, have joined.",
                                   color=support.Color.red())
             await ctx.respond(embed=embed, ephemeral=True)
@@ -461,7 +451,7 @@ class UnoCog(MasterCog):
                                                             view=None)
 
     @host_group.command(name="abort", description="Abort an UNO game. Game Hosts only.")
-    @uno.helpers.verify_context(level="thread", verify_host=True)
+    @uno.verify_context(level="thread", verify_host=True)
     async def abort_game(self, ctx: discord.ApplicationContext):
         """
         Aborts an ongoing UNO game, forcefully ending it for all players. Can only be used by UNO Game Hosts in UNO game
@@ -480,12 +470,12 @@ class UnoCog(MasterCog):
 
         if confirmation:
             await ctx.interaction.edit_original_message(content="Aborting your UNO game...", embeds=[], view=None)
-            await uno_game.abort_game()
+            await uno_game.force_close(reason="host_abortion")
         else:
             await ctx.interaction.edit_original_message(content="Okay! The game is still on.", embeds=[], view=None)
 
     @host_group.command(name="kick", description="Kick a player from an UNO game. Game Hosts only.")
-    @uno.helpers.verify_context(level="thread", verify_host=True)
+    @uno.verify_context(level="thread", verify_host=True)
     async def kick_player(self, ctx: discord.ApplicationContext,
                           player: Option(discord.User, "Mention a player to kick.")):
         """
@@ -533,91 +523,9 @@ class UnoCog(MasterCog):
                 await ctx.interaction.edit_original_message(content=f"Okay! {player.mention} remains in the game.",
                                                             embeds=[], view=None)
 
-    @host_group.command(name="ban", description="Ban a user from an UNO game thread. Game Hosts only.")
-    @uno.helpers.verify_context(level="thread", verify_host=True)
-    async def ban_player(self, ctx: discord.ApplicationContext,
-                         user: Option(discord.User, "Mention a user to ban.")):
-        """
-        Bans a user from an UNO game thread. Can only be used by UNO Game Hosts in UNO game threads.
-
-        :param user: The player to ban.
-        :param ctx: An ApplicationContext object.
-        """
-        uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-
-        # the host can't ban the bot
-        if user == ctx.me:
-            embed = discord.Embed(title="Haha, no.",
-                                  description="You can't ban me. Choose someone else.",
-                                  color=support.Color.red())
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        # the host can't ban players who're already banned
-        elif user in uno_game.banned_users:
-            embed = discord.Embed(title="That user is already banned.",
-                                  description="You can't ban someone who's already banned.",
-                                  color=support.Color.red())
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        # the host can't ban players who aren't in the thread
-        elif not discord.utils.find(lambda x: x.id == user.id, await uno_game.thread.fetch_members()):
-            embed = discord.Embed(title="That user isn't in the thread.",
-                                  description="You can't ban someone who isn't in the game thread.",
-                                  color=support.Color.red())
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        # the host can't ban themselves
-        elif user == ctx.user:
-            embed = discord.Embed(title="Um, that's you.",
-                                  description="You can't ban yourself. If you want out, use `/uno leave` "
-                                              "(consider transferring your host powers to someone else first, "
-                                              "though).",
-                                  color=support.Color.red())
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        # the host can't ban server moderators
-        elif ((discord.Permissions.manage_threads.flag | discord.Permissions.administrator.flag) &
-              ctx.channel.permissions_for(user).value):
-            embed = discord.Embed(title="You can't ban moderators.",
-                                  description="Users with the `Manage Threads` permission are immune to being banned "
-                                              "(you can still `/uno host kick` them if they're a player, though).",
-                                  color=support.Color.red())
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        # if none of the above conditions are met, confirm the ban with the host
-        else:
-            msg = f"{user.mention} will be permanently removed from the game thread. If they're a player in this " \
-                  f"game, they'll be permanently removed from the game, too.\n" \
-                  f"\n" \
-                  f"If you *only* want to remove them from the game, use `/uno host kick` instead.\n" \
-                  f"\n" \
-                  f"This action cannot be undone.\n" \
-                  f"\n" \
-                  f"Ban {user.mention}?"
-
-            embed = discord.Embed(title=f"Ban {user.name}?", description=msg,
-                                  color=support.Color.orange())
-
-            view = support.ConfirmationView(ctx=ctx)
-            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
-
-            if confirmation:
-                await ctx.interaction.edit_original_message(content=f"Banning {user.name}...",
-                                                            embeds=[], view=None)
-
-                player_node: dllistnode = uno_game.retrieve_player(user, return_node=True)
-
-                if player_node:
-                    await uno_game.ban_player(player_node)
-                else:
-                    await uno_game.ban_spectator(user)
-            else:
-                await ctx.interaction.edit_original_message(content=f"Okay! {user.mention} remains in the game.",
-                                                            embeds=[], view=None)
-
     @host_group.command(name="transfer",
                         description="Transfer your Game Host powers to another player. Game Hosts only.")
-    @uno.helpers.verify_context(level="thread", verify_host=True)
+    @uno.verify_context(level="thread", verify_host=True)
     async def transfer_host(self,
                             ctx: discord.ApplicationContext,
                             player: Option(discord.User, "Mention the player you want to transfer host "
@@ -678,28 +586,7 @@ class UnoCog(MasterCog):
                                                             view=None)
 
     @commands.Cog.listener()
-    async def on_thread_member_join(self, thread_member: discord.ThreadMember):
-        """
-        A listener that runs whenever a user joins a thread. This runs whenever *any* user joins *any* thread in the
-        server, regardless of whether it's an UNO game thread. The purpose of this listener is to enable the bot to
-        automatically remove the user from the thread if they have been banned from the associated UNO game.
-
-        This listener is only effective on public threads; with private threads, Discord provides functionality
-        to properly bar users from rejoining threads they've been removed from.
-
-        :param thread_member: The user who joined the thread.
-        """
-
-        uno_game = uno.UnoGame.retrieve_game(thread_member.thread_id)
-
-        if uno_game:
-            if discord.utils.find(lambda user: user.id == thread_member.id, uno_game.banned_users):
-                await thread_member.thread.remove_user(thread_member)
-                await thread_member.thread.purge(limit=2, check=lambda message: message.author.id == thread_member.id)
-
-    @commands.Cog.listener()
     async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
-
         """
         A listener that runs whenever a user is removed from a thread. This runs whenever *any* user is removed from
         *any* thread in the server, regardless of whether they're playing an UNO game or being removed from an UNO game
@@ -752,8 +639,8 @@ class ChessCog(MasterCog):
     chess_group = SlashCommandGroup("chess", "Commands for playing chess.")
 
     @chess_group.command(description="Challenge someone to a game of chess.")
-    @support.helpers.bot_has_permissions(support.GamePermissions.chess())
-    @support.helpers.invoked_in_text_channel()
+    @support.bot_has_permissions(support.GamePermissions.chess())
+    @support.invoked_in_text_channel()
     async def challenge(self,
                         ctx: discord.ApplicationContext,
                         opponent: Option(discord.User, "Mention a user to be your opponent."),
@@ -786,7 +673,7 @@ class ChessCog(MasterCog):
                   f"You'll need to wrap it up before you can challenge them to another one."
             embed = discord.Embed(title=f"You're already playing with {opponent.name}.", description=msg,
                                   color=support.Color.red())
-            await ctx.respond(embed=embed, view=support.GoToGameThreadView(thread=chess_game.thread), ephemeral=True)
+            await ctx.respond(embed=embed, view=support.GameThreadURLView(thread=chess_game.thread), ephemeral=True)
 
         else:
             # confirm with the challenger (i.e. the invoker of /chess challenge) that they want to issue the challenge
@@ -858,12 +745,12 @@ class ChessCog(MasterCog):
                                               f"game thread.",
                                   color=support.Color.mint())
 
-            await ctx.send(embed=embed, view=support.GoToGameThreadView(thread=chess_game.thread))
+            await ctx.send(embed=embed, view=support.GameThreadURLView(thread=chess_game.thread))
 
             await chess_game.game_timer()
 
     @chess_group.command(description="Identify yourself as ready to begin a chess match.")
-    @chess.helpers.verify_context(level="player")
+    @chess.verify_context(level="player")
     async def ready(self, ctx: discord.ApplicationContext):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
@@ -896,7 +783,7 @@ class ChessCog(MasterCog):
                 )
 
     @chess_group.command(description="Make a move in a chess match.")
-    @chess.helpers.verify_context(level="turn")
+    @chess.verify_context(level="turn")
     async def move(self,
                    ctx: discord.ApplicationContext,
                    notation: Option(str, name="move",
@@ -912,7 +799,7 @@ class ChessCog(MasterCog):
             await player.move_with_gui(ctx)
 
     @chess_group.command(description="View the board in a chess match.")
-    @chess.helpers.verify_context(level="game")
+    @chess.verify_context(level="game")
     async def board(self, ctx: discord.ApplicationContext):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
@@ -920,7 +807,7 @@ class ChessCog(MasterCog):
         await player.view_board(ctx)
 
     @chess_group.command(description="Forfeit a chess match.")
-    @chess.helpers.verify_context(level="player")
+    @chess.verify_context(level="player")
     async def forfeit(self, ctx: discord.ApplicationContext):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
@@ -951,7 +838,7 @@ class ChessCog(MasterCog):
             await ctx.interaction.edit_original_message(content=f"Okay! The game is still on.", view=None, embeds=[])
 
     @chess_group.command(description="Propose a draw in a chess match, or rescind a proposal you've already made.")
-    @chess.helpers.verify_context(level="game")
+    @chess.verify_context(level="game")
     async def draw(self,
                    ctx: discord.ApplicationContext,
                    mode: Option(str, description="Choose whether to propose a draw or rescind an existing proposal.",
@@ -1007,7 +894,7 @@ class ChessCog(MasterCog):
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(message.channel.id)
 
         if (chess_game and not chess_game.retrieve_player(message.author) and not message.author.bot and
-                not support.helpers.is_celsius_narhwal(message.author)):
+                not support.is_celsius_narhwal(message.author)):
             await message.delete()
 
     @commands.Cog.listener(name="on_thread_member_remove")
@@ -1045,29 +932,36 @@ class CAHCog(MasterCog):
     The cog for the Cards Against Humanity module, which facilitates CAH games between up to 20 members of the same
     Discord server.
     """
-
     cah_group = SlashCommandGroup("cah", description="Commands for playing Cards Against Humanity.")
-    create_group = cah_group.create_subgroup("create",
-                                             description="Commands for creating Cards Against Humanity games.")
     host_group = cah_group.create_subgroup("host", description="Commands for CAH Game Hosts.")
 
-    @create_group.command(name="public", description="Create a public Cards Against Humanity game.")
-    @support.helpers.invoked_in_text_channel()
-    async def create_public_game(self, ctx: discord.ApplicationContext,
-                                 players: Option(int, description="Choose how many players can join your game "
-                                                                  "(min. 3, max. 20). This includes you. "
-                                                                  "The default is 20.",
-                                                 min_value=3, max_value=20, default=20),
-                                 points: Option(int, description="Choose the number of points required to win "
-                                                                 "(min 5, max. 100). The default is 10.",
-                                                min_value=5, max_value=100, default=10),
-                                 timeout: Option(int, "Choose how many seconds players must finish their turns in "
-                                                      "(min. 30, max. 120). The default is 60.",
-                                                 min_value=30, max_value=120, default=60),
-                                 voting: Option(str, description="Choose whether round winners are selected by a "
-                                                                 "Card Czar or popular vote. The default is Card Czar.",
-                                                choices=["Card Czar", "Popular Vote"],
-                                                default="Card Czar")):
+    @cah_group.command(name="create", description="Create a Cards Against Humanity game.")
+    @support.bot_has_permissions(support.GamePermissions.cah())
+    @support.invoked_in_text_channel()
+    @cah.CAHGame.verify_unique_host()
+    async def create_game(self, ctx: discord.ApplicationContext,
+                          players: Option(int, description="Choose how many players can join your game "
+                                                           "(min. 3, max. 20). This includes you. "
+                                                           "The default is 20.",
+                                          min_value=3, max_value=20, default=20),
+                          points: Option(int, description="Choose the number of points required to win "
+                                                          "(min 5, max. 100). The default is 10.",
+                                         min_value=5, max_value=100, default=10),
+                          timeout: Option(int, "Choose how many seconds players must finish their turns in "
+                                               "(min. 30, max. 120). The default is 60.",
+                                          min_value=30, max_value=120, default=60),
+                          voting: Option(str, description="Choose whether round winners are selected by a "
+                                                          "Card Czar or popular vote. The default is Card Czar.",
+                                         choices=["Card Czar", "Popular Vote"],
+                                         default="Card Czar"),
+                          voice: Option(str, description="Choose whether to create a private voice channel "
+                                                         "for your game. The default is Don't Create.",
+                                        choices=["Create", "Don't Create"],
+                                        default="Don't Create")):
+
+        if voice == "Create" and not await cah.check_voice_permissions(ctx):
+            return
+
         msg = "Cards Against Humanity is a pretty vulgar game. You're likely to see content that may gross you out, " \
               "offend you, or violate your server's rules. Are you cool with that?"
         embed = discord.Embed(title="Content Warning", description=msg, color=support.Color.orange())
@@ -1078,7 +972,7 @@ class CAHCog(MasterCog):
         confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
 
         if confirmation:
-            msg = f"You're about to create a **public** Cards Against Humanity game. There are a few important " \
+            msg = f"You're about to create a Cards Against Humanity game. There are a few important " \
                   f"things you need to know:\n" \
                   f"\n" \
                   f"**Cards Against Humanity games are contained within " \
@@ -1087,12 +981,12 @@ class CAHCog(MasterCog):
                   f"``Manage Threads``, please refrain from editing or deleting the thread until the game is " \
                   f"over (trust me, I've got this).\n" \
                   f"\n" \
-                  f"**Anyone can join.** Since you're creating a public Cards Against Humanity game, anyone who can " \
-                  f"both see and talk in this channel will be able to join or spectate your game.\n" \
+                  f"**Anyone can join.** Anyone who can both see and talk in this channel will be able to " \
+                  f"join or spectate your game.\n" \
                   f"\n" \
-                  f"**You're in control.** You'll be the Game Host for this Cards Against Humanity game. This " \
-                  f"entitles you to certain special powers, like removing players from the game or the thread " \
-                  f"it's hosted in, or ending the game early. However...\n" \
+                  f"**You're in control.** You'll be the Game Host for this CAH game. This " \
+                  f"entitles you to certain special powers, like removing players from the game or ending the game" \
+                  f"early. However...\n " \
                   f"\n" \
                   f"**With power comes responsibility.** The game won't start until you use " \
                   f"`/cah host start`, and if you leave the game or its thread at any time, the game will " \
@@ -1103,14 +997,24 @@ class CAHCog(MasterCog):
                   f"removed, the game will end for everyone else, since you're the Game Host. Keep that in " \
                   f"mind.\n" \
                   f"\n" \
-                  f"**Content warning, again.** Just to reiterate, this game has a lot of very very " \
+                  f"**Content warning, again.** Just to reiterate, this game has lots of very very " \
                   f"NSFW 18+ put-the-kids-to-bed type stuff. If that makes you uncomfortable, this is your last " \
                   f"chance to turn back.\n" \
                   f"\n" \
                   f"Before we start, let's review your game settings.\n" \
-                  f"\n"
+                  f"\n" \
+                  f"__Game Settings__\n" \
+                  f"**Players**: {players}\n" \
+                  f"**Points to Win**: {points}\n" \
+                  f"**Timeout**: {timeout} seconds\n" \
+                  f"**Voting Mode**: {voting}\n" \
+                  f"**Voice Channel**: {voice}\n" \
+                  f"\n" \
+                  f"Once the game has been created, these settings can't be changed.\n" \
+                  f"\n" \
+                  f"Proceed with creating this Cards Against Humanity game?""" \
 
-            embed = discord.Embed(title="Creating a Public Cards Against Humanity Game", description=msg,
+            embed = discord.Embed(title="Creating a Cards Against Humanity Game", description=msg,
                                   color=discord.Color.orange())
 
             view = support.ConfirmationView(ctx=ctx)
@@ -1119,6 +1023,9 @@ class CAHCog(MasterCog):
             if confirmation:
                 cards = await cah.PackSelectView(ctx=ctx).get_packs()
 
+                if not cards:
+                    return
+
                 game_thread = await ctx.channel.create_thread(name=f"CAH with {ctx.user.name} - check pins to play!",
                                                               type=discord.ChannelType.public_thread,
                                                               auto_archive_duration=1440)
@@ -1126,22 +1033,25 @@ class CAHCog(MasterCog):
                 game_settings = cah.CAHGameSettings(max_players=players,
                                                     points_to_win=points,
                                                     timeout=timeout,
-                                                    use_czar=bool(voting == "Card Czar"))
+                                                    use_czar=bool(voting == "Card Czar"),
+                                                    use_voice=bool(voice == "Create"))
 
-                cah_game = cah.CAHGame(guild=ctx.guild, thread=game_thread, host=ctx.user, cards=cards,
-                                       settings=game_settings)
+                game_class = cah.CAHGame if game_settings.use_czar else cah.CAHPopularVoteGame
+                cah_game = game_class(guild=ctx.guild, thread=game_thread, host=ctx.user, cards=cards,
+                                      settings=game_settings)
 
                 await cah_game.open_lobby()
+                await cah_game.add_player(ctx=ctx, user=ctx.user, is_host=True)
 
                 msg = f"{ctx.user.mention} created a Cards Against Humanity game! You can join the game by typing " \
                       f"`/cah join` in the game thread."
                 embed = discord.Embed(title="A Cards Against Humanity game has been created!", description=msg,
                                       color=support.Color.mint())
 
-                await ctx.send(embed=embed, view=support.GoToGameThreadView(thread=game_thread))
+                await ctx.send(embed=embed, view=support.GameThreadURLView(thread=game_thread))
             else:
-                msg = f"You canceled the creation of this Cards Against Humanity game. You can create a new game with " \
-                      f"`/{ctx.command.qualified_name}`."
+                msg = f"You canceled the creation of this Cards Against Humanity game. You can create a new game " \
+                      f"with `/{ctx.command.qualified_name}`."
                 embed = discord.Embed(title="Game Creation Canceled", description=msg, color=support.Color.red())
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
         else:
@@ -1150,68 +1060,330 @@ class CAHCog(MasterCog):
             embed = discord.Embed(title="Game Creation Canceled", description=msg, color=support.Color.red())
             await ctx.interaction.edit_original_message(embeds=[embed], view=None)
 
-    @create_group.command(name="private", description="Create a private Cards Against Humanity game.")
-    async def create_private_game(self, ctx: discord.ApplicationContext):
-        if ctx.guild.premium_tier < 2:
-            msg = "Discord won't let me create private Cards Against Humanity games in this server until it's " \
-                  "reached Boost Level 2 or higher."
-            embed = discord.Embed(title="Boost your server first.", description=msg, color=support.Color.red())
-
-            await ctx.respond(embed=embed, view=support.ServerBoostURLView(), ephemeral=True)
-
     @cah_group.command(name="join", description="Join a Cards Against Humanity game.")
+    @cah.verify_context(level="thread")
     async def join_game(self, ctx: discord.ApplicationContext):
-        pass
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+
+        # users can't join games they're already in
+        if cah_game.retrieve_player(ctx.user):
+            msg = "You can't join an CAH game you're already a player in. If you meant to leave, use `/cah leave` " \
+                  "instead."
+            embed = discord.Embed(title="You're already in this game.", description=msg,
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # users can't join games that have already started
+        elif not cah_game.is_joinable:
+            msg = "You can't join a game that's already in progress."
+            embed = discord.Embed(title="This game has already started.", description=msg,
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # users can't join games that are already full
+        elif not len(cah_game.players) <= cah_game.settings.max_players:
+            msg = "You won't be able to join unless someone leaves or is removed by the Game Host."
+            embed = discord.Embed(title="This game is full.", description=msg, color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        else:
+            await cah_game.add_player(ctx=ctx, user=ctx.user)
 
     @cah_group.command(name="leave", description="Leave a Cards Against Humanity game.")
+    @cah.verify_context(level="player")
     async def leave_game(self, ctx: discord.ApplicationContext):
-        pass
+        """
+        Voluntarily removes the player from an CAH game. Can only be used in CAH game threads.
+
+        :param ctx: An ApplicationContext object.
+        """
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+        player_node = cah_game.retrieve_player(ctx.user, return_node=True)
+
+        if cah_game and player_node:
+            if ctx.user == cah_game.host:
+                msg = "You're the Game Host, so your departure will end the game for everyone else - " \
+                      "consider transferring your host powers to another player with `/cah host transfer` " \
+                      "beforehand."
+            else:
+                if cah_game.is_joinable:
+                    msg = "You can rejoin at any time before the game starts."
+                else:
+                    if len(cah_game.players) - 1 < cah_game.min_players:
+                        msg = "Your departure will leave too few players for the game to continue on, forcing it " \
+                              "to end for everyone else."
+                    else:
+                        msg = "Since the game has already started, you won't be able to rejoin."
+
+            embed = discord.Embed(title="Leave this Cards Against Humanity game?", description=msg,
+                                  color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(
+                prompt_embeds=[embed], ephemeral=True)
+
+            if confirmation:
+                await ctx.interaction.edit_original_message(content="Removing you from the game...", view=None,
+                                                            embeds=[])
+                await cah_game.remove_player(player_node=player_node)
+            else:
+                await ctx.interaction.edit_original_message(content="Okay! You're still in the game!", view=None,
+                                                            embeds=[])
 
     @cah_group.command(name="hand", description="See the white cards you're currently holding.")
     async def show_hand(self, ctx: discord.ApplicationContext):
-        pass
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+        player = cah_game.retrieve_player(ctx.user)
+
+        await player.show_hand(ctx)
 
     @cah_group.command(name="play", description="Play a white card (or two).")
+    @cah.verify_context(level="turn")
     async def play_card(self, ctx: discord.ApplicationContext):
-        pass
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+        player = cah_game.retrieve_player(ctx.user)
 
-    @cah_group.command(name="vote", description="Vote for the funniest white card.")
+        await player.pick_cards(ctx)
+
+    @cah_group.command(name="vote", description="Vote for the funniest submission.")
+    @cah.verify_context(level="turn")
     async def vote(self, ctx: discord.ApplicationContext):
-        pass
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+        player = cah_game.retrieve_player(ctx.user)
 
-    @host_group.command(name="start", description="Start a Cards Against Humanity game. Game Hosts only.")
+        await player.vote(ctx)
+
+    @cah_group.command(name="status", description="Open the CAH Status Center.")
+    async def status(self, ctx: discord.ApplicationContext):
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+
+        await cah.CAHStatusCenterView(ctx=ctx, game=cah_game).open_status_center()
+
+    @host_group.command(name="start", description="Start an Cards Against Humanity game. Game Hosts only.")
+    @cah.verify_context(level="thread", verify_host=True)
     async def start_game(self, ctx: discord.ApplicationContext):
-        pass
+        """
+        Starts an CAH game that has already been created and which at least one player aside from the Game Host has
+        joined. Can only be used by CAH Game Hosts in CAH game threads. Not to be confused with
+        ``create_public_game()`` and ``create_private_game()``, which create CAH games that must later be started with
+        this command.
 
-    @host_group.command(name="abort", description="Abort a Cards Against Humanity game. Game Hosts only.")
+        :param ctx: An ApplicationContext object.
+        """
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+
+        # the host can't start a game that's already in progress
+        if not cah_game.is_joinable:
+            embed = discord.Embed(title="This game has already started.",
+                                  description="You can't start a game that's already in progress, silly!",
+                                  color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # the host can't start a game that too few players have joined
+        elif len(cah_game.players) < cah_game.min_players:
+            embed = discord.Embed(title="You need more players.",
+                                  description=f"You can't start this game until at least "
+                                              f"{inflect.number_to_words(cah_game.min_players)} players, including "
+                                              "yourself, have joined.",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # if none of the above conditions are met, the host is asked to confirm that they want to start the game
+        else:
+            embed = discord.Embed(title="Start this Cards Against Humanity game?",
+                                  description="Once the game has begun, no new players will be able to join.",
+                                  color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+            if confirmation:
+                await ctx.interaction.edit_original_message(content="Let's get started!", embeds=[], view=None)
+                await cah_game.start_game()
+
+            else:
+                await ctx.interaction.edit_original_message(content="Okay! Just use `/cah host start` "
+                                                                    "whenever you're ready.",
+                                                            embeds=[],
+                                                            view=None)
+
+    @host_group.command(name="abort", description="Abort a CAH game. Game Hosts only.")
+    @cah.verify_context(level="thread", verify_host=True)
     async def abort_game(self, ctx: discord.ApplicationContext):
-        pass
+        """
+        Aborts an ongoing CAH game, forcefully ending it for all players. Can only be used by CAH Game Hosts in CAH game
+        threads.
+
+        :param ctx: An ApplicationContext object.
+        """
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+        message = "Proceeding will immediately end the game and lock the thread for all players, including you.\n" \
+                  "\n" \
+                  "This can't be undone."
+        embed = discord.Embed(title="Abort this CAH game?", description=message, color=support.Color.orange())
+
+        view = support.ConfirmationView(ctx=ctx)
+        confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+        if confirmation:
+            await ctx.interaction.edit_original_message(content="Aborting your CAH game...", embeds=[], view=None)
+            await cah_game.force_close(reason="host_abortion")
+        else:
+            await ctx.interaction.edit_original_message(content="Okay! The game is still on.", embeds=[], view=None)
 
     @host_group.command(name="kick", description="Kick a player from a Cards Against Humanity game. Game Hosts only.")
-    async def kick_player(self, ctx: discord.ApplicationContext):
-        pass
+    @cah.verify_context(level="thread", verify_host=True)
+    async def kick_player(self, ctx: discord.ApplicationContext, player: discord.Member):
+        """
+        Kicks a player from an CAH game. Can only be used by CAH Game Hosts in CAH game threads.
 
-    @host_group.command(name="ban", description="Ban a player from a Cards Against Humanity game. Game Hosts only.")
-    async def ban_player(self, ctx: discord.ApplicationContext):
-        pass
+        :param player: The player to kick.
+        :param ctx: An ApplicationContext object.
+        """
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+        player_node: dllistnode = cah_game.retrieve_player(player, return_node=True)
+
+        if not player_node:
+            embed = discord.Embed(title="That's not a player.",
+                                  description="You can't kick someone who isn't a player in this game.",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+        elif player == ctx.user:
+            embed = discord.Embed(title="Um, that's you.",
+                                  description="You can't kick yourself. If you want out, use `/cah leave` "
+                                              "(consider transferring your host powers to someone else first, "
+                                              "though).",
+                                  color=support.Color.red())
+            await ctx.respond(embed=embed, ephemeral=True)
+        else:
+            if cah_game.is_joinable:
+                msg = f"{player.mention} will be able to rejoin the game at any time before it starts.\n" \
+                      f"\n" \
+                      f"Kick {player.mention}?"
+            elif len(cah_game.players) - 1 < cah_game.min_players:
+                msg = f"Kicking {player.mention} will leave too few players for the game to continue on, forcing it " \
+                      f"to end.\n" \
+                      f"\n" \
+                      f"Kick {player.mention}?"
+            else:
+                msg = f"{player.mention} will be removed from the game.\n" \
+                      f"\n" \
+                      f"Kick {player.mention}?"
+
+            embed = discord.Embed(title=f"Kick {player.name}?", description=msg,
+                                  color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+            if confirmation:
+                await ctx.interaction.edit_original_message(content=f"Kicking {player.name}...",
+                                                            embeds=[],
+                                                            view=None)
+                await cah_game.kick_player(player_node)
+            else:
+                await ctx.interaction.edit_original_message(content=f"Okay! {player.mention} remains in the game.",
+                                                            embeds=[], view=None)
 
     @host_group.command(name="transfer",
                         description="Transfer your Game Host powers to another player. Game Hosts only.")
-    async def transfer_host(self, ctx: discord.ApplicationContext):
-        pass
+    @cah.verify_context(level="thread", verify_host=True)
+    async def transfer_host(self,
+                            ctx: discord.ApplicationContext,
+                            player: Option(discord.User, "Mention the player you want to transfer host "
+                                                         "powers to.")):
 
-    @commands.Cog.listener(name="on_thread_member_join")
-    async def on_thread_member_join(self, thread_member: discord.ThreadMember):
-        pass
+        cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
+
+        # user cannot transfer host powers to themselves
+        if player.id == ctx.user.id:
+            msg = "Choose another player to transfer host powers to."
+            embed = discord.Embed(title="You can't transfer host powers to yourself.", description=msg,
+                                  color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # user cannot transfer host powers to non-players
+        elif not cah_game.retrieve_player(player):
+            msg = "The new Game Host must be a player in this UNO game."
+            embed = discord.Embed(title="That person's not a player.", description=msg,
+                                  color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # user cannot transfer host powers to players already hosting another game in the same server
+        elif uno.UnoGame.find_hosted_games(player, ctx.guild_id):
+            msg = "You can't transfer host powers to someone who's already hosting an CAH game in this server."
+            embed = discord.Embed(title="That player's already hosting a game.", description=msg,
+                                  color=support.Color.red())
+
+            await ctx.respond(embed=embed, ephemeral=True)
+
+        # if none of the above conditions are met, the user is asked to confirm the transfer
+        else:
+            msg = f"{player.mention} will become the Game Host, effective immediately, and all associated powers " \
+                  f"will become exclusively theirs to use. Conversely, you will lose your status as Game Host " \
+                  f"and will no longer be able to use any of the powers that come with the title.\n" \
+                  f"\n" \
+                  f"You will remain a player in this CAH game until it ends or you choose to leave.\n" \
+                  f"\n" \
+                  f"This action cannot be undone.\n" \
+                  f"\n" \
+                  f"Do you want to make {player.name} the Game Host?"
+
+            embed = discord.Embed(title=f"Make {player.name} the Game Host?", description=msg,
+                                  color=support.Color.orange())
+
+            view = support.ConfirmationView(ctx=ctx)
+            confirmation = await view.request_confirmation(prompt_embeds=[embed], ephemeral=True)
+
+            if confirmation:
+                await ctx.interaction.edit_original_message(content=f"Transferring host powers to {player.mention}...",
+                                                            embeds=[], view=None)
+                await cah_game.transfer_host(player)
+
+            else:
+                await ctx.interaction.edit_original_message(content="Ok! You're still the Game Host.",
+                                                            embeds=[],
+                                                            view=None)
 
     @commands.Cog.listener(name="on_thread_member_remove")
     async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
-        pass
+        """
+        A listener that runs whenever a user is removed from a thread. This runs whenever *any* user is removed from
+        *any* thread in the server, regardless of whether they're playing an CAH game or being removed from an CAH game
+        thread. The purpose of this listener is to enable the automatic removal of CAH players from games when they
+        leave associated game threads.
+
+        :param thread_member: A discord.ThreadMember object representing the removed user.
+        """
+        cah_game = cah.CAHGame.retrieve_game(thread_member.thread_id)
+        player_node = cah_game.retrieve_player(thread_member, return_node=True)
+
+        # only call remove_player() if the thread is an CAH game thread AND the user is a player in that game
+        if player_node:
+            await cah_game.remove_player(player_node=player_node)
 
     @commands.Cog.listener(name="on_raw_thread_delete")
-    async def on_raw_thread_delete(self, thread: discord.Thread):
-        pass
+    async def on_raw_thread_delete(self, thread: discord.RawThreadDeleteEvent):
+        cah_game: cah.CAHGame = cah.CAHGame.retrieve_game(thread.thread_id)
+        if cah_game:
+            await cah_game.force_close(reason="thread_deletion")
 
     @commands.Cog.listener(name="on_guild_channel_delete")
-    async def on_guild_channel_delete(self, channel: discord.TextChannel):
-        pass
+    async def on_guild_channel_delete(self, channel: discord.TextChannel | discord.VoiceChannel):
+        if type(channel) == discord.TextChannel:
+            for thread in [thread for thread in channel.threads]:
+                cah_game = cah.CAHGame.retrieve_game(thread.id)
+                if cah_game:
+                    await cah_game.force_close(reason="channel_deletion")
+        elif type(channel) == discord.VoiceChannel:
+            if channel.category.name.casefold() == "3515.games" and len(channel.category.channels) == 0:
+                await channel.category.delete()
+
+            cah_game: cah.CAHGame = discord.utils.find(lambda g: g.voice_channel == channel,
+                                                       cah.CAHGame.__all_games__.values())
+
+            if cah_game:
+                await cah_game.send_vc_deletion_warning()

@@ -78,7 +78,7 @@ class UnoCardSelectView(UnoTerminableView):
         self.game = self.player.game
         self.selected_card: uno.UnoCard = None
         self.paginator = self.UnoCardSelectPaginator(
-            pages=DoublyLinkedList(support.helpers.split_list(self.cards, 23))
+            pages=DoublyLinkedList(support.split_list(self.cards, 23))
         )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -459,15 +459,11 @@ class UnoStatusCenterView(EnhancedView):
 
         msg = "Pick an item from the menu below and I'll tell you what you want to know."
 
-        if self.status.game.is_joinable:
-            msg += "\n\nThis game hasn't started yet, so the information I can tell you is limited. To access all of " \
-                   "my knowledge, you'll need to wait until the game starts."
-
         embed = discord.Embed(title="Welcome to the UNO Status Center!",
                               description=msg,
                               color=support.Color.mint())
 
-        embed.set_author(name="UNO Status Center", icon_url=self.ctx.me.display_avatar.url)
+        embed.set_author(name="UNO", icon_url=self.ctx.me.display_avatar.url)
 
         await self.ctx.respond(embed=embed, view=self, ephemeral=True)
 
@@ -483,7 +479,7 @@ class UnoStatusCenterView(EnhancedView):
 
     def player_list(self):
         """
-        Returns an embed contianing a string representation of the player list.
+        Returns an embed containing a string representation of the player list.
         """
         players = self.status.get_player_list()
 
@@ -519,7 +515,7 @@ class UnoStatusCenterView(EnhancedView):
             else:
                 string += f"{player.user.name}"
 
-            if self.status.game.retrieve_player(player.user, return_node=True) == self.status.game.current_player:
+            if self.status.game.retrieve_player(player.user, return_node=True) == self.status.game.card_czar:
                 string = f"**{string}**"
 
             string += f" ({player.user.mention})"
