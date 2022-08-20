@@ -27,7 +27,7 @@ class CAHGame(HostedMultiplayerGame):
     def __init__(self, cards: dict, settings: CAHGameSettings, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.min_players = 3
+        self.min_players = 2
 
         self.cardset = CAHCardSet(cards)
         self.settings: CAHGameSettings = settings
@@ -223,6 +223,25 @@ class CAHGame(HostedMultiplayerGame):
         # if there are too few players remaining in the game and the game has started, the game is force closed
         elif len(self.players) - 1 < self.min_players and not self.is_joinable:
             await self.force_close(reason="insufficient_players")
+
+        elif self.is_voting and player == self.card_czar.value:
+            await player.force_vote()
+
+        elif not self.is_voting:
+            if player == self.card_czar.value:
+                self.card_czar = self.card_czar.next
+                msg = f"{self.card_czar.value.user.mention} is now the Card Czar."
+                embed = discord.Embed(title="The Card Czar has changed!", description=msg, color=support.Color.orange())
+                embed.set_thumbnail(url=self.card_czar.value.user.display_avatar.url)
+
+                await self.thread.send(content=f"{self.card_czar.value.user.mention}, you are now the Card Czar.",
+                                       embed=embed)
+            else:
+                await player.force_pick()
+
+        player_candidate = discord.utils.find(lambda c: c.player == player, self.candidates)
+        if player_candidate:
+            self.candidates.remove(player_candidate)
 
         self.players.remove(player_node)
 
@@ -534,6 +553,40 @@ class CAHPopularVoteGame(CAHGame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    async def remove_player(self, player_node: dllistnode):
+        player: CAHPlayer = player_node.value
+
+        embed = discord.Embed(title="A player has left the game.",
+                              description=f"{player.user.mention} has left the game.",
+                              color=support.Color.red())
+
+        await self.thread.send(embed=embed)
+
+        # if the host leaves, the game is force closed
+        if player.user == self.host:
+            await self.force_close(reason="host_left")
+
+        # if there are too few players remaining in the game and the game has started, the game is force closed
+        elif len(self.players) - 1 < self.min_players and not self.is_joinable:
+            pass
+            await self.force_close(reason="insufficient_players")
+
+        elif self.is_voting:
+            await player.force_vote()
+
+        else:
+            await player.force_pick()
+
+        player_candidate = discord.utils.find(lambda c: c.player == player, self.candidates)
+        if player_candidate:
+            self.candidates.remove(player_candidate)
+
+        self.players.remove(player_node)
+
+        if self.voice_channel and player.user in self.voice_channel.members:
+            await player.user.move_to(None)
+            await self.voice_channel.set_permissions(target=player.user, overwrite=None)
+
     async def start_new_round(self):
         self.turn_uuid = shortuuid.uuid()
         self.black_card = self.cardset.get_random_black()
@@ -678,24 +731,30 @@ class CAHPlayer:
             self.reset_timeouts()
             await self.submit_candidate(candidate)
 
-    async def force_pick(self):
+    async def force_pick(self, player_removal: bool = False):
         """
-        Picks white cards on the player's behalf. Called when the player times out.
+        Picks white cards on the player's behalf.
+        :param player_removal: Flags whether the cards are being picked on the player's behalf as a result of them
+        being removed from the game.
         """
         # pick x number of cards from the player's hand at random, depending on how many white cards need to be played
         cards = [self.hand[i] for i in random.sample(range(len(self.hand)), self.game.black_card.pick)]
         # create candidates from those cards and randomly choose one of them to submit
         candidate: CAHCandidateCard = random.choice(CAHCandidateCard.make_candidates(self, *cards))
 
-        await self.submit_candidate(candidate)
+        await self.submit_candidate(candidate, player_removal=player_removal)
 
-    async def submit_candidate(self, candidate: CAHCandidateCard):
+    async def submit_candidate(self, candidate: CAHCandidateCard, player_removal: bool = False):
         """
         Submits the player's candidate card.
         :param candidate: The candidate card to submit.
+        :param player_removal: Flags whether the submission is being made on the player's behalf as a result of them
+        being removed from the game.
         """
         self.has_submitted = True
-        self.game.candidates.append(candidate)
+
+        if not player_removal:
+            self.game.candidates.append(candidate)
 
         await self.terminate_views()
 
@@ -722,7 +781,7 @@ class CAHPlayer:
 
     async def force_vote(self):
         """
-        Votes for a candidate card on the player's behalf. Called when the player times out.
+        Votes for a candidate card on the player's behalf.
         """
         await self.terminate_views()
         await self.game.submit_vote(candidate=random.choice(self.game.candidates))
