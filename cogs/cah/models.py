@@ -460,7 +460,9 @@ class CAHGame(HostedMultiplayerGame):
 
             for player in outstanding_players:
                 await player.increment_timeouts()
-                await player.force_pick()
+
+                if self.retrieve_player(player.user):
+                    await player.force_pick()
 
         async def vote_callback():
             """
@@ -472,7 +474,8 @@ class CAHGame(HostedMultiplayerGame):
 
             await self.card_czar.value.increment_timeouts()
 
-            await self.card_czar.value.force_vote()
+            if self.retrieve_player(self.card_czar.value.user):
+                await self.card_czar.value.force_vote()
 
         turn_uuid = self.turn_uuid
 
@@ -647,7 +650,9 @@ class CAHPopularVoteGame(CAHGame):
 
             for player in outstanding_players:
                 await player.increment_timeouts()
-                await player.force_pick()
+
+                if self.retrieve_player(player.user):
+                    await player.force_pick()
 
         async def vote_callback():
             outstanding_players = [player for player in self.players.itervalues() if not player.has_submitted]
@@ -659,7 +664,9 @@ class CAHPopularVoteGame(CAHGame):
 
             for player in outstanding_players:
                 await player.increment_timeouts()
-                await player.force_vote()
+
+                if self.retrieve_player(player.user):
+                    await player.force_vote()
 
         turn_uuid = self.turn_uuid
 
