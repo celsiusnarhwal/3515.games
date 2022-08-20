@@ -27,7 +27,7 @@ class CAHGame(HostedMultiplayerGame):
     def __init__(self, cards: dict, settings: CAHGameSettings, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.min_players = 2
+        self.min_players = 3
 
         self.cardset = CAHCardSet(cards)
         self.settings: CAHGameSettings = settings
