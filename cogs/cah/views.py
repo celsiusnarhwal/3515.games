@@ -273,13 +273,13 @@ class CAHStatusCenterView(EnhancedView):
         choice = status_menu.values[0]
 
         options = {
-            "settings": self.settings(),
-            "players": self.players(),
-            "leaderboard": self.leaderboard(),
+            "settings": self.settings,
+            "players": self.players,
+            "leaderboard": self.leaderboard,
         }
 
         # get embed from the appropriate method based on the user's choice
-        embed = options[choice]
+        embed = options[choice]()
         embed.set_author(name="CAH Status Center", icon_url=self.ctx.me.display_avatar.url)
 
         await interaction.response.edit_message(embed=embed)
@@ -320,7 +320,7 @@ class CAHStatusCenterView(EnhancedView):
         return discord.Embed(title="⚙️ Game Settings", description=self.game.settings, color=support.Color.mint())
 
     def players(self):
-        embed = discord.Embed(title="Players", color=support.Color.mint())
+        embed = discord.Embed(title="👥 Players", color=support.Color.mint())
         embed.add_field(name="Game Host", value=f"{self.game.host.name} ({self.game.host.mention})", inline=False)
 
         other_players = [p for p in self.game.players if p.user != self.game.host]
@@ -333,7 +333,7 @@ class CAHStatusCenterView(EnhancedView):
     def leaderboard(self):
         leaderboard = self.game.get_leaderboard()
 
-        embed = discord.Embed(title="Leaderboard", color=support.Color.mint())
+        embed = discord.Embed(title="🏆 Leaderboard", color=support.Color.mint())
 
         for i, group in enumerate(leaderboard):
             if len(group) == 1:
@@ -345,7 +345,7 @@ class CAHStatusCenterView(EnhancedView):
                 else:
                     players += f" & {group[-1].user.name}"
 
-                players += f"— {group[0].points} points"
+            players += f"— {group[0].points} {inflect.plural('point', group[0].points)}"
 
             embed.add_field(name=f"{inflect.ordinal(i + 1)} Place", value=players, inline=False)
 
