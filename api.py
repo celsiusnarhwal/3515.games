@@ -1,4 +1,6 @@
+import json
 import os
+import subprocess
 import urllib.parse
 
 from fastapi import FastAPI, Depends, HTTPException, status
@@ -37,3 +39,13 @@ async def get_invite_url():
     }
 
     return RedirectResponse(f"{base_url}?{urllib.parse.urlencode(params)}")
+
+
+@app.get("/licenses")
+async def get_licenses():
+    licenses = json.loads(
+        subprocess.run(
+            "pip-licenses -f json --from=mixed --no-license-path --with-license-file",
+            stdout=subprocess.PIPE, shell=True).stdout)
+
+    return licenses
