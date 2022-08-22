@@ -12,10 +12,13 @@ RUN apt-get update && apt-get install -y apt-transport-https ca-certificates cur
     apt-get update && \
     apt-get -y install doppler
 
-# Install Poetry and Dependencies
+# Install dependencies
 RUN curl -sSL https://install.python-poetry.org | python3 - && \
     poetry config virtualenvs.create false &&  \
     poetry install --no-dev
 
+# Prepare entrypoint script
+RUN chmod +x entrypoint.sh
+
 # Start it up!
-ENTRYPOINT ["doppler", "run", "--", "poetry", "run", "python3", "main.py"]
+ENTRYPOINT ["./entrypoint.sh"]

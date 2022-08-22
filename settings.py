@@ -13,6 +13,9 @@ DEV_MODE = False
 # Bot Name
 BOT_NAME = "3515.games"
 
+# Application ID
+APP_ID = 939972078323519488
+
 # Owner ID (corresponds to celsiusnarhwal#3515)
 OWNER_ID = 170966436125212673
 

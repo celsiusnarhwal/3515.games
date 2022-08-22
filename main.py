@@ -4,6 +4,7 @@ Bot events, setup functions, and the program entrypoint.
 
 import inspect
 import logging
+import subprocess
 
 import alianator
 import discord
