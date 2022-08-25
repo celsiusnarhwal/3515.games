@@ -37,6 +37,10 @@ NLTK_CORPORA = ["averaged_perceptron_tagger"]
 # Database Settings
 DATABASE_SETTINGS = {"provider": "postgres", "dsn": os.getenv("DATABASE_URL")}
 
+# API Settings
+API_HOST = "0.0.0.0"
+API_PORT = os.getenv("PORT")
+
 # Bot Token
 TOKEN = os.getenv("BOT_TOKEN" if not DEV_MODE else "DEV_TOKEN")
 

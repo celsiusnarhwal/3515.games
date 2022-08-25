@@ -17,8 +17,5 @@ RUN curl -sSL https://install.python-poetry.org | python3 - && \
     poetry config virtualenvs.create false &&  \
     poetry install --no-dev
 
-# Prepare entrypoint script
-RUN chmod +x entrypoint.sh
-
 # Start it up!
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["doppler", "run", "--", "poetry", "run", "python3", "main.py"]

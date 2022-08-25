@@ -126,6 +126,13 @@ def load_extensions():
     bot.load_extensions(*settings.EXTENSIONS)
 
 
+def start_api():
+    """
+    Starts the API.
+    """
+    subprocess.Popen(f"uvicorn api:app --host {settings.API_HOST} --port {settings.API_PORT}", shell=True)
+
+
 # Entrypoint
 
 if __name__ == '__main__':
@@ -134,5 +141,6 @@ if __name__ == '__main__':
     configure_nltk()
     configure_database()
     load_extensions()
+    start_api()
     uptime.mark_startup()
     bot.run(settings.TOKEN)

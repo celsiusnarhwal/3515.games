@@ -1,23 +1,11 @@
-import json
-import os
-import subprocess
 import urllib.parse
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi.security import OAuth2PasswordBearer
 
 import settings
 from support import GamePermissions
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-
-def api_key_auth(api_key: str = Depends(oauth2_scheme)):
-    if api_key != os.getenv("BOT_API_KEY"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Forbidden")
-
 
 app = FastAPI()
 
@@ -30,6 +18,10 @@ app.add_middleware(CORSMiddleware,
 
 @app.get("/invite")
 async def get_invite_url():
+    """
+    Dynamically generates and redirects to an invite link for 3515.games based on the permissions it requires as
+    dictated by :class:`support.GamePermissions`.
+    """
     base_url = "https://discord.com/api/oauth2/authorize"
 
     params = {
@@ -39,13 +31,3 @@ async def get_invite_url():
     }
 
     return RedirectResponse(f"{base_url}?{urllib.parse.urlencode(params)}")
-
-
-@app.get("/licenses")
-async def get_licenses():
-    licenses = json.loads(
-        subprocess.run(
-            "pip-licenses -f json --from=mixed --no-license-path --with-license-file",
-            stdout=subprocess.PIPE, shell=True).stdout)
-
-    return licenses
