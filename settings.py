@@ -26,7 +26,7 @@ INTENTS = discord.Intents.default() + discord.Intents.members
 DEBUG_GUILDS = []
 
 # Extensions
-EXTENSIONS = ["jishaku"]
+EXTENSIONS = []
 
 # Disabled Cogs
 DISABLED_COGS = [cogs.AboutCog]
