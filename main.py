@@ -130,7 +130,13 @@ def start_api():
     """
     Starts the API.
     """
-    subprocess.Popen(f"uvicorn api:app --host {settings.API_HOST} --port {settings.API_PORT}", shell=True)
+    subprocess.Popen(
+        f"uvicorn api:app "
+        f"--host {settings.API_HOST} "
+        f"--port {settings.API_PORT} "
+        f"--log-level {settings.API_LOG_LEVEL}",
+        shell=True
+    )
 
 
 # Entrypoint

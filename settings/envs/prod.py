@@ -41,6 +41,7 @@ DATABASE_SETTINGS = {
 # API Settings
 API_HOST = "0.0.0.0"
 API_PORT = os.getenv("PORT")
+API_LOG_LEVEL = "critical"
 
 # Bot Token
 TOKEN = os.getenv("BOT_TOKEN")
