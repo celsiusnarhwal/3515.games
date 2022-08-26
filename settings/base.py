@@ -40,6 +40,7 @@ DATABASE_SETTINGS = None
 # API Settings
 API_HOST = None
 API_PORT = None
+API_LOG_LEVEL = None
 
 # Bot Token
 TOKEN = None
