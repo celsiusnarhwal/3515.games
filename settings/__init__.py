@@ -5,7 +5,7 @@ environment it's running in.
 from settings.base import *
 
 _environments = {
-    "prod": "settings.envs.prod",
+    "prd": "settings.envs.prod",
     "dev": "settings.envs.dev",
 }
 
