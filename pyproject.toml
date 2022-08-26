@@ -20,14 +20,15 @@ shortuuid = "^1.0.8"
 pony = "^0.7.16"
 psycopg2 = "^2.9.3"
 jishaku = "^2.5.0"
-py-cord = {git = "https://github.com/Pycord-Development/pycord", rev = "7accb95008098f09ddc1184f6207c427b64f4691"}
 nltk = "^3.7"
 fastapi = "^0.79.1"
 uvicorn = "^0.18.2"
-pip-licenses = "^3.5.3"
+py-cord = "^2.1.1"
 
 [tool.poetry.dev-dependencies]
+pip-licenses = "^3.5.3"
 doppler-env = "^0.3.0"
+pyperclip = "^1.8.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

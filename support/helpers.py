@@ -34,16 +34,12 @@ def is_celsius_narhwal(user: discord.User = None):
     return user.id == 170966436125212673 if user else commands.check(predicate)
 
 
-def bot_has_permissions(expected_permissions: discord.Permissions, context: discord.ApplicationContext = None):
+def bot_has_permissions(expected_permissions: discord.Permissions):
     """
-    A function that checks if the bot has a particular set of permissions at the channel level.
-
-    If the ``context`` parameter is not
-    provided, this function will act as a command decorator and check against the invocation context.
+    A decorator that checks if the bot has a particular set of permissions at the channel level.
 
     :param expected_permissions: A discord.Permissions object representing the permissions to check for.
     the channel level.
-    :param context: The context to check the permissions against.
     """
 
     async def predicate(ctx: discord.ApplicationContext):
@@ -65,7 +61,7 @@ def bot_has_permissions(expected_permissions: discord.Permissions, context: disc
 
             return False
 
-    return predicate(context) if context else commands.check(predicate)
+    return commands.check(predicate)
 
 
 def invoked_in_text_channel():

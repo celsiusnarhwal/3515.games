@@ -23,14 +23,37 @@ class MasterCog(commands.Cog):
         self.bot = bot
 
 
-class AboutCog(MasterCog):
+class GeneriCog(MasterCog):
     """
-    The cog for the About module, which displays meta information about 3515.games.
+    A cog to contain miscellaneous, standalone, commands that don't fit in any of the other cogs.
     """
 
     @slash_command(description="Allow me to reintroduce myself.")
-    async def about(self, ctx):
+    async def about(self, ctx: discord.ApplicationContext):
         await about.AboutView(ctx=ctx).show_about()
+
+    @slash_command(description="See which games I have the necessary permissions to play.")
+    async def caniplay(self, ctx: discord.ApplicationContext):
+        games = {
+            "Rock-Paper-Scissors": support.GamePermissions.rps(),
+            "UNO": support.GamePermissions.uno(),
+            "Chess": support.GamePermissions.chess(),
+            "Cards Against Humanity": support.GamePermissions.cah(),
+        }
+
+        msg = "Each of my games requires a different set of permissions to play. Given the permissions I have in " \
+              "this channel, here are the games I can and can't play:\n\n"
+
+        for game, permset in games.items():
+            msg += f"{game}: {'✅' if ctx.channel.permissions_for(ctx.me) >= permset else '❌'}\n"
+
+        msg += "\nKeep in mind that server moderators can directly control access to my commands via " \
+               "Server Settings and I have no way of knowing if any of my commands have been disabled on a server " \
+               "level, so a checkmark here doesn't guarantee that game can actually be played."
+
+        embed = discord.Embed(title="Can I play that?", description=msg, color=support.Color.mint())
+
+        await ctx.respond(embed=embed, ephemeral=True)
 
 
 class RockPaperScissorsCog(MasterCog):

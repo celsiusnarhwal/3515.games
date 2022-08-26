@@ -1,14 +1,12 @@
 """
 Production settings.
 """
+
 import os
 
 import discord
 
 import cogs
-
-# Dev Mode
-DEV_MODE = False
 
 # Bot Name
 BOT_NAME = "3515.games"
@@ -26,22 +24,23 @@ INTENTS = discord.Intents.default() + discord.Intents.members
 DEBUG_GUILDS = []
 
 # Extensions
-EXTENSIONS = ["jishaku"]
+EXTENSIONS = []
 
 # Disabled Cogs
-DISABLED_COGS = [cogs.AboutCog]
+DISABLED_COGS = [cogs.GeneriCog]
 
 # NLTK Corpora (https://www.nltk.org/book/ch02)
 NLTK_CORPORA = ["averaged_perceptron_tagger"]
 
 # Database Settings
-DATABASE_SETTINGS = {"provider": "postgres", "dsn": os.getenv("DATABASE_URL")}
+DATABASE_SETTINGS = {
+    "provider": "postgres",
+    "dsn": os.getenv("DATABASE_URL")
+}
+
+# API Settings
+API_HOST = "0.0.0.0"
+API_PORT = os.getenv("PORT")
 
 # Bot Token
-TOKEN = os.getenv("BOT_TOKEN" if not DEV_MODE else "DEV_TOKEN")
-
-# local_settings.py, if it exists, will override the values defined above
-try:
-    from local_settings import *
-except ImportError:
-    pass
+TOKEN = os.getenv("BOT_TOKEN")
