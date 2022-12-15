@@ -1,3 +1,19 @@
+########################################################################################################################
+# Copyright (C) 2022 celsius narhwal
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of verion 3 of the GNU Affero General Public License as published by
+# the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################################################################
+
 """
 Bot events, setup functions, and the program entrypoint.
 """
@@ -80,6 +96,12 @@ async def on_guild_join(guild: discord.Guild):
 
 # Setup Functions
 
+def print_copyright():
+    """
+    Prints 3515.games' copyright notice.
+    """
+    print(f"\n{open('COPYRIGHT').read()}\n\n")
+
 def configure_logging():
     """
     Configures API event logging.
@@ -108,7 +130,7 @@ def configure_nltk():
     Downloads NLTK corpora.
     """
     for corpus in settings.NLTK_CORPORA:
-        nltk.download(corpus)
+        nltk.download(corpus, quiet=True)
 
 
 def configure_database():
@@ -142,6 +164,7 @@ def start_api():
 # Entrypoint
 
 if __name__ == '__main__':
+    print_copyright()
     configure_logging()
     configure_cogs()
     configure_nltk()
