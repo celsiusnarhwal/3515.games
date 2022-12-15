@@ -28,7 +28,7 @@ otherwise distributing it to other people.
 * Play with 3515.games
 * Look at 3515.games' source code
 * Open [issues](https://github.com/celsiusnarhwal/3515.games/issues) (bug reports, feature requests, etc.)
-* Download and tinker with 3515.games source code (as long as you're not sharing it with others!)
+* Download and tinker with 3515.games' source code (as long as you're not sharing it with others!)
 
 ### Things that will require you to worry about the AGPL
 * Self-hosting 3515.games
