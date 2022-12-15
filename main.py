@@ -102,6 +102,7 @@ def print_copyright():
     """
     print(f"\n{open('COPYRIGHT').read()}\n\n")
 
+
 def configure_logging():
     """
     Configures API event logging.
