@@ -1,9 +1,18 @@
 # 3515.games
 
-3515.games is a bot that lets you enjoy real-time social games with your friends on Discord. Its source code is made
-publicly available for viewing in this repository.
+This is the source code of 3515.games, a bot that lets you enjoy real-time social games with your friends on Discord.
 
-The contents of this repository are strictly for the curious. You can't use or redistribute anything in this repository
-without my express written permission.
+## License
+
+3515.games is licensed under version 3 of the GNU Affero General Public License (AGPLv3) with exemptions for the 
+individuals and organizations noted below. If you're interesting in doing pretty much anything with the source code 
+aside from just looking at it, it is **critically** important that you read and understand the license.
+
+For more information, see [About 3515.games' License](license-info.md).
+
+### Exemptions
+
+* [celsius narhwal](https://github.com/celsiusnarhwal) is exempt from AGPLv3 licensing and may, at his option,
+license any source code authored for 3515.games under terms of his choosing.
 
 3515.games © celsius narhwal. All rights reserved.
