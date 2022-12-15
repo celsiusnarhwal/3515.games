@@ -14,7 +14,7 @@ licensed software on the condition that if you share it with other people, you m
 under the same terms. The AGPL is the same thing with the additional condition that letting people use the software 
 over a network also counts as sharing it with them.
 
-In the case of 3515.games' specifically, this means that **if you self-host the bot, you must share the source
+In the case of 3515.games, this means that **if you self-host the bot, you must share the source
 code with anyone who can access your instance of it, and you must do so under the terms of the AGPL.** 
 If you modify the source code and self-host it, you have to share your modified version, too — again, under the terms of
 the AGPL. If you include 3515.games' source code in a larger program and share that program, you have to share the
