@@ -1,6 +1,7 @@
 # About 3515.games' License
 
 > **Warning**
+> 
 > This human-readable summary of 3515.games' license is not a substitute for the license itself. If this 
 > summary conflicts with the license, the license takes precedence. For the license, see [LICENSE](LICENSE.md).
 > You are advised to read it (I promise, it's really not *that* long).
@@ -16,7 +17,8 @@ over a network also counts as sharing it with them.
 In the case of 3515.games' specifically, this means that **if you self-host the bot, you must share the source
 code with anyone who can access your instance of it, and you must do so under the terms of the AGPL.** 
 If you modify the source code and self-host it, you have to share your modified version, too — again, under the terms of
-the AGPL.
+the AGPL. If you include 3515.games' source code in a larger program and share that program, you have to share the
+*entire* program's source code under the terms of the AGPL.
 
 You pretty much only need to worry about this if you plan on modifying the source code and/or self-hosting the bot or
 otherwise distributing it to other people.

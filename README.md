@@ -15,4 +15,4 @@ For more information, see [About 3515.games' License](license-info.md).
 * [celsius narhwal](https://github.com/celsiusnarhwal) is exempt from AGPL licensing and may, at his option,
 license any source code authored for 3515.games under terms of his choosing.
 
-3515.games © celsius narhwal. All rights reserved.
+3515.games © celsius narhwal.
