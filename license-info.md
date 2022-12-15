@@ -34,6 +34,7 @@ otherwise distributing it to other people.
 * Self-hosting 3515.games
 * Redistributing 3515.games' source code
 * Modifiying 3515.games' source code and redistributing your modified version
+* Including or incorporating 3515.games into a larger program and sharing that program
 
 
 I can take legal action against you if you violate 3515.games' license, so please make sure you understand it!
