@@ -2,7 +2,7 @@
 name = "3515.games"
 version = "0.0.0"
 description = "3515.games is a Discord bot that lets you enjoy real-time social games with your friends."
-authors = ["celsiusnarhwal <celsius@celsiusnarhwal.dev>"]
+authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
 
 [tool.poetry.dependencies]
 python = "^3.10.2"
