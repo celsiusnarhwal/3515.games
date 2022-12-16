@@ -1,5 +1,5 @@
 ########################################################################################################################
-# Copyright (C) 2022 celsius narhwal
+# Copyright (C) 2022 celsius narhwal <hello@celsiusnarhwal.dev>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of verion 3 of the GNU Affero General Public License as published by
