@@ -25,7 +25,7 @@ import subprocess
 import alianator
 import discord
 import nltk
-from rich.traceback import install
+
 import cogs
 import settings
 import support
