@@ -25,7 +25,7 @@ import subprocess
 import alianator
 import discord
 import nltk
-
+from rich.traceback import install
 import cogs
 import settings
 import support
@@ -96,6 +96,7 @@ async def on_guild_join(guild: discord.Guild):
 
 # Setup Functions
 
+
 def print_copyright():
     """
     Prints 3515.games' copyright notice.
@@ -165,6 +166,7 @@ def start_api():
 # Entrypoint
 
 if __name__ == '__main__':
+    settings.startup()
     print_copyright()
     configure_logging()
     configure_cogs()
@@ -173,4 +175,4 @@ if __name__ == '__main__':
     load_extensions()
     start_api()
     uptime.mark_startup()
-    bot.run(settings.TOKEN)
+    bot.run(settings.TOKE)
