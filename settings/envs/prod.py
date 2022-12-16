@@ -45,10 +45,3 @@ API_LOG_LEVEL = "critical"
 
 # Bot Token
 TOKEN = os.getenv("BOT_TOKEN")
-
-# Startup Code
-def startup():
-    """
-    Special startup code that only runs for this settings configuration.
-    """
-    pass

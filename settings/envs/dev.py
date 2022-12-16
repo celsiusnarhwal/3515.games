@@ -46,14 +46,3 @@ API_LOG_LEVEL = "info"
 
 # Bot Token
 TOKEN = os.getenv("DEV_TOKEN")
-
-# Startup Code
-def startup():
-    """
-    Special startup code that only runs for this settings configuration.
-    """
-    # Note: Imports specific to this function should be local to this function.
-
-    from rich.traceback import install
-
-    install()

@@ -44,10 +44,3 @@ API_LOG_LEVEL = None
 
 # Bot Token
 TOKEN = None
-
-# Startup Code
-def startup():
-    """
-    Special startup code that only runs for this settings configuration.
-    """
-    pass
