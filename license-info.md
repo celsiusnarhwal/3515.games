@@ -23,7 +23,7 @@ AGPL. If you modify the source code and self-host it, you have to share your mod
 under the terms of the AGPL. If you include 3515.games' source code in a larger program and share that program,
 you have to share the *entire* program's source code under the terms of the AGPL.
 
-**Self-hosting the bot counts as sharing it with other people.**
+**Self-hosting 3515.games counts as sharing it with other people.**
 
 ### Credit Where Credit Is Due
 
