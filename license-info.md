@@ -9,7 +9,7 @@
 3515.games is licensed under the GNU Affero General Public License (AGPL). But what does that
 mean for you?
 
-You may be familiar with the GNU General Public License (GPL), which allows you to do anything you want with the
+You may be familiar with the GNU General Public License (GPL), which allows you to do almost anything you want with the
 licensed software on the condition that if you share it with other people, you must also share the source code with them
 under the same terms. The AGPL is the same thing with the additional condition that letting people use the software
 over a network also counts as sharing it with them.
