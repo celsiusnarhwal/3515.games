@@ -6,7 +6,7 @@
 > summary conflicts with the license, the license takes precedence. For the license, see [LICENSE](LICENSE.md).
 > You are advised to read it (I promise, it's really not *that* long).
 
-3515.games is licensed under the GNU Affero General Public License (AGPL). But what does that
+3515.games is licensed under version 3 of the GNU Affero General Public License (AGPL). But what does that
 mean for you?
 
 You may be familiar with the GNU General Public License (GPL), which allows you to do almost anything you want with the
