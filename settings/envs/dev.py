@@ -45,4 +45,4 @@ API_PORT = 8080
 API_LOG_LEVEL = "info"
 
 # Bot Token
-TOKEN = os.getenv("DEV_TOKEN")
+TOKEN = os.getenv("BOT_TOKEN")
