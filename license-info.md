@@ -27,7 +27,7 @@ you have to share the *entire* program's source code under the terms of the AGPL
 
 ### Credit Where Credit Is Due
 
-Whenever you share the source code, you also have to include a verbatim copies of both the AGPL and 
+Whenever you share the source code, you also have to include verbatim copies of both the AGPL and 
 [COPYRIGHT](COPYRIGHT). If you share a modified verion of the source code, you have to include a prominent notice 
 that it's been modified and the date on which you first modified it, as well as a prominent notice that the source 
 code is licensed under the AGPL.
