@@ -1,17 +1,7 @@
 ########################################################################################################################
 # Copyright (C) 2022 celsius narhwal <hello@celsiusnarhwal.dev>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of verion 3 of the GNU Affero General Public License as published by
-# the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# This notice may not be altered or removed except by or with the express written permission of the copyright holder.
+# For more information, see the COPYRIGHT file.
 ########################################################################################################################
 
 """
@@ -20,11 +10,12 @@ Bot events, setup functions, and the program entrypoint.
 
 import inspect
 import logging
-import subprocess
 
 import alianator
 import discord
 import nltk
+import rich.traceback
+from rich import print as rprint
 
 import cogs
 import settings
@@ -42,7 +33,7 @@ async def on_ready():
     """
     Prints a message to the console when 3515.games has connected to Discord and is ready for use.
     """
-    print(f"{settings.BOT_NAME} is ready to play!", flush=True)
+    rprint(f"[green]{settings.BOT_NAME} is ready to play! 🎉", flush=True)
     await bot.register_commands(force=True)
     await bot.sync_commands(force=True)
 
@@ -96,12 +87,18 @@ async def on_guild_join(guild: discord.Guild):
 
 # Setup Functions
 
+def install_tracebacks():
+    """
+    Installs Rich's tracebacks.
+    """
+    rich.traceback.install()
+
 
 def print_copyright():
     """
     Prints 3515.games' copyright notice.
     """
-    print(f"\n{open('COPYRIGHT').read()}\n\n")
+    rprint(f"[bright_yellow]\n{open('COPYRIGHT').read()}\n")
 
 
 def configure_logging():
@@ -150,29 +147,16 @@ def load_extensions():
     bot.load_extensions(*settings.EXTENSIONS)
 
 
-def start_api():
-    """
-    Starts the API.
-    """
-    subprocess.Popen(
-        f"uvicorn api:app "
-        f"--host {settings.API_HOST} "
-        f"--port {settings.API_PORT} "
-        f"--log-level {settings.API_LOG_LEVEL}",
-        shell=True
-    )
-
-
 # Entrypoint
 
 if __name__ == '__main__':
-    settings.startup()
+    install_tracebacks()
     print_copyright()
+    print(f"Hello! {settings.BOT_NAME} will be ready in just a moment.")
     configure_logging()
     configure_cogs()
     configure_nltk()
     configure_database()
     load_extensions()
-    start_api()
     uptime.mark_startup()
     bot.run(settings.TOKEN)
