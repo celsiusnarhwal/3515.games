@@ -175,4 +175,4 @@ if __name__ == '__main__':
     load_extensions()
     start_api()
     uptime.mark_startup()
-    bot.run(settings.TOKE)
+    bot.run(settings.TOKEN)
