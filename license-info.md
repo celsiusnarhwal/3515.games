@@ -34,9 +34,7 @@ code is licensed under the AGPL.
 
 Where the text of [COPYRIGHT](COPYRIGHT) appears in 3515.games, it may not be altered or removed.
 
-You are absolutely never allowed to pretend that you made 3515.games, alter or remove copyright notices present in
-3515.games, misrepresent modified versions of 3515.games' source code as the original work, or misrepresent unmodified 
-versions of 3515.games' source code as your own work.
+You are absolutely never allowed to pretend that you made 3515.games, misrepresent modified versions of 3515.games' source code as the original work, or misrepresent unmodified versions of 3515.games' source code as your own work.
 
 ### One License to Rule Them All
 
