@@ -94,21 +94,14 @@ def install_tracebacks():
     rich.traceback.install()
 
 
-def print_copyright():
-    """
-    Prints 3515.games' copyright notice.
-    """
-    rprint(f"[bright_yellow]\n{open('COPYING').read()}\n")
-
-
 def configure_logging():
     """
     Configures API event logging.
     """
-    logger = logging.getLogger('discord')
+    logger = logging.getLogger("discord")
     logger.setLevel(logging.DEBUG)
-    handler = logging.FileHandler(filename='3515.games.log', encoding='utf-8', mode='w')
-    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    handler = logging.FileHandler(filename="3515.games.log", encoding="utf-8", mode="w")
+    handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s"))
     logger.addHandler(handler)
 
 
@@ -146,17 +139,23 @@ def load_extensions():
     """
     bot.load_extensions(*settings.EXTENSIONS)
 
-
-# Entrypoint
-
-if __name__ == '__main__':
+def setup():
+    """
+    Calls the previous functions.
+    """
     install_tracebacks()
-    print_copyright()
-    print(f"Hello! {settings.BOT_NAME} will be ready in just a moment.")
     configure_logging()
     configure_cogs()
     configure_nltk()
     configure_database()
     load_extensions()
+
+
+# Entrypoint
+
+if __name__ == '__main__':
+    rprint(f"[bright_yellow]\n{open('COPYING').read()}\n")
+    print(f"Hello! {settings.BOT_NAME} will be ready in just a moment.")
+    setup()
     uptime.mark_startup()
     bot.run(settings.TOKEN)
