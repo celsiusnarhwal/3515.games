@@ -132,7 +132,7 @@ it with your service token.
 
 At runtime, the Doppler CLI will honor the `DOPPLER_TOKEN` environment variable and inject your secrets like usual.
 
-### If You Can't Use Docker
+### If All Else Fails
 
 If Doppler doesn't integrate with your hosting provider and Docker builds aren't an option, you may be in a bit of a
 tight spot. [Contact Doppler support](mailto:support@doppler.com) and ask nicely if they would consider adding an 
