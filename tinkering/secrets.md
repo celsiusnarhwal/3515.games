@@ -38,7 +38,7 @@ that I do, which I will explain below.
 <details>
     <summary><code>GITHUB_TOKEN</code></summary>
     <p>
-        A <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">GitHub personal access token</a>
+        A <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">GitHub personal access token</a>.
         This token allows 3515.games to make authenticated requests to the GitHub API through your GitHub account.
         This is used for fetching information like release notes and repository URLs. This isn't <i>critical</i>, but
         failing to provide it will cause non-fatal errors wherever it's referenced.
