@@ -19,7 +19,7 @@ that I do, which I will explain below.
 - A [Doppler](https://dashboard.doppler.com/register) account. The free tier is *way* more than sufficient.
 - A [new, empty, Doppler project](https://docs.doppler.com/docs/create-project) just for 3515.games.
 - Two configurations in your Doppler project — one named `dev` and one
-  named `prd`. By default, 3515.games requires the active Doppler configuration to be named either `dev` or `prod` and
+  named `prd`. By default, 3515.games requires the active Doppler configuration to be named either `dev` or `prd` and
   will refuse to start if this isn't the case.
 
 ## Referenced Secrets
