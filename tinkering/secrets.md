@@ -1,7 +1,7 @@
 # Secrets
 
 Secrets are sensitive pieces of information that would pose security risks if they were stored in plain text
-(for example, 3515.games' bot token). Secrets are typically referenced in the source code with something like:
+(for example, 3515.games' bot token). Secrets are referenced in the source code like:
 
 ```py
 os.getenv("SECRET_NAME")
@@ -11,16 +11,16 @@ os.getenv("SECRET_NAME")
 [`settings/__init.py__`](../settings/__init__.py), which will block 3515.games from starting up if it's not running
 in a valid Doppler environment.
 
-While you are free to change all this and manage secrets however you want, I recommend you use the same workflow
-that I do, which I will explain below.
+While you are free to change all this and manage secrets however you want, this document will explain what
+I believe to be the best way of doing it.
 
 ## Prerequisites
 
 - A [Doppler](https://dashboard.doppler.com/register) account. The free tier is *way* more than sufficient.
 - A [new, empty, Doppler project](https://docs.doppler.com/docs/create-project) just for 3515.games.
 - Two configurations in your Doppler project — one named `dev` and one
-  named `prd`. By default, 3515.games requires the active Doppler configuration to be named either `dev` or `prd` and
-  will refuse to start if this isn't the case.
+  named `prd` for development and production, respectively. By default, 3515.games requires the active Doppler
+  configuration to be named either `dev` or `prd` and will refuse to start if this isn't the case.
 
 ## Referenced Secrets
 
@@ -40,8 +40,8 @@ that I do, which I will explain below.
     <p>
         A <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">GitHub personal access token</a>.
         This token allows 3515.games to make authenticated requests to the GitHub API through your GitHub account.
-        This is used for fetching information like release notes and repository URLs. This isn't <i>critical</i>, but
-        failing to provide it will cause non-fatal errors wherever it's referenced.
+        This is used for fetching information like release notes and repository URLs. Unlike <code>BOT_TOKEN</code>,
+        failing to provide this will not burn the whole house down, but <i>may</i> render some functionality unusable.[^1]
     </p>
 </details>
 
@@ -91,8 +91,7 @@ poetry add doppler-env --group dev
 ```
 
 Once doppler-env is installed, edit your run configuration for [`main.py`](../main.py) to add an environment variable
-named `DOPPLER_ENV` with a value of `1`. (
-Instructions: [PyCharm](https://www.jetbrains.com/help/pycharm/run-debug-configuration.html) | [Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations))
+named `DOPPLER_ENV` with a value of `1`. (Instructions: [PyCharm](https://www.jetbrains.com/help/pycharm/run-debug-configuration.html) | [Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations))
 
 That's it. Just run `main.py` like usual and Doppler will inject your secrets at runtime. If you ever want
 
@@ -135,7 +134,14 @@ At runtime, the Doppler CLI will honor the `DOPPLER_TOKEN` environment variable 
 ### If All Else Fails
 
 If Doppler doesn't integrate with your hosting provider and Docker builds aren't an option, you may be in a bit of a
-tight spot. [Contact Doppler support](mailto:support@doppler.com) and ask nicely if they would consider adding an 
-integration for your hosting provider. If you're hosting 3515.games on your own server (meaning one that actually 
-belongs to you, personally), you have hopefully realized that you can just use the Doppler CLI like in 
-development — or even better, install Docker and follow [those instructions](#using-docker).
+tight spot. [Contact Doppler support](mailto:support@doppler.com) and ask nicely if they would consider adding an
+integration for your hosting provider. If you're hosting 3515.games on your own server (meaning one that actually
+belongs to you, personally), you've hopefully realized that you can just use the Doppler CLI like in
+development — or even better, install Docker and follow [those instructions](#using-docker). Of course, you can always
+manage your secrets manually (though I don't recommend it).
+
+Or, ideally, switch to a hosting provider that doesn't suck. 🙃
+
+[^1]: Truthfully, this may be a holdover from when 3515.games' repository was private during its initial development
+and thus required authentication to access. You may be able to get away with not providing this. Who knows. I haven't
+tested it. lmao
