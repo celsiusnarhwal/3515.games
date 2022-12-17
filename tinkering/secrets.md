@@ -24,7 +24,7 @@ I believe to be the best way of doing it.
 
 ## Referenced Secrets
 
-3515.games references the follwing secrets:
+3515.games references the following secrets:[^1]
 
 <details>
     <summary><code>BOT_TOKEN</code></summary>
@@ -41,7 +41,7 @@ I believe to be the best way of doing it.
         A <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">GitHub personal access token</a>.
         This token allows 3515.games to make authenticated requests to the GitHub API through your GitHub account.
         This is used for fetching information like release notes and repository URLs. Unlike <code>BOT_TOKEN</code>,
-        failing to provide this will not burn the whole house down, but <i>may</i> render some functionality unusable.[^1]
+        failing to provide this will not burn the whole house down, but <i>may</i> render some functionality unusable.
     </p>
 </details>
 
@@ -142,6 +142,6 @@ manage your secrets manually (though I don't recommend it).
 
 Or, ideally, switch to a hosting provider that doesn't suck. 🙃
 
-[^1]: Truthfully, this may be a holdover from when 3515.games' repository was private during its initial development
+[^1]: Truthfully, `GITHUB_TOKEN` may be a holdover from when 3515.games' repository was private during its initial development
 and thus required authentication to access. You may be able to get away with not providing this. Who knows. I haven't
 tested it. lmao
