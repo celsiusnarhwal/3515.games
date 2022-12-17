@@ -58,8 +58,6 @@ Here are some examples of how the AGPL affects your use of 3515.games.
 * Redistributing 3515.games' source code
 * Modifiying 3515.games' source code and redistributing your modified version
 
-I can take legal action against you if you violate 3515.games' license, so please make sure you understand it!
-
 If you have any questions, shoot me an email at [hello@celsiusnarhwal.dev](mailto:hello@celsiusnarhwal.dev).
 
 [^1]: With one exception: if the larger program is licensed under version 3 of the GNU General Public License (GPL),
