@@ -1,3 +1,9 @@
+########################################################################################################################
+#                         Copyright (C) 2022-present celsius narhwal <hello@celsiusnarhwal.dev>                        #
+#  This notice may not be altered or removed except by or with the express written permission of the copyright holder. #
+#                                      For more information, see the COPYING file.                                     #
+########################################################################################################################
+
 """
 The settings package enables 3515.games to dynamically load a particular settings configuration based on the
 environment it's running in.

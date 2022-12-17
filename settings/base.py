@@ -1,3 +1,9 @@
+########################################################################################################################
+#                         Copyright (C) 2022-present celsius narhwal <hello@celsiusnarhwal.dev>                        #
+#  This notice may not be altered or removed except by or with the express written permission of the copyright holder. #
+#                                      For more information, see the COPYING file.                                     #
+########################################################################################################################
+
 """
 The base template for settings files. All other settings files must import the same modules and define the same
 variables as this one (but should not import this file). This file exists largely to provide reference resolution and
