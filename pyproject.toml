@@ -24,12 +24,12 @@ nltk = "^3.7"
 fastapi = "^0.79.1"
 uvicorn = "^0.18.2"
 py-cord = "^2.1.1"
+rich = "^12.6.0"
 
 [tool.poetry.group.dev.dependencies]
 pip-licenses = "^3.5.3"
 doppler-env = "^0.3.0"
 pyperclip = "^1.8.2"
-rich = "^12.6.0"
 
 [build-system]
 requires = ["poetry-core"]
