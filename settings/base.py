@@ -5,9 +5,23 @@
 ########################################################################################################################
 
 """
-The base template for settings configurations. Other configurations are required to define exactly the same variables
-as this template (but should *not* import this template).
+The base template for settings configurations. Settings configurations should:
+- Import this template (from settings.base import *)
+- Define ALL settings in this template with a value other than None
+- Not define any settings that are not defined in this template
+- Not import any names that are not imported in this template
+
+If these rules are followed, 3515.games will refuse to start when undefined settings exist, significantly reducing
+the possiblity that problems related to incorrectly-configured settings will arise whlile it is running.
+
+Avoid running formatters that remove unused imports on this file (e.g. PyCharm's built-in formatter).
 """
+
+import os
+
+import discord
+
+import cogs
 
 # Bot Name
 BOT_NAME = None

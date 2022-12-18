@@ -8,11 +8,7 @@
 Development settings.
 """
 
-import os
-
-import discord
-
-import cogs
+from settings.base import *
 
 # Bot Name
 BOT_NAME = "3515.games.dev"
