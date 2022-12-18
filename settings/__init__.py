@@ -5,21 +5,15 @@
 ########################################################################################################################
 
 """
-The settings package enables 3515.games to dynamically load a particular settings configuration based on the
-environment it's running in.
+Bot settings.
 """
 
-from settings.base import *
+import os
 
-_environments = {
-    "dev": "settings.envs.dev",
-    "prd": "settings.envs.prd",
-}
-
-_current_environment = os.getenv("DOPPLER_ENVIRONMENT")
-configuration = _environments.get(_current_environment)
-
-if configuration:
-    exec(f"from {configuration} import *")
-else:
-    raise Exception(f"Unknown environment: {_current_environment}")
+match os.getenv("DOPPLER_ENVIRONMENT"):
+    case "dev":
+        from settings.envs.dev import *
+    case "prd":
+        from settings.envs.prd import *
+    case _:
+        raise Exception(f"Unkown environment: {os.getenv('DOPPLER_ENVIRONMENT')}")

@@ -5,16 +5,9 @@
 ########################################################################################################################
 
 """
-The base template for settings files. All other settings files must import the same modules and define the same
-variables as this one (but should not import this file). This file exists largely to provide reference resolution and
-code completion within my IDE and does not serve any runtime purpose.
+The base template for settings configurations. Other configurations are required to define exactly the same variables
+as this template (but should *not* import this template).
 """
-
-import os
-
-import discord
-
-import cogs
 
 # Bot Name
 BOT_NAME = None
