@@ -13,7 +13,7 @@ from settings.base import *
 
 _environments = {
     "dev": "settings.envs.dev",
-    "prd": "settings.envs.prod",
+    "prd": "settings.envs.prd",
 }
 
 _current_environment = os.getenv("DOPPLER_ENVIRONMENT")
