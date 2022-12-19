@@ -30,6 +30,7 @@ rich = "^12.6.0"
 pip-licenses = "^3.5.3"
 doppler-env = "^0.3.0"
 pyperclip = "^1.8.2"
+rich-tracebacks = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]

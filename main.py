@@ -14,7 +14,6 @@ import logging
 import alianator
 import discord
 import nltk
-import rich.traceback
 from rich import print as rprint
 
 import cogs
@@ -87,13 +86,6 @@ async def on_guild_join(guild: discord.Guild):
 
 # Setup Functions
 
-def install_tracebacks():
-    """
-    Installs Rich's tracebacks.
-    """
-    rich.traceback.install()
-
-
 def configure_logging():
     """
     Configures API event logging.
@@ -139,11 +131,11 @@ def load_extensions():
     """
     bot.load_extensions(*settings.EXTENSIONS)
 
+
 def setup():
     """
     Calls the previous functions.
     """
-    install_tracebacks()
     configure_logging()
     configure_cogs()
     configure_nltk()
