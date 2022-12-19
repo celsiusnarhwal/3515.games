@@ -22,7 +22,6 @@ match _os.getenv("DOPPLER_ENVIRONMENT"):
     case _ as _environment:
         raise Exception(f"Unkown environment: {_environment}")
 
-_undefined = _inspect.getmembers(_sys.modules[__name__], lambda x: x is None)
-
-if _undefined:
-    raise Exception(f"Undefined settings: {' '.join([x for x, *_ in _undefined])}")
+match _inspect.getmembers(_sys.modules[__name__], lambda x: x is None):
+    case _undefined if _undefined:
+        raise Exception(f"Undefined settings: {' '.join([x for x, *_ in _undefined])}")
