@@ -7,6 +7,7 @@
 """
 Bot settings.
 """
+
 import inspect as _inspect
 import os as _os
 import sys as _sys
