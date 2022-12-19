@@ -14,14 +14,24 @@ import sys as _sys
 
 from settings.base import *  # ensure editor code completion only cares about settings.base
 
-match _os.getenv("DOPPLER_ENVIRONMENT"):
-    case "dev":
-        from settings.envs.dev import *
-    case "prd":
-        from settings.envs.prd import *
-    case _ as _environment:
-        raise Exception(f"Unkown environment: {_environment}")
+def _is_setting(name: str) -> bool:
+    return name.isupper() and not name.startswith("_")
 
-match _inspect.getmembers(_sys.modules[__name__], lambda x: x is None):
+configuration = _os.getenv("DOPPLER_ENVIRONMENT")
+module = f"settings.envs.{configuration}"
+
+try:
+    exec(f"from {module} import *")
+except ImportError:
+    raise Exception(f"Unknown configuration: {configuration}")
+
+defined = {x: y for x, y in _inspect.getmembers(_sys.modules[module]) if _is_setting(x)}
+required = [x for x, _ in _inspect.getmembers(_sys.modules["settings.base"]) if _is_setting(x)]
+
+match set(defined.keys()).difference(required):
+    case _unknown if _unknown:
+        raise Exception(f"Unknown settings: {' '.join(_unknown)}")
+
+match [name for name in required if defined.get(name) is None]:
     case _undefined if _undefined:
-        raise Exception(f"Undefined settings: {' '.join([x for x, *_ in _undefined])}")
+        raise Exception(f"Undefined settings: {' '.join(_undefined)}")

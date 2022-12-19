@@ -5,14 +5,15 @@
 ########################################################################################################################
 
 """
-The base template for settings configurations. Settings configurations should:
+The base template for settings configurations. Settings configurations must:
 - Import this template (from settings.base import *)
 - Define ALL settings in this template with a value other than None
 - Not define any settings that are not defined in this template
-- Not import any names that are not imported in this template
+- Be named identically to their corresponding Doppler configuration
 
-If these rules are followed, 3515.games will refuse to start when undefined settings exist, significantly reducing
-the possiblity that problems related to incorrectly-configured settings will arise whlile it is running.
+3515.games will refuse to start if the active configuration does not follow these rules.
+
+To enable code-level enforcement of these rules, setting names should be in ALL_CAPS.
 
 Avoid running formatters that remove unused imports on this file (e.g. PyCharm's built-in formatter).
 """
