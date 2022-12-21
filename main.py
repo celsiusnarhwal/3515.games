@@ -17,12 +17,12 @@ import nltk
 from rich import print as rprint
 
 import cogs
-import settings
 import support
 import uptime
 from database.models import db
+from settings import settings
 
-bot = discord.Bot(intents=settings.INTENTS, debug_guilds=settings.DEBUG_GUILDS, owner_id=settings.OWNER_ID)
+bot = discord.Bot(intents=settings.intents, debug_guilds=settings.debug_guilds, owner_id=settings.owner_id)
 
 
 # Bot Events
@@ -32,7 +32,7 @@ async def on_ready():
     """
     Prints a message to the console when 3515.games has connected to Discord and is ready for use.
     """
-    rprint(f"[green]{settings.BOT_NAME} is ready to play! 🎉", flush=True)
+    rprint(f"[green]{settings.bot_name} is ready to play! 🎉", flush=True)
     await bot.register_commands(force=True)
     await bot.sync_commands(force=True)
 
@@ -105,7 +105,7 @@ def configure_cogs():
         cog[1] for cog in inspect.getmembers(cogs) if inspect.isclass(cog[1]) and issubclass(cog[1], cogs.MasterCog)
     )
 
-    for cog in all_cogs.difference(settings.DISABLED_COGS):
+    for cog in all_cogs.difference(settings.disabled_cogs):
         bot.add_cog(cog(bot=bot))
 
 
@@ -113,7 +113,7 @@ def configure_nltk():
     """
     Downloads NLTK corpora.
     """
-    for corpus in settings.NLTK_CORPORA:
+    for corpus in settings.nltk_corpora:
         nltk.download(corpus, quiet=True)
 
 
@@ -121,7 +121,7 @@ def configure_database():
     """
     Configures the database.
     """
-    db.bind(**settings.DATABASE_SETTINGS)
+    db.bind(**settings.database)
     db.generate_mapping(create_tables=True)
 
 
@@ -129,7 +129,7 @@ def load_extensions():
     """
     Loads extensions.
     """
-    bot.load_extensions(*settings.EXTENSIONS)
+    bot.load_extensions(*settings.extensions)
 
 
 def setup():
@@ -147,7 +147,7 @@ def setup():
 
 if __name__ == '__main__':
     rprint(f"[bright_yellow]\n{open('COPYING').read()}\n")
-    print(f"Hello! {settings.BOT_NAME} will be ready in just a moment.")
+    print(f"Hello! {settings.bot_name} will be ready in just a moment.")
     setup()
     uptime.mark_startup()
-    bot.run(settings.TOKEN)
+    bot.run(settings.token)

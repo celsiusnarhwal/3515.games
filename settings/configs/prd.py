@@ -5,17 +5,18 @@
 ########################################################################################################################
 
 """
-Bot settings.
+Production settings.
 """
 
-import os as _os
+import os
 
-settings = None
+from settings.base import Settings
 
-_configuration = _os.getenv("DOPPLER_CONFIG")
-_module = f"settings.configs.{_configuration}"
-
-try:
-    exec(f"from {_module} import settings")
-except ImportError:
-    raise Exception(f"Unknown configuration: {_configuration}")
+settings = Settings(
+    bot_name="3515.games",
+    app_id=960228863986761778,
+    database={
+        "provider": "postgres",
+        "dsn": os.getenv("DATABASE_URL"),
+    }
+)
