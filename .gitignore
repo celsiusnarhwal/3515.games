@@ -1,4 +1,3 @@
-
 # Created by https://www.toptal.com/developers/gitignore/api/python,pycharm
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm
 
@@ -267,3 +266,4 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm
 /db.sqlite
+/rt_config.py

@@ -9,11 +9,14 @@ from __future__ import annotations
 import asyncio
 import inspect
 import os
+from io import TextIOWrapper
 
+import chevron
 import discord
 import inflect as ifl
 from discord.ext import commands
 from path import Path
+from pydantic import BaseModel, StrictStr
 
 import support
 
@@ -281,6 +284,27 @@ class Assets(Path):
     @classmethod
     def cah(cls):
         return cls._get_pointer("cah")
+
+
+class Template(BaseModel):
+    """
+    Represents a Moustache template.
+    """
+    template: StrictStr | TextIOWrapper
+
+    def render(self, **data) -> str:
+        """
+        Render the template using the provided data.
+
+        Parameters
+        ----------
+        **data
+            The data to render the template with.
+        """
+        return chevron.render(self.template, data)
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class GamePermissions(discord.Permissions):

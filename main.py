@@ -5,7 +5,7 @@
 ########################################################################################################################
 
 """
-Bot events, setup functions, and the program entrypoint.
+Bot events, setup functions, and the program main.
 """
 
 import inspect
@@ -14,7 +14,7 @@ import logging
 import alianator
 import discord
 import nltk
-from rich import print as rprint
+from click import secho as print
 
 import cogs
 import support
@@ -32,7 +32,7 @@ async def on_ready():
     """
     Prints a message to the console when 3515.games has connected to Discord and is ready for use.
     """
-    rprint(f"[green]{settings.bot_name} is ready to play! 🎉", flush=True)
+    print(f"{settings.bot_name} is ready to play! 🎉", fg="green")
     await bot.register_commands(force=True)
     await bot.sync_commands(force=True)
 
@@ -146,8 +146,11 @@ def setup():
 # Entrypoint
 
 if __name__ == '__main__':
-    rprint(f"[bright_yellow]\n{open('COPYING').read()}\n")
+    print(f"\n{open('COPYING').read()}\n", fg="magenta")
+
     print(f"Hello! {settings.bot_name} will be ready in just a moment.")
+
     setup()
+
     uptime.mark_startup()
     bot.run(settings.token)

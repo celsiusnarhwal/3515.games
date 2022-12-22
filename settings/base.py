@@ -16,9 +16,8 @@ from pydantic import BaseSettings, Field, StrictInt, StrictStr
 
 class Settings(BaseSettings):
     """
-    Represents a settings configuration. To create a new settings configuration:
-    - Create a new Python file in `settings/configs` named after the appropriate Doppler configuration'
-    - Define a `settings` variable in that file and bind it to an instance of this class
+    Represents a settings configuration. New settings configurations should be created with Kurisu
+    (``kurisu settings new``).
 
     Settings configurations must respect this class' type annotations and define values for any fields that lack
     defaults. 3515.games will refuse to start if either of these conditions are not met.
