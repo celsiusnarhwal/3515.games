@@ -11,7 +11,7 @@ import platform
 import time
 
 import discord
-import toml
+import tomlkit as toml
 from discord import Interaction, ButtonStyle
 from discord.ui import Button, button as discord_button
 
