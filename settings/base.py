@@ -8,8 +8,6 @@
 The base settings configuration.
 """
 
-from __future__ import annotations
-
 import discord
 from pydantic import BaseSettings, Field, StrictInt, StrictStr
 
@@ -21,8 +19,7 @@ class Settings(BaseSettings):
 
     Settings configurations must respect this class' type annotations and define values for any fields that lack
     defaults. 3515.games will refuse to start if either of these conditions are not met.
-
-    Settings must adhere
+    
     Parameters
     ----------
     bot_name : str
