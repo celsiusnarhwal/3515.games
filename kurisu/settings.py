@@ -1,3 +1,9 @@
+########################################################################################################################
+#                         Copyright (C) 2022-present celsius narhwal <hello@celsiusnarhwal.dev>                        #
+#  This notice may not be altered or removed except by or with the express written permission of the copyright holder. #
+#                                      For more information, see the COPYING file.                                     #
+########################################################################################################################
+
 import json
 import subprocess
 
@@ -15,34 +21,56 @@ app = typer.Typer()
 
 
 @app.command(name="new")
-def settings_new():
+def settings_new(
+        config: str = typer.Option(None, "--config", "-c", help="The name of the Doppler configuration to create a "
+                                                                "settings configuration for. You'll be prompted "
+                                                                "for this if you don't provide it."),
+        description: str = typer.Option(None, "--description", "-d",
+                                        help="The description for the new settings configuration. "
+                                             "You'll be prompted for this if you don't provide it.")):
     """
     Create a new settings configuration.
     """
     configs_dir = root / "settings" / "envs"
 
-    envs_json = json.loads(subprocess.run(["doppler", "environments", "--json"], capture_output=True).stdout.decode())
-    configs_json = json.loads(subprocess.run(["doppler", "configs", "--json"], capture_output=True).stdout.decode())
+    envs_json = json.loads(
+        subprocess.run("doppler environments --json --no-read-env", shell=True, capture_output=True).stdout.decode()
+    )
 
-    environment = prompts.rawlist(
-        message="Select a Doppler environment.",
-        choices=[env["id"] for env in envs_json]
-    ).execute()
+    configs_json = json.loads(
+        subprocess.run("doppler configs --json --no-read-env", shell=True, capture_output=True).stdout.decode()
+    )
 
-    config = prompts.rawlist(
-        message="Select a Doppler configuration.",
-        choices=[config["name"] for config in configs_json if config["environment"] == environment],
-        validate=lambda result: not (configs_dir / environment / result).with_suffix(".py").exists(),
-        invalid_message="This Doppler configuration already has a settings configuration."
-    ).execute()
+    if config:
+        match next((c for c in configs_json if c["name"] == config), None):
+            case None:
+                print(f"[bold red]Error:[/] Unknown Doppler configuration: {config}")
+                raise typer.Exit(1)
+            case _ as config_info:
+                environment = config_info["environment"]
+                if (configs_dir / environment / config).with_suffix(".py").exists():
+                    print(f"[bold red]Error:[/] A settings configuration for {environment}/{config} already exists.")
+                    raise typer.Exit(1)
+    else:
+        environment = prompts.rawlist(
+            message="Select a Doppler environment.",
+            choices=[env["id"] for env in envs_json]
+        ).execute()
 
-    description = prompts.text(
+        config = prompts.rawlist(
+            message="Select a Doppler configuration.",
+            choices=[c["name"] for c in configs_json if c["environment"] == environment],
+            validate=lambda result: not (configs_dir / environment / result).with_suffix(".py").exists(),
+            invalid_message="This Doppler configuration already has a settings configuration."
+        ).execute()
+
+    description = description or prompts.text(
         message="Enter a description for this settings configuration.",
         validate=lambda result: bool(result),
         invalid_message="You must enter a description."
     ).execute()
 
-    template = support.Template(template=(here / "templates" / "settings.mustache").open())
+    template = support.Template(template=(here / "templates" / "dynamic" / "settings.mustache").open())
 
     env_dir = (configs_dir / environment).makedirs_p()
     env_dir.joinpath("__init__.py").touch()

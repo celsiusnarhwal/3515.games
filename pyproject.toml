@@ -7,7 +7,6 @@ packages = [{include = "kurisu"}]
 
 [tool.poetry.dependencies]
 python = "^3.10.2"
-llist = "^0.8"
 sortedcontainers = "^2.4.0"
 inflect = "^5.4.0"
 chess = "^1.9.0"
@@ -26,15 +25,18 @@ pydantic = "^1.10.2"
 tomlkit = "^0.11.6"
 certifi = "^2022.12.7"
 chevron = "^0.14.0"
+llist = "^0.7.1"
 
 [tool.poetry.group.dev.dependencies]
-pip-licenses = "^3.5.3"
 doppler-env = "^0.3.0"
 pyperclip = "^1.8.2"
 rich-tracebacks = "^1.0.0"
 typer = {extras = ["rich"], version = "^0.7.0"}
 inquirerpy = "^0.3.4"
 poethepoet = "^0.16.5"
+gitignorefile = "^1.1.2"
+ipython = "^8.7.0"
+pip-licenses = "^4.0.3"
 
 [tool.poetry.scripts]
 kurisu = "kurisu.kurisu:app"
