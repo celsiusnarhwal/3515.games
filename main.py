@@ -102,11 +102,11 @@ def configure_cogs():
     Initializes cogs.
     """
     all_cogs = set(
-        cog[1] for cog in inspect.getmembers(cogs) if inspect.isclass(cog[1]) and issubclass(cog[1], cogs.MasterCog)
+        cog for _, cog in inspect.getmembers(cogs) if inspect.isclass(cog) and issubclass(cog, cogs.MasterCog)
     )
 
     for cog in all_cogs.difference(settings.disabled_cogs):
-        bot.add_cog(cog(bot=bot))
+        bot.add_cog(cog(bot))
 
 
 def configure_nltk():
