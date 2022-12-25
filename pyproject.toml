@@ -3,40 +3,38 @@ name = "3515.games"
 version = "0.0.0"
 description = "3515.games is a Discord bot that lets you enjoy real-time social games with your friends."
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
-packages = [{include = "kurisu"}]
+packages = [{ include = "kurisu" }]
 
 [tool.poetry.dependencies]
 python = "^3.10.2"
-sortedcontainers = "^2.4.0"
-inflect = "^5.4.0"
-chess = "^1.9.0"
-svglib = "^1.4.1"
-path = "^16.4.0"
 alianator = "^3.0.0"
+chess = "^1.9.0"
+chevron = "^0.14.0"
 humanize = "^4.0.0"
-PyGithub = "^1.55"
-shortuuid = "^1.0.8"
+inflect = "^5.4.0"
+llist = "^0.7.1"
+nltk = "^3.7"
+path = "^16.4.0"
 pony = "^0.7.16"
 psycopg2 = "^2.9.3"
-jishaku = "^2.5.0"
-nltk = "^3.7"
 py-cord = "^2.1.1"
 pydantic = "^1.10.2"
+PyGithub = "^1.55"
+shortuuid = "^1.0.8"
+sortedcontainers = "^2.4.0"
+svglib = "^1.4.1"
 tomlkit = "^0.11.6"
-certifi = "^2022.12.7"
-chevron = "^0.14.0"
-llist = "^0.7.1"
 
 [tool.poetry.group.dev.dependencies]
 doppler-env = "^0.3.0"
+gitignorefile = "^1.1.2"
+inquirerpy = "^0.3.4"
+ipython = "^8.7.0"
+jishaku = "^2.5.1"
+pip-licenses = "^4.0.3"
 pyperclip = "^1.8.2"
 rich-tracebacks = "^1.0.0"
-typer = {extras = ["rich"], version = "^0.7.0"}
-inquirerpy = "^0.3.4"
-poethepoet = "^0.16.5"
-gitignorefile = "^1.1.2"
-ipython = "^8.7.0"
-pip-licenses = "^4.0.3"
+typer = { extras = ["rich"], version = "^0.7.0" }
 
 [tool.poetry.scripts]
 kurisu = "kurisu.kurisu:app"
