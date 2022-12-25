@@ -1,14 +1,11 @@
-FROM python:3.10.2
+FROM python:3.11.1
 
-ENV POETRY_VERSION=1.1.13
-ENV PATH="${PATH}:/root/.local/bin"
+ENV POETRY_VERSION=1.3.1
+ENV POETRY_HOME=/opt/poetry
+ENV PATH="${PATH}:${POETRY_HOME}/bin"
 
 COPY . .
 
-# Install dependencies
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    poetry config virtualenvs.create false &&  \
-    poetry install --no-dev
+RUN curl -sSL https://install.python-poetry.org | python - && poetry install --no-root --only main
 
-# Start it up!
-ENTRYPOINT ["poetry", "run", "python3", "main.py"]
+ENTRYPOINT ["poetry", "run", "python", "main.py"]
