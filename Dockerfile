@@ -4,7 +4,9 @@ ENV POETRY_VERSION=1.3.1
 ENV POETRY_HOME=/opt/poetry
 ENV PATH="${PATH}:${POETRY_HOME}/bin"
 
-COPY . .
+COPY . /bot
+
+WORKDIR /bot
 
 RUN curl -sSL https://install.python-poetry.org | python - && poetry install --no-root --only main
 

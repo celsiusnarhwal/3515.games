@@ -1,7 +1,7 @@
 3515.games.log
 Dockerfile
 dockerfile.sh
-db.sqlite
+db.sqlite3
 .git
 .gitignore
 kurisu
