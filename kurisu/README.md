@@ -16,13 +16,13 @@ $ kurisu [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* [`copyright`](#copyright): Attach copyright notices to all non-gitignored Python source files.
-* [`docs`](#docs): Generate Kurisu's documentation.
-* [`invite`](#invite): Generate an invite link for 3515.games. By default, this generates an invite link for the development instance.
-* [`licenses`](#licenses): Create Markdown-formatted documentation of 3515.games' software licenses.
-* [`portal`](#portal): Open the Discord Developer Portal.
-* [`release`](#release): Create a new release. This command is interactive only.
-* [`settings`](#settings): Manage settings configurations.
+* [`copyright`](#kurisu-copyright): Attach copyright notices to all non-gitignored Python source files.
+* [`docs`](#kurisu-docs): Generate Kurisu's documentation.
+* [`invite`](#kurisu-invite): Generate an invite link for 3515.games. By default, this generates an invite link for the development instance.
+* [`licenses`](#kurisu-licenses): Create Markdown-formatted documentation of 3515.games' software licenses.
+* [`portal`](#kurisu-portal): Open the Discord Developer Portal.
+* [`release`](#kurisu-release): Create a new release. This command is interactive only.
+* [`settings`](#kurisu-settings): Manage settings configurations.
 
 ## `kurisu copyright`
 
@@ -140,8 +140,8 @@ $ kurisu settings [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* [`new`](#new): Create a new settings configuration.
-* [`sync`](#sync): Remove settings configurations that lack a corresponding Doppler configuration.
+* [`new`](#kurisu-settings-new): Create a new settings configuration.
+* [`sync`](#kurisu-settings-sync): Remove settings configurations that lack a corresponding Doppler configuration.
 
 ### `kurisu settings new`
 
