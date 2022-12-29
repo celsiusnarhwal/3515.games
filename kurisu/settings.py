@@ -22,10 +22,11 @@ app = typer.Typer()
 
 @app.command(name="new")
 def settings_new(
-        config: str = typer.Option(None, "--config", "-c", help="The name of the Doppler configuration to create a "
-                                                                "settings configuration for. You'll be prompted "
-                                                                "for this if you don't provide it."),
-        description: str = typer.Option(None, "--description", "-d",
+        config: str = typer.Option(None, "--config", "-c", show_default=False,
+                                   help="The name of the Doppler configuration to create a "
+                                        "settings configuration for. You'll be prompted "
+                                        "for this if you don't provide it."),
+        description: str = typer.Option(None, "--description", "-d", show_default=False,
                                         help="The description for the new settings configuration. "
                                              "You'll be prompted for this if you don't provide it.")):
     """

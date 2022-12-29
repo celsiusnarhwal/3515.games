@@ -10,9 +10,11 @@ import os
 
 import alianator
 import discord
+import tomlkit as toml
 from discord import ButtonStyle
 from discord.ext import pages, commands
 from github import Github as GitHub
+from tomlkit import TOMLDocument
 
 import support
 
@@ -138,6 +140,17 @@ def split_list(seq: list, size: int) -> list:
     return [seq[i:i + size] for i in range(0, len(seq), size)]
 
 
+def pyproject() -> TOMLDocument:
+    """
+    Return a dictionary-like object representing 3515.games pyproject.toml file.
+    """
+    return toml.load(open("pyproject.toml"))
+
+
 def github():
     gh = GitHub(os.getenv("GITHUB_TOKEN"))
     return gh.get_user("celsiusnarhwal")
+
+
+def bot_repo():
+    return github().get_repo("3515.games")

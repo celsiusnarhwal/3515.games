@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "3515.games"
-version = "0.0.0"
+version = "0.0.1"
 description = "3515.games is a Discord bot that lets you enjoy real-time social games with your friends."
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
 packages = [{ include = "kurisu" }]
 
 [tool.poetry.dependencies]
-python = "^3.10.2"
+python = "^3.11.1"
 alianator = "^3.0.0"
 chess = "^1.9.0"
 chevron = "^0.14.0"
@@ -28,12 +28,16 @@ tomlkit = "^0.11.6"
 [tool.poetry.group.dev.dependencies]
 doppler-env = "^0.3.0"
 gitignorefile = "^1.1.2"
+gitpython = "^3.1.29"
 inquirerpy = "^0.3.4"
 ipython = "^8.7.0"
 jishaku = "^2.5.1"
 pip-licenses = "^4.0.3"
+ptpython = "^3.0.22"
 pyperclip = "^1.8.2"
 rich-tracebacks = "^1.0.0"
+semver = "^2.13.0"
+wonderwords = "^2.2.0"
 typer = { extras = ["rich"], version = "^0.7.0" }
 
 [tool.poetry.scripts]
