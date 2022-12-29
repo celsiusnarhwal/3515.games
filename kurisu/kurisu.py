@@ -156,7 +156,7 @@ def licenses(output: pathlib.Path = typer.Option(None, "--output", "-o",
                                                       "printed to standard output."),
              copy: bool = typer.Option(None, "--copy", "-c", help="Copy the documentaton to the clipboard. If neither "
                                                                   "this nor -o are provided, the documentation will be "
-                                                                  "printed to standard output")):
+                                                                  "printed to standard output.")):
     """
     Create Markdown-formatted documentation of 3515.games' software licenses.
     """

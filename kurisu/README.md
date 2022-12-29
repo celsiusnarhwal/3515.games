@@ -88,7 +88,7 @@ $ kurisu licenses [OPTIONS]
 **Options**:
 
 * `-o, --output PATH`: The file to write the documentation to. If neither this nor -c are provided, the documentation will be printed to standard output.
-* `-c, --copy`: Copy the documentaton to the clipboard. If neither this nor -o are provided, the documentation will be printed to standard output
+* `-c, --copy`: Copy the documentaton to the clipboard. If neither this nor -o are provided, the documentation will be printed to standard output.
 * `--help`: Show the help message and exit.
 
 ## `kurisu portal`
