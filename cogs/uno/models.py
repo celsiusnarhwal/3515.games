@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import asyncio
-import copy
 import random
 import string
 import uuid
@@ -833,6 +832,7 @@ class UnoPlayer:
 
 
 class _UnoCardEnum(Enum):
+    # title() and casefold() are temporary backwards compatibility patches and should eventually be removed.
     def title(self):
         return str(self).title()
 
@@ -885,12 +885,12 @@ class UnoCardSuit(_UnoCardEnum, metaclass=_UnoCardSuitMeta):
       color :class:`UnoCardColor.WILD`. The former is reserved for the Wild Draw Four card (which is the only card of
       that suit) and the latter for the suitless Wild card.
     """
+    ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE = list(string.digits)
     REVERSE = "reverse"
     SKIP = "skip"
     DRAW_TWO = "draw two"
     DRAW_FOUR = "draw four"
-    NONE = ""
-    ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE = list(string.digits)
+    NONE = None
 
 
 class UnoCard:
@@ -908,13 +908,17 @@ class UnoCard:
     ----------
     uuid: :class:`uuid.UUID`
         The card's randomly-generated unique identifier.
+
+    Notes
+    -----
+    - Use :meth:`UnoCard.generate_cards` rather than instantiating this class directly.
     """
 
     def __init__(self, color: UnoCardColor, suit: UnoCardSuit = UnoCardSuit.NONE):
         self.color = color
         self.suit = suit
 
-        self.uuid = None
+        self.uuid = uuid.uuid4()
 
     @classmethod
     def generate_cards(cls, num_cards) -> list[UnoCard]:
@@ -937,17 +941,10 @@ class UnoCard:
           This does not emulate the probability of drawing cards in the canonical implementation of UNO, in which
           cards appear with varying frequencies.
         """
-        all_cards = [cls(color, suit) for color in UnoCardColor for suit in UnoCardSuit]
-        all_cards.extend([cls(UnoCardColor.WILD), cls(UnoCardColor.WILD, UnoCardSuit.DRAW_FOUR)])
+        cards = [cls(color, suit) for color in UnoCardColor for suit in UnoCardSuit]
+        cards.extend([cls(UnoCardColor.WILD), cls(UnoCardColor.WILD, UnoCardSuit.DRAW_FOUR)])
 
-        cards_to_return = []
-        for i in range(num_cards):
-            # TODO try removing the copy call
-            card = copy.copy(random.choice(all_cards))
-            card.uuid = str(uuid.uuid4())
-            cards_to_return.append(card)
-
-        return cards_to_return
+        return random.choices(cards, k=num_cards)
 
     def emoji(self) -> discord.PartialEmoji:
         """
