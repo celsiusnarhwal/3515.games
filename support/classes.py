@@ -8,16 +8,12 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import os
-from io import TextIOWrapper
 
-import chevron
 import discord
 import inflect as ifl
 from discord.ext import commands
 from jinja2 import Environment, FileSystemLoader
 from path import Path
-from pydantic import BaseModel, StrictStr
 
 import support
 
@@ -264,7 +260,7 @@ class Assets(Path):
 
     @classmethod
     def _get_pointer(cls, module):
-        return cls(os.path.join("cogs", module, "assets"))
+        return cls.joinpath("cogs", module, "assets")
 
     @classmethod
     def about(cls):
@@ -285,6 +281,10 @@ class Assets(Path):
     @classmethod
     def cah(cls):
         return cls._get_pointer("cah")
+
+    @classmethod
+    def kurisu(cls):
+        return cls("kurisu/assets")
 
 
 class Jinja(Environment):
@@ -317,6 +317,10 @@ class Jinja(Environment):
     @classmethod
     def cah(cls):
         return cls._get_env(Assets.cah())
+
+    @classmethod
+    def kurisu(cls):
+        return cls._get_env(Assets.kurisu())
 
     def __enter__(self):
         return self
