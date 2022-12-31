@@ -225,7 +225,7 @@ class UnoCardSelectView(UnoTerminableView):
         )
 
         for card in self.paginator.current():
-            card_menu.add_option(label=str(card), emoji=card.emoji, value=card.uuid)
+            card_menu.add_option(label=str(card), emoji=card.emoji(), value=card.uuid)
 
         if self.paginator.has_previous():
             card_menu.add_option(label="Previous Page", emoji="⏪", value="prev")

@@ -8,14 +8,15 @@ from __future__ import annotations
 
 import asyncio
 import copy
-import json
 import random
 import string
 import uuid
+from enum import Enum, EnumMeta
 from typing import Union
 
 import discord
 import inflect as ifl
+import tomlkit as toml
 from discord.ext import pages as discord_pages
 from llist import dllistnode, dllist as DoublyLinkedList
 from sortedcontainers import SortedKeyList
@@ -569,7 +570,7 @@ class UnoPlayer:
             discord.Embed(
                 title="Your Hand",
                 description=f"Here are all the cards you're currently holding:\n\n"
-                            f"{chr(10).join([f'- {str(card)} {card.emoji}' for card in page])}",
+                            f"{chr(10).join([f'- {str(card)} {card.emoji()}' for card in page])}",
                 color=support.Color.mint()
             )
             for page in split_cards]
@@ -650,7 +651,7 @@ class UnoPlayer:
         processor = UnoEventProcessor(self.game)
         await processor.card_played_event(player=self, card=card, with_draw=with_draw)
 
-        if card.color.casefold() == "wild":
+        if card.color.casefold() == UnoCardColor.WILD:
             await processor.wild_event(player=self)
 
         if card.suit.casefold() == "draw two":
@@ -686,7 +687,7 @@ class UnoPlayer:
                 embed = discord.Embed(title="Card Drawn and Played",
                                       description=f"You drew and played a **{str(card)}**.",
                                       color=card.embed_color())
-                embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
+                embed.set_thumbnail(url=card.emoji().url)
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
 
@@ -702,7 +703,7 @@ class UnoPlayer:
             else:
                 embed = discord.Embed(title="Card Drawn", description=f"You drew a **{str(card)}**.",
                                       color=card.embed_color())
-                embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
+                embed.set_thumbnail(url=card.emoji().url)
 
                 await ctx.interaction.edit_original_message(embeds=[embed], view=None)
 
@@ -830,22 +831,65 @@ class UnoPlayer:
         return self.user.name
 
 
+class _UnoCardEnum(Enum):
+    def title(self):
+        return str(self).title()
+
+    def casefold(self):
+        return str(self).casefold()
+
+    def emoji_key(self):
+        return self.name.lower()
+
+    def __str__(self):
+        return self.value
+
+
+class _UnoCardColorMeta(EnumMeta):
+    def __iter__(self):
+        for color in super().__iter__():
+            if color is not UnoCardColor.WILD:
+                yield color
+
+
+class _UnoCardSuitMeta(EnumMeta):
+    def __iter__(self):
+        for suit in super().__iter__():
+            if suit not in [UnoCardSuit.DRAW_FOUR, UnoCardSuit.NONE]:
+                yield suit
+
+
+class UnoCardColor(_UnoCardEnum, metaclass=_UnoCardColorMeta):
+    RED = "red"
+    BLUE = "blue"
+    GREEN = "green"
+    YELLOW = "yellow"
+    WILD = "wild"
+
+
+class UnoCardSuit(_UnoCardEnum, metaclass=_UnoCardSuitMeta):
+    REVERSE = "reverse"
+    SKIP = "skip"
+    DRAW_TWO = "draw two"
+    DRAW_FOUR = "draw four"
+    NONE = ""
+    ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE = list(string.digits)
+
+
 class UnoCard:
     """
     Represents an UNO card.
     """
 
-    def __init__(self, color, suit, emoji: str):
+    def __init__(self, color: UnoCardColor, suit: UnoCardSuit = UnoCardSuit.NONE):
         """
         The constructor for ``UnoCard``.
 
         :param color: The color of the card (red, blue, green, yellow).
         :param suit: The attribute of the card (0-9, Reverse, Skip, Draw Two).
-        :param emoji: A string representing the Discord emoji corresponding to the card.
         """
         self.color = color
         self.suit = suit
-        self.emoji = emoji
 
         self.uuid = None
 
@@ -862,22 +906,9 @@ class UnoCard:
         # included in a standard deck (approx. 1.85% for any given card). this differs from a standard UNO game - in a
         # real, physical, UNO deck, not all cards appear with the same frequency.
 
-        with support.Assets.uno():
-            card_emoji = json.load(open("uno_card_emotes.json"))
+        all_cards = [cls(color, suit) for color in UnoCardColor for suit in UnoCardSuit]
 
-        # for each color (red, blue, green, yellow), there are 13 cards (ten numbered cards 0-9 + reverse, skip,
-        # and draw two)
-        colors = ["Red", "Blue", "Green", "Yellow"]
-        suits = [*string.digits] + ["Reverse", "Skip", "Draw Two"]
-
-        # most cards can be derived from the cartesian product of those two sets
-        all_cards = [cls(color, suit, card_emoji[color][suit]) for color in colors for suit in suits]
-
-        # wild and wild draw four are special cases, so we create their objects manually and
-        # add them to all_cards afterward
-        wild = cls("Wild", "", card_emoji["Wild"]["Standard"])
-        wd4 = cls("Wild", "Draw Four", card_emoji["Wild"]["Draw Four"])
-        all_cards.extend([wild, wd4])
+        all_cards.extend([cls(UnoCardColor.WILD), cls(UnoCardColor.WILD, UnoCardSuit.DRAW_FOUR)])
 
         cards_to_return = []
         for i in range(num_cards):
@@ -887,22 +918,27 @@ class UnoCard:
 
         return cards_to_return
 
+    def emoji(self) -> discord.PartialEmoji:
+        with support.Assets.uno():
+            card_emoji = toml.load(open("uno_card_emotes.toml"))
+            return discord.PartialEmoji.from_str(card_emoji[self.color.emoji_key()][self.suit.emoji_key()])
+
     def point_value(self):
         """
         Returns the point value of an UNO card.
         """
 
         # reverse, skip, and draw two cards are worth 20 points
-        if self.suit.casefold() in ["reverse", "skip", "draw two"]:
+        if self.suit in [UnoCardSuit.REVERSE, UnoCardSuit.SKIP, UnoCardSuit.DRAW_TWO]:
             return 20
 
         # wild and wild draw four cards are worth 50 points
-        elif self.color.casefold() == "wild":
+        elif self.color is UnoCardColor.WILD:
             return 50
 
         # otherwise, it's a numbered card and worth its face value
         else:
-            return int(self.suit)
+            return int(self.suit.value)
 
     def embed_color(self):
         """
@@ -921,7 +957,7 @@ class UnoCard:
 
     def __str__(self):
         if self.suit:
-            return f"{self.color} {self.suit}"
+            return f"{self.color.title()} {self.suit.title()}"
         else:
             return self.color
 
@@ -952,7 +988,7 @@ class UnoEventProcessor:
                                           f"plays a **{str(card)}**.",
                               color=card.embed_color())
 
-        embed.set_thumbnail(url=discord.PartialEmoji.from_str(card.emoji).url)
+        embed.set_thumbnail(url=card.emoji().url)
         embed.set_footer(icon_url=player.user.display_avatar.url,
                          text=f"{player.user} • UNO with {self.game.host.name}! • Round {self.game.current_round}")
 
