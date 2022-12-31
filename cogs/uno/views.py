@@ -521,7 +521,7 @@ class UnoStatusCenterView(EnhancedView):
             else:
                 string += f"{player.user.name}"
 
-            if self.status.game.retrieve_player(player.user, return_node=True) == self.status.game.card_czar:
+            if self.status.game.retrieve_player(player.user, return_node=True) == self.status.game.current_player:
                 string = f"**{string}**"
 
             string += f" ({player.user.mention})"
