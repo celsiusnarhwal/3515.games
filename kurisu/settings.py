@@ -21,8 +21,7 @@ app = typer.Typer()
 
 
 @app.command(name="new")
-def settings_new(
-        config: str = typer.Option(None, "--config", "-c", show_default=False,
+def new(config: str = typer.Option(None, "--config", "-c", show_default=False,
                                    help="The name of the Doppler configuration to create a "
                                         "settings configuration for. You'll be prompted "
                                         "for this if you don't provide it."),
@@ -71,16 +70,17 @@ def settings_new(
         invalid_message="You must enter a description."
     ).execute()
 
-    template = support.Template(template=(here / "templates" / "dynamic" / "settings.mustache").open())
+    with support.Jinja.kurisu() as jinja:
+        template = jinja.get_template("settings.py.jinja")
+        env_dir = (configs_dir / environment).makedirs_p()
+        env_dir.joinpath("__init__.py").touch()
+        env_dir.joinpath(config).with_suffix(".py").write_text(template.render(description=description))
 
-    env_dir = (configs_dir / environment).makedirs_p()
-    env_dir.joinpath("__init__.py").touch()
-    env_dir.joinpath(config).with_suffix(".py").write_text(template.render(description=description))
     print(f"[green]Created settings configuration for {environment}/{config}[/green].")
 
 
 @app.command(name="sync")
-def settings_sync():
+def sync():
     """
     Remove settings configurations that lack a corresponding Doppler configuration.
     """
@@ -115,7 +115,7 @@ def settings_sync():
 
 
 @app.callback()
-def settings_main():
+def main():
     """
     Manage settings configurations.
     """

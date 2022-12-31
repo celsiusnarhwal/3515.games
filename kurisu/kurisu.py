@@ -11,6 +11,7 @@ Kurisu, 3515.games' development CLI, provides command-line shortcuts for common 
 import importlib
 import json
 import os
+from datetime import datetime
 import pathlib
 import subprocess
 import sys
@@ -19,6 +20,7 @@ from enum import Enum
 
 import git as pygit
 import gitignorefile as gitignore
+from difflib import SequenceMatcher
 import inflect as ifl
 import pyperclip
 import semver
@@ -58,21 +60,33 @@ def copyright(verbose: bool = typer.Option(None, "--verbose", "-v", help="Show t
         if not quiet:
             print(*args, **kwargs)
 
+    def write(fp: Path, content: str):
+        nonlocal changed
+        changed += 1
+
+        if verbose:
+            echo(f"[bold yellow]Changed[/]: {file}")
+
+        if not dry_run:
+            fp.write_text(content)
+
     verbose = verbose and not quiet
 
-    notice = Path(here / "templates" / "static" / "copyright.txt").read_text().strip("\n") + "\n\n"
     is_ignored = gitignore.parse(root / ".gitignore")
     changed = 0
 
-    for file in root.walkfiles("*.py"):
-        if notice not in file.text() and not is_ignored(file):
-            changed += 1
+    with support.Jinja.kurisu() as jinja:
+        template = jinja.get_template("copyright.jinja")
+        notice = template.render(year=datetime.now().year).strip("\n") + "\n\n"
 
-            if verbose:
-                echo(f"[bold yellow]Changed[/]: {file}")
-
-            if not dry_run:
-                file.write_text(notice + file.text())
+        for file in [f for f in root.walkfiles("test.py") if not is_ignored(f)]:
+            match SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio():
+                case ratio if 0.9 <= ratio < 1:
+                    write(file, notice + "".join(file.lines()[6:]))
+                case ratio if ratio == 1:
+                    pass
+                case _:
+                    write(file, notice + file.text())
 
     if changed:
         output = f"[green]Changed [bold]{changed}[/bold] {inflect.plural('file', changed)}"
