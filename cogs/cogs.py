@@ -182,41 +182,9 @@ class UnoCog(MasterCog):
         """
 
         # tell the user important information about creating an UNO game
-        msg = f"You're about to create an UNO game. There are a few important things you need to " \
-              f"know:\n" \
-              f"\n" \
-              f"**UNO games are contained within " \
-              f"[threads](https://support.discord.com/hc/en-us/articles/4403205878423-Threads-FAQ).** " \
-              f"I'll handle the creation and management of the thread for you. If you can " \
-              f"``Manage Threads``, please refrain from editing or deleting the thread until the game is " \
-              f"over (trust me, I've got this).\n" \
-              f"\n" \
-              f"**Anyone can join.** Anyone who can both see and talk in this channel will be able to " \
-              f"join or spectate your game.\n" \
-              f"\n" \
-              f"**You're in control.** You'll be the Game Host for this UNO game. This entitles you to " \
-              f"certain special powers, like removing players from the game or ending the game early. However...\n " \
-              f"\n" \
-              f"**With power comes responsibility.** The game won't start until you use " \
-              f"``/uno host start``, and if you leave the game or its thread at any time, the game will immediately " \
-              f"end for all players. For more, see the *Host Powers and Responsibilities* section of " \
-              f"``/help UNO``.\n" \
-              f"\n" \
-              f"**I'm watching for inactivity.** Players determined to be inactive may be automatically " \
-              f"removed from the game by yours truly. __You're not exempt from this__, and if *you* get " \
-              f"removed, the game will end for everyone else, since you're the Game Host. Keep that in " \
-              f"mind.\n" \
-              f"\n" \
-              f"Before we start, let's review your game settings.\n" \
-              f"\n" \
-              f"__Game Settings__\n" \
-              f"**Maximum Players**: {players}\n" \
-              f"**Points to Win**: {points}\n" \
-              f"**Timeout**: {timeout} seconds\n" \
-              f"\n" \
-              f"Once the game has been created, these settings can't be changed.\n" \
-              f"\n" \
-              f"Proceed with creating this UNO game?"
+        with support.Jinja.uno() as jinja:
+            template = jinja.get_template("create-game.md")
+            msg = template.render(players=players, points=points, timeout=timeout)
 
         embed = discord.Embed(title="Creating an UNO Game", description=msg,
                               color=support.Color.orange())
