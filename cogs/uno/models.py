@@ -882,8 +882,8 @@ class UnoCardSuit(_UnoCardEnum, metaclass=_UnoCardSuitMeta):
     Notes
     -----
     - DRAW_FOUR and NONE are excluded from this enumeration's iterator as they can only appear on cards of
-      color :class:`UnoCardColor.WILD`. The former is reserved for the Wild Draw Four card (which is the only card of that
-      suit) and the latter for the suitless Wild card.
+      color :class:`UnoCardColor.WILD`. The former is reserved for the Wild Draw Four card (which is the only card of
+      that suit) and the latter for the suitless Wild card.
     """
     REVERSE = "reverse"
     SKIP = "skip"
@@ -942,6 +942,7 @@ class UnoCard:
 
         cards_to_return = []
         for i in range(num_cards):
+            # TODO try removing the copy call
             card = copy.copy(random.choice(all_cards))
             card.uuid = str(uuid.uuid4())
             cards_to_return.append(card)
@@ -992,7 +993,7 @@ class UnoCard:
         if self.suit:
             return f"{self.color.title()} {self.suit.title()}"
         else:
-            return self.color
+            return self.color.title()
 
 
 class UnoEventProcessor:
