@@ -79,7 +79,7 @@ def copyright(verbose: bool = typer.Option(None, "--verbose", "-v", help="Show t
         template = jinja.get_template("copyright.jinja")
         notice = template.render(year=datetime.now().year).strip("\n") + "\n\n"
 
-        for file in [f for f in root.walkfiles("test.py") if not is_ignored(f)]:
+        for file in [f for f in root.walkfiles("*.py") if not is_ignored(f)]:
             match SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio():
                 case ratio if 0.9 <= ratio < 1:
                     write(file, notice + "".join(file.lines()[6:]))
