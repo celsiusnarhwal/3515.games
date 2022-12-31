@@ -325,27 +325,6 @@ class Jinja(Environment):
         pass
 
 
-class Template(BaseModel):
-    """
-    Represents a Moustache template.
-    """
-    template: StrictStr | TextIOWrapper
-
-    def render(self, **data) -> str:
-        """
-        Render the template using the provided data.
-
-        Parameters
-        ----------
-        **data
-            The data to render the template with.
-        """
-        return chevron.render(self.template, data)
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
 class GamePermissions(discord.Permissions):
     """
     Implements permission set constants for 3515.games.
