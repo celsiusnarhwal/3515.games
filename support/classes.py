@@ -15,6 +15,7 @@ import chevron
 import discord
 import inflect as ifl
 from discord.ext import commands
+from jinja2 import Environment, FileSystemLoader
 from path import Path
 from pydantic import BaseModel, StrictStr
 
@@ -284,6 +285,44 @@ class Assets(Path):
     @classmethod
     def cah(cls):
         return cls._get_pointer("cah")
+
+
+class Jinja(Environment):
+    """
+    Jinja2 environments.
+    """
+
+    @classmethod
+    def _get_env(cls, pointer: Assets):
+        env = cls(loader=FileSystemLoader(pointer / "templates"))
+        env.filters["deline"] = lambda content: content.replace("\n", "")
+        return env
+
+    @classmethod
+    def about(cls):
+        return cls._get_env(Assets.about())
+
+    @classmethod
+    def rps(cls):
+        return cls._get_env(Assets.rps())
+
+    @classmethod
+    def uno(cls):
+        return cls._get_env(Assets.uno())
+
+    @classmethod
+    def chess(cls):
+        return cls._get_env(Assets.chess())
+
+    @classmethod
+    def cah(cls):
+        return cls._get_env(Assets.cah())
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 class Template(BaseModel):
