@@ -56,6 +56,7 @@ class UnoGame(HostedMultiplayerGame):
         self.reverse_turn_order = False
         self.turn_uuid = None
         self.last_move = None
+        self.card_in_play: UnoCard = None
         self.color_in_play: str = ""
         self.suit_in_play: str = ""
         self.lobby_intro_msg: discord.Message = None
@@ -432,7 +433,7 @@ class UnoGame(HostedMultiplayerGame):
                 # ...or the suit of the same.
                 or card.suit.casefold() == self.suit_in_play.casefold()
                 # wild cards are always playable
-                or card.color.casefold() == "wild"
+                or card.color is UnoCardColor.WILD
                 # if there's no color in play (e.g. at the start of a round), all cards are playable
                 or not self.color_in_play)
 
@@ -860,6 +861,13 @@ class _UnoCardSuitMeta(EnumMeta):
 
 
 class UnoCardColor(_UnoCardEnum, metaclass=_UnoCardColorMeta):
+    """
+    Enumerates UNO card colors.
+
+    Notes
+    -----
+    - WILD is excluded from this enumeration's iterator.
+    """
     RED = "red"
     BLUE = "blue"
     GREEN = "green"
@@ -868,6 +876,15 @@ class UnoCardColor(_UnoCardEnum, metaclass=_UnoCardColorMeta):
 
 
 class UnoCardSuit(_UnoCardEnum, metaclass=_UnoCardSuitMeta):
+    """
+    Enumerates UNO card suits.
+
+    Notes
+    -----
+    - DRAW_FOUR and NONE are excluded from this enumeration's iterator as they can only appear on cards of
+      color :class:`UnoCardColor.WILD`. The former is reserved for the Wild Draw Four card (which is the only card of that
+      suit) and the latter for the suitless Wild card.
+    """
     REVERSE = "reverse"
     SKIP = "skip"
     DRAW_TWO = "draw two"
@@ -878,16 +895,22 @@ class UnoCardSuit(_UnoCardEnum, metaclass=_UnoCardSuitMeta):
 
 class UnoCard:
     """
-    Represents an UNO card.
+    An UNO card.
+
+    Parameters
+    ----------
+    color: :class:`UnoCardColor`
+        The color of the card.
+    suit: :class:`UnoCardSuit`
+        The suit of the card.
+
+    Attributes
+    ----------
+    uuid: :class:`uuid.UUID`
+        The card's randomly-generated unique identifier.
     """
 
     def __init__(self, color: UnoCardColor, suit: UnoCardSuit = UnoCardSuit.NONE):
-        """
-        The constructor for ``UnoCard``.
-
-        :param color: The color of the card (red, blue, green, yellow).
-        :param suit: The attribute of the card (0-9, Reverse, Skip, Draw Two).
-        """
         self.color = color
         self.suit = suit
 
@@ -896,18 +919,25 @@ class UnoCard:
     @classmethod
     def generate_cards(cls, num_cards) -> list[UnoCard]:
         """
-        Generates UNO cards.
+        Gemerate UNO cards.
 
-        :param num_cards: The number of cards to generate.
-        :return: A list of UnoCard objects.
+        Parameters
+        ----------
+        num_cards
+            The number of cards to generate.
+
+        Returns
+        -------
+        :class:`list` of :class:`UnoCard`
+            The generated cards.
+
+        Notes
+        -----
+        - This algorithm has an equal chance of generating any one of the 54 distinct UNO cards in a standard deck.
+          This does not emulate the probability of drawing cards in the canonical implementation of UNO, in which
+          cards appear with varying frequencies.
         """
-
-        # this card generation algorithm has an equal chance of generating any one of the 54 distinct UNO cards
-        # included in a standard deck (approx. 1.85% for any given card). this differs from a standard UNO game - in a
-        # real, physical, UNO deck, not all cards appear with the same frequency.
-
         all_cards = [cls(color, suit) for color in UnoCardColor for suit in UnoCardSuit]
-
         all_cards.extend([cls(UnoCardColor.WILD), cls(UnoCardColor.WILD, UnoCardSuit.DRAW_FOUR)])
 
         cards_to_return = []
@@ -919,22 +949,25 @@ class UnoCard:
         return cards_to_return
 
     def emoji(self) -> discord.PartialEmoji:
+        """
+        Get the card's corresponding Discord emoji.
+        """
         with support.Assets.uno():
             card_emoji = toml.load(open("uno_card_emotes.toml"))
             return discord.PartialEmoji.from_str(card_emoji[self.color.emoji_key()][self.suit.emoji_key()])
 
-    def point_value(self):
+    def point_value(self) -> int:
         """
-        Returns the point value of an UNO card.
+        Get the point value of an UNO card.
         """
-
-        # reverse, skip, and draw two cards are worth 20 points
-        if self.suit in [UnoCardSuit.REVERSE, UnoCardSuit.SKIP, UnoCardSuit.DRAW_TWO]:
-            return 20
 
         # wild and wild draw four cards are worth 50 points
-        elif self.color is UnoCardColor.WILD:
+        if self.color is UnoCardColor.WILD:
             return 50
+
+        # reverse, skip, and draw two cards are worth 20 points
+        elif self.suit in [UnoCardSuit.REVERSE, UnoCardSuit.SKIP, UnoCardSuit.DRAW_TWO]:
+            return 20
 
         # otherwise, it's a numbered card and worth its face value
         else:
@@ -942,7 +975,7 @@ class UnoCard:
 
     def embed_color(self):
         """
-        Returns the embed color associated with the card.
+        Get the embed color associated with the card.
         """
 
         embed_colors = {
