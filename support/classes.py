@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+from typing import Self
 
 import discord
 import inflect as ifl
@@ -259,7 +260,7 @@ class Assets(Path):
     """
 
     @classmethod
-    def _get_pointer(cls, module):
+    def _get_pointer(cls, module) -> Self:
         return cls.joinpath("cogs", module, "assets")
 
     @classmethod
@@ -293,9 +294,15 @@ class Jinja(Environment):
     """
 
     @classmethod
-    def _get_env(cls, pointer: Assets):
+    def _get_env(cls, pointer: Assets) -> Self:
+        """
+        Notes
+        -----
+        The `deline` filter, which replaces all newlines in a string with spaces, is used to counteract
+        Discord's treatment of carriage returns as newlines.
+        """
         env = cls(loader=FileSystemLoader(pointer / "templates"))
-        env.filters["deline"] = lambda content: content.replace("\n", "")
+        env.filters["deline"] = lambda content: content.replace("\n", " ")
         return env
 
     @classmethod

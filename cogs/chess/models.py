@@ -11,7 +11,7 @@ import math
 import random
 import uuid
 from collections import Counter
-from typing import TypedDict
+from typing import TypedDict, Self
 
 import chess as pychess
 import discord
@@ -53,11 +53,11 @@ class ChessGame:
             await self.force_close("time_limit")
 
     @classmethod
-    def retrieve_game(cls, thread_id: int):
+    def retrieve_game(cls, thread_id: int) -> Self:
         return cls.__all_games__.get(thread_id)
 
     @classmethod
-    def retrieve_duplicate_game(cls, players, guild) -> ChessGame:
+    def retrieve_duplicate_game(cls, players, guild) -> Self:
         return discord.utils.find(
             lambda game: Counter([user.id for user in players]) == Counter(
                 [player.user.id for player in game.players]) and game.guild == guild,
@@ -487,7 +487,7 @@ class ChessEventProcessor:
         msg = f"**{player.user.mention}** moves **{piece}** from {origin.capitalize()} " \
               f"to {destination.capitalize()}."
 
-        embed = discord.Embed(title="Piece Moved", description=msg, color=player.get_embed_color())
+        embed = discord.Embed(title="Piece Moved", description=msg, color=player.embed_color())
 
         embed.set_footer(icon_url=player.user.display_avatar.url,
                          text=f"{player.user} • {self.game.thread.name} • Turn {math.ceil(self.game.turn_number / 2)}")

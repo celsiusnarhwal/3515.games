@@ -92,23 +92,9 @@ class UnoGame(HostedMultiplayerGame):
         """
         Sends an introductory message at the creation of an UNO game thread and pins said message to that thread.
         """
-        intro_message = f"{self.host.mention} is the Game Host.\n" \
-                        f"\n" \
-                        f"To **join**, type `/uno join`. \n" \
-                        f"\n" \
-                        f"To **spectate**, you don't have to do anything! Anyone can spectate " \
-                        f"by simply being in the thread.\n" \
-                        f"\n" \
-                        f"@everyone mentions will be used to notify players of important game events. Players are " \
-                        f"advised to make sure their notification settings for this server are __not__ set to " \
-                        f"suppress @everyone mentions.\n" \
-                        f"\n" \
-                        f"If you're a spectator, you'll also be pinged by these " \
-                        f"@everyone mentions. If that's a problem, you'll have to either suppress @everyone mentions " \
-                        f"in your notification settings for this server or stop spectating and leave the thread.\n" \
-                        f"\n" \
-                        f"The Game Host can begin the game at any time with `/uno host start`. Once the game " \
-                        f"has begun, no new players will be able to join."
+        with support.Jinja.uno() as jinja:
+            template = jinja.get_template("lobby-open.md")
+            intro_message = template.render(host=self.host.mention)
 
         intro_embed = discord.Embed(title=f"Welcome to {posessive(self.host.name)} UNO game!",
                                     description=intro_message,
@@ -122,35 +108,25 @@ class UnoGame(HostedMultiplayerGame):
 
     async def start_game(self):
         """
-        Starts an UNO game.
+        Start an UNO game.
         """
         self.is_joinable = False
         await self.thread.edit(name=f"{self.short_name} with {self.host.name}!")
 
         random.shuffle(self.players)
 
-        with support.Assets.uno():
-            start_lines = open("uno_start_lines.txt").readlines()
-
-        msg = random.choice(start_lines).replace("\n", "") + "\n\n"
-
-        msg += "In UNO, your goal is to be the first player to get rid of all your cards each round. " \
-               "Once a player gets rid of all their cards, the round ends and that player is awarded points " \
-               "based on the cards everyone else is still holding."
-
         if self.settings.points_to_win == 0:
-            msg += "\n\nThis is a **zero-point** game, so **the first player to get rid of all their cards " \
-                   "wins the entire game**."
+            rules = ("This is a **zero-point** game, so **the first player to get rid of all their cards "
+                     "wins the entire game**.")
         else:
-            msg += f"\n\nFor this UNO game, the first player to reach **{self.settings.points_to_win} points** wins."
+            rules = f"For this UNO game, the first player to reach **{self.settings.points_to_win} points** wins."
 
-        msg += " You can view the cards you currently hold at any time with `/uno hand`. When it's your turn, " \
-               "you can play a card with `/uno play` or draw one with `/uno draw`.\n" \
-               "\n" \
-               "You can view a range of information about this UNO game with `/uno status`, including the " \
-               "current turn order and score leaderboard.\n" \
-               "\n" \
-               "Let's play!"
+        with support.Assets.uno():
+            funny = random.choice(open("uno_start_lines.txt").readlines()).strip() + "\n\n"
+
+        with support.Jinja.uno() as jinja:
+            template = jinja.get_template("game-start.md")
+            msg = template.render(funny=funny, rules=rules)
 
         embed = discord.Embed(title="Let's play UNO!", description=msg, color=support.Color.mint())
 
@@ -184,14 +160,14 @@ class UnoGame(HostedMultiplayerGame):
         await self.thread.send(embed=join_message_embed)
 
         if not is_host:
-            msg = f"If you didn't mean to join, you can leave the game with `/uno leave`. You can leave at any time, " \
-                  f"but if the game has already started, you won't be able to rejoin.\n" \
-                  f"\n" \
-                  f"Be advised that the Game Host, {self.host.mention}, can kick you at any time, " \
-                  f"and if you go AFK mid-game, I'll have you automatically removed for inactivity. Please remember " \
-                  f"to be courteous to your fellow players.\n" \
-                  f"\n" \
-                  f"Have fun!"
+            msg = (f"If you didn't mean to join, you can leave the game with `/uno leave`. You can leave at any time, "
+                   f"but if the game has already started, you won't be able to rejoin.\n"
+                   f"\n"
+                   f"Be advised that the Game Host, {self.host.mention}, can kick you at any time, "
+                   f"and if you go AFK mid-game, I'll have you automatically removed for inactivity. Please remember "
+                   f"to be courteous to your fellow players.\n"
+                   f"\n"
+                   f"Have fun!")
 
             embed = discord.Embed(title=f"Welcome to UNO, {user.name}!", description=msg,
                                   color=support.Color.mint())
@@ -365,12 +341,12 @@ class UnoGame(HostedMultiplayerGame):
         """
         self.__all_games__.pop(self.thread.id)
 
-        msg = f"Congratulations, {game_winner.user.mention}! You won UNO!\n" \
-              f"\n" \
-              f"{game_winner.user.name} won the game with a total of **{game_winner.points} points**. To see " \
-              f"the final leaderboard for this game, use the button below.\n" \
-              f"\n" \
-              f"This thread will be automatically deleted in 60 seconds. Thanks for playing!"
+        msg = (f"Congratulations, {game_winner.user.mention}! You won UNO!\n"
+               f"\n"
+               f"{game_winner.user.name} won the game with a total of **{game_winner.points} points**. To see "
+               f"the final leaderboard for this game, use the button below.\n"
+               f"\n"
+               f"This thread will be automatically deleted in 60 seconds. Thanks for playing!")
 
         embed = discord.Embed(title=f"UNO: Game Over! {game_winner.user.name} Wins!", description=msg,
                               color=support.Color.mint())
@@ -597,16 +573,16 @@ class UnoPlayer:
         if selected_card:
             # inform the player about saying 'UNO!' if playing the card will leave them with only one card in their hand
             if len(self.hand) == 2:
-                msg = f"If you play this card, you'll only have one card left.\n" \
-                      f"\n" \
-                      f"When you have only one card left, you must use `/uno uno` to say 'UNO!' and alert the other " \
-                      f"players of this fact. If another player believes you have only one card left and haven't " \
-                      f"said 'UNO!', they can use `/uno callout` and force you to draw two cards as punishment.\n" \
-                      f"\n" \
-                      f"You can use `/uno uno` at any time, provided you only have one card and haven't been " \
-                      f"called out.\n" \
-                      f"\n" \
-                      f"Proceed with playing this card?"
+                msg = (f"If you play this card, you'll only have one card left.\n"
+                       f"\n"
+                       f"When you have only one card left, you must use `/uno uno` to say 'UNO!' and alert the other "
+                       f"players of this fact. If another player believes you have only one card left and haven't "
+                       f"said 'UNO!', they can use `/uno callout` and force you to draw two cards as punishment.\n"
+                       f"\n"
+                       f"You can use `/uno uno` at any time, provided you only have one card and haven't been "
+                       f"called out.\n"
+                       f"\n"
+                       f"Proceed with playing this card?")
                 embed = discord.Embed(title="One Card Remaining", description=msg,
                                       color=support.Color.orange())
 
@@ -729,16 +705,16 @@ class UnoPlayer:
         :param ctx: A discord.ApplicationContext object.
         :param recipient: The player being called out.
         """
-        msg = f"If you think {recipient.user.name} has one card left and hasn't said 'UNO!', you can call them " \
-              f"out.\n" \
-              f"\n" \
-              f"If the callout **succeeds** (meaning {recipient.user.name} actually has one card left and hasn't " \
-              f"said 'UNO!'), {recipient.user.name} will draw two cards.\n" \
-              f"\n" \
-              f"If the callout **fails** (meaning {recipient.user.name} has said 'UNO!' or has more than " \
-              f"one card), you will draw a card and **your turn will end**.\n" \
-              f"\n" \
-              f"Call out {recipient.user.name}?"
+        msg = (f"If you think {recipient.user.name} has one card left and hasn't said 'UNO!', you can call them "
+               f"out.\n"
+               f"\n"
+               f"If the callout **succeeds** (meaning {recipient.user.name} actually has one card left and hasn't "
+               f"said 'UNO!'), {recipient.user.name} will draw two cards.\n"
+               f"\n"
+               f"If the callout **fails** (meaning {recipient.user.name} has said 'UNO!' or has more than "
+               f"one card), you will draw a card and **your turn will end**.\n"
+               f"\n"
+               f"Call out {recipient.user.name}?")
 
         embed = discord.Embed(title=f"Call out {recipient.user.name}?", description=msg,
                               color=support.Color.orange())
