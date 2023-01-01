@@ -10,8 +10,8 @@ $ kurisu [OPTIONS] COMMAND [ARGS]...
 
 **Options**:
 
-* `--install-completion [bash|zsh|fish|powershell|pwsh]`: Install completion for the specified shell.
-* `--show-completion [bash|zsh|fish|powershell|pwsh]`: Show completion for the specified shell, to copy it or customize the installation.
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 * `--help`: Show the help message and exit.
 
 **Commands**:
@@ -55,7 +55,7 @@ $ kurisu docs [OPTIONS]
 **Options**:
 
 * `--output FILE`: The file to write the documentation to. Defaults to kurisu/README.md.
-* `-o, --override`: Override the the file specified by -o if it already exists. If the file exists and you don't pass this option, you'll be asked if you want to override it.
+* `-o, --override`: Override the the file specified by --output if it already exists. If the file exists and you don't pass this option, you'll be asked if you want to override it.
 * `-c, --copy`: Copy the documentation to the clipboard.
 * `--help`: Show the help message and exit.
 

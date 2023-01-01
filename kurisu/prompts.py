@@ -4,36 +4,37 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
+from functools import wraps
+
 from InquirerPy import inquirer
 
 
 def prompt_decorator(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         if kwargs.get("multiselect"):
             keybindings = {
-                "toggle": [
-                    {"key": "c-z"}
-                ],
-                "toggle-all-true": [
-                    {"key": "c-a"}
-                ],
-                "toggle-all-false": [
-                    {"key": "c-a"}
-                ],
+                "toggle": [{"key": "c-z"}],
+                "toggle-all-true": [{"key": "c-a"}],
+                "toggle-all-false": [{"key": "c-a"}],
             }
         else:
             keybindings = {
-                "answer": [
-                    {"key": "enter"},
-                    {"key": "c-z"}
-                ],
+                "answer": [{"key": "enter"}, {"key": "c-z"}],
             }
 
-        kwargs["keybindings"] = keybindings
-        kwargs["qmark"] = "•"
-        kwargs["amark"] = "✓"
-        kwargs["mandatory_message"] = "You can't skip this."
-        kwargs["raise_keyboard_interrupt"] = True
+        overrides = {
+            "keybindings": keybindings,
+            "qmark": "•",
+            "amark": "✓",
+            "mandatory_message": "You can't skip this.",
+            "raise_keyboard_interrupt": True,
+        }
+
+        kwargs.get("qmark")
+
+        for key, value in overrides.items():
+            kwargs[key] = kwargs.get(key) or value
 
         return func(*args, **kwargs)
 

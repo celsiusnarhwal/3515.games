@@ -48,11 +48,23 @@ app.add_typer(kurisu.settings.app, name="settings")
 
 
 @app.command(name="copyright")
-def copyright(verbose: bool = typer.Option(None, "--verbose", "-v", help="Show the name of each changed file."),
-              quiet: bool = typer.Option(None, "--quiet", "-q",
-                                         help="Suppress all output aside from errors. Overrides -v."),
-              dry_run: bool = typer.Option(None, "--dry-run", "-n", help="Run as usual but without actually "
-                                                                         "changing any files.")):
+def copyright(
+    verbose: bool = typer.Option(
+        None, "--verbose", "-v", help="Show the name of each changed file."
+    ),
+    quiet: bool = typer.Option(
+        None,
+        "--quiet",
+        "-q",
+        help="Suppress all output aside from errors. Overrides -v.",
+    ),
+    dry_run: bool = typer.Option(
+        None,
+        "--dry-run",
+        "-n",
+        help="Run as usual but without actually " "changing any files.",
+    ),
+):
     """
     Attach copyright notices to all non-gitignored Python source files.
     """
@@ -91,7 +103,9 @@ def copyright(verbose: bool = typer.Option(None, "--verbose", "-v", help="Show t
                 write(file, notice + file.text())
 
     if changed:
-        output = f"[green]Changed [bold]{changed}[/bold] {inflect.plural('file', changed)}"
+        output = (
+            f"[green]Changed [bold]{changed}[/bold] {inflect.plural('file', changed)}"
+        )
     else:
         output = "[green] No files changed"
 
@@ -103,29 +117,43 @@ def copyright(verbose: bool = typer.Option(None, "--verbose", "-v", help="Show t
 
 @app.command(name="docs")
 def docs(
-        ctx: typer.Context,
-        output: pathlib.Path = typer.Option(here / "README.md", "--output",
-                                            show_default=False, file_okay=True, dir_okay=False,
-                                            help="The file to write the documentation to. "
-                                                 "Defaults to kurisu/README.md."),
-        override: bool = typer.Option(None, "--override", "-o",
-                                      help="Override the the file specified by -o if it already exists. "
-                                           "If the file exists and you don't pass this option, "
-                                           "you'll be asked if you want to override it."),
-        copy: bool = typer.Option(None, "--copy", "-c", help="Copy the documentation to the clipboard.")
+    ctx: typer.Context,
+    output: pathlib.Path = typer.Option(
+        here / "README.md",
+        "--output",
+        show_default=False,
+        file_okay=True,
+        dir_okay=False,
+        help="The file to write the documentation to. " "Defaults to kurisu/README.md.",
+    ),
+    override: bool = typer.Option(
+        None,
+        "--override",
+        "-o",
+        help="Override the the file specified by --output if it already exists. "
+        "If the file exists and you don't pass this option, "
+        "you'll be asked if you want to override it.",
+    ),
+    copy: bool = typer.Option(
+        None, "--copy", "-c", help="Copy the documentation to the clipboard."
+    ),
 ) -> None:
     """
     Generate Kurisu's documentation.
     """
     click_obj = typer.main.get_command(app)
     click_docs = get_docs_for_click(obj=click_obj, ctx=ctx, name="kurisu")
-    clean_docs = "".join(["# Kurisu\n", *f"{click_docs.strip()}\n".splitlines(keepends=True)[1:]])
+    clean_docs = "".join(
+        ["# Kurisu\n", *f"{click_docs.strip()}\n".splitlines(keepends=True)[1:]]
+    )
 
     if copy:
         pyperclip.copy(clean_docs)
         print("[bold green]Docuemtation copied to clipboard[/]")
 
-    if output.exists() and not (override or typer.confirm(f"{output} already exists. Override it?")):
+    if output.exists() and not (
+        override or typer.confirm(f"{output} already exists. Override it?")
+    ):
         raise typer.Exit()
 
     output.write_text(clean_docs)
@@ -133,11 +161,20 @@ def docs(
 
 
 @app.command(name="invite")
-def invite(production: bool = typer.Option(None, "--production", "-p",
-                                           help="Generate an invite link for the "
-                                                "production instance of 3515.games."),
-           copy: bool = typer.Option(None, "--copy", "-c", help="Copy the invite link to the clipboard."),
-           launch: bool = typer.Option(None, "--open", "-o", help="Open the invite link in a web browser.")):
+def invite(
+    production: bool = typer.Option(
+        None,
+        "--production",
+        "-p",
+        help="Generate an invite link for the " "production instance of 3515.games.",
+    ),
+    copy: bool = typer.Option(
+        None, "--copy", "-c", help="Copy the invite link to the clipboard."
+    ),
+    launch: bool = typer.Option(
+        None, "--open", "-o", help="Open the invite link in a web browser."
+    ),
+):
     """
     Generate an invite link for 3515.games. By default, this generates an invite link for the development instance.
     """
@@ -166,19 +203,33 @@ def invite(production: bool = typer.Option(None, "--production", "-p",
 
 
 @app.command(name="licenses")
-def licenses(output: pathlib.Path = typer.Option(None, "--output", "-o",
-                                                 help="The file to write the documentation to. If neither this "
-                                                      "nor -c are provided, the documentation will be "
-                                                      "printed to standard output."),
-             copy: bool = typer.Option(None, "--copy", "-c", help="Copy the documentaton to the clipboard. If neither "
-                                                                  "this nor -o are provided, the documentation will be "
-                                                                  "printed to standard output.")):
+def licenses(
+    output: pathlib.Path = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="The file to write the documentation to. If neither this "
+        "nor -c are provided, the documentation will be "
+        "printed to standard output.",
+    ),
+    copy: bool = typer.Option(
+        None,
+        "--copy",
+        "-c",
+        help="Copy the documentaton to the clipboard. If neither "
+        "this nor -o are provided, the documentation will be "
+        "printed to standard output.",
+    ),
+):
     """
     Create Markdown-formatted documentation of 3515.games' software licenses.
     """
     documents = json.loads(
-        subprocess.run("pip-licenses -f json --from=mixed --no-license-path --with-license-file", capture_output=True,
-                       shell=True).stdout
+        subprocess.run(
+            "pip-licenses -f json --from=mixed --no-license-path --with-license-file",
+            capture_output=True,
+            shell=True,
+        ).stdout
     )
 
     fallbacks = {
@@ -202,12 +253,16 @@ def licenses(output: pathlib.Path = typer.Option(None, "--output", "-o",
             license_file += f"## {doc['Name']}\n### {doc['License']}\n\n"
 
             if doc["LicenseText"] != "UNKNOWN":
-                license_file += f"{doc['LicenseText']}\n\n".replace("#", "").replace("=", "")
+                license_file += f"{doc['LicenseText']}\n\n".replace("#", "").replace(
+                    "=", ""
+                )
             else:
                 for fallback in fallbacks:
                     if fallback in doc["License"]:
-                        license_file += (f"{doc['Name']} is licensed under the "
-                                         f"[{doc['License']}]({fallbacks[fallback]}).\n\n")
+                        license_file += (
+                            f"{doc['Name']} is licensed under the "
+                            f"[{doc['License']}]({fallbacks[fallback]}).\n\n"
+                        )
 
     if not (output or copy):
         print(license_file)
@@ -228,10 +283,15 @@ class PortalGate(str, Enum):
 
 
 @app.command(name="portal")
-def portal(gate: PortalGate = typer.Argument(PortalGate.home, show_default="home",
-                                             help="Where on the developer portal to go. Choose from "
-                                                  "home (the home page), docs (the documentation), or "
-                                                  "app (3515.games.dev's application page).")):
+def portal(
+    gate: PortalGate = typer.Argument(
+        PortalGate.home,
+        show_default="home",
+        help="Where on the developer portal to go. Choose from "
+        "home (the home page), docs (the documentation), or "
+        "app (3515.games.dev's application page).",
+    )
+):
     """
     Open the Discord Developer Portal.
     """
@@ -255,9 +315,16 @@ def pycord():
 
 
 @app.command(name="release", rich_help_panel="Dangerous Commands")
-def release(dry_run: bool = typer.Option(None, "--dry-run", "-n", help="Run through the release flow without "
-                                                                       "actually pushing a release or making any "
-                                                                       "repository changes."), ):
+def release(
+    dry_run: bool = typer.Option(
+        None,
+        "--dry-run",
+        "-n",
+        help="Run through the release flow without "
+        "actually pushing a release or making any "
+        "repository changes.",
+    ),
+):
     """
     Create a new release. This command is interactive only.
     """
@@ -265,24 +332,32 @@ def release(dry_run: bool = typer.Option(None, "--dry-run", "-n", help="Run thro
     github = support.bot_repo()
 
     last_version = semver.parse_version_info(github.get_latest_release().tag_name)
-    new_version = semver.parse_version_info(support.pyproject()["tool"]["poetry"]["version"])
+    new_version = semver.parse_version_info(
+        support.pyproject()["tool"]["poetry"]["version"]
+    )
 
     if new_version <= last_version:
-        print(f"[bold red]Error:[/] [bold]Proposed version {new_version} is not greater than "
-              f"latest version {last_version}[/bold]. Update pyproject.toml and try again.")
+        print(
+            f"[bold red]Error:[/] [bold]Proposed version {new_version} is not greater than "
+            f"latest version {last_version}[/bold]. Update pyproject.toml and try again."
+        )
         raise typer.Exit(1)
 
     if dry_run:
-        print(f"[bold blue]Notice:[/] This is a dry run. No release will be published and no changes will be made "
-              f"to the repository.\n")
+        print(
+            f"[bold blue]Notice:[/] This is a dry run. No release will be published and no changes will be made "
+            f"to the repository.\n"
+        )
     else:
-        print(f"[bold yellow]Warning:[/] This is NOT a dry run. Proceed with caution.\n")
+        print(
+            f"[bold yellow]Warning:[/] This is NOT a dry run. Proceed with caution.\n"
+        )
 
     release_title = prompts.text(
         message="Enter a title for this release.",
         default=str(new_version),
         validate=lambda result: bool(result.strip()),
-        invalid_message="You must enter a title."
+        invalid_message="You must enter a title.",
     ).execute()
 
     release_notes = None
@@ -295,8 +370,10 @@ def release(dry_run: bool = typer.Option(None, "--dry-run", "-n", help="Run thro
         ],
     ).execute():
         case "scratch":
-            prompts.text("Kurisu will open your default text editor. Save the file and close the editor "
-                         "when you're done. Press Enter to continue.").execute()
+            prompts.text(
+                "Kurisu will open your default text editor. Save the file and close the editor "
+                "when you're done. Press Enter to continue."
+            ).execute()
             release_notes = typer.edit(require_save=False, extension=".md")
 
             if not release_notes.strip():
@@ -305,15 +382,16 @@ def release(dry_run: bool = typer.Option(None, "--dry-run", "-n", help="Run thro
         case "file":
             release_notes = prompts.filepath(
                 message="Enter the path to a Markdown or plain text file.",
-                validate=lambda result: Path(result).ext in [".md", ".txt"] and Path(result).text().strip(),
+                validate=lambda result: Path(result).ext in [".md", ".txt"]
+                and Path(result).text().strip(),
                 invalid_message="The file must be an existing, non-empty, Markdown or plain text file.",
                 filter=lambda result: Path(result).text(),
             ).execute()
 
     if not prompts.confirm(
-            "Confirm you understand that you are merging the development branch into the main branch "
-            "and that the development branch's codebase, as it was last committed, will be deployed to the "
-            "production instance of 3515.games."
+        "Confirm you understand that you are merging the development branch into the main branch "
+        "and that the development branch's codebase, as it was last committed, will be deployed to the "
+        "production instance of 3515.games."
     ).execute():
         raise typer.Exit()
 
@@ -323,32 +401,34 @@ def release(dry_run: bool = typer.Option(None, "--dry-run", "-n", help="Run thro
         message=f"Enter the passphrase located at the bottom of your terminal.",
         long_instruction=f"Passphrase: {passphrase}",
         validate=lambda result: result == passphrase,
-        invalid_message="Incorrect passphrase."
+        invalid_message="Incorrect passphrase.",
     ).execute()
 
     if not prompts.select(
-            message="Final confirmation. There's no going back after this.",
-            choices=[
-                Choice(name="Push it", value=True),
-                Choice(name="Never mind", value=False),
-            ]
+        message="Final confirmation. There's no going back after this.",
+        choices=[
+            Choice(name="Push it", value=True),
+            Choice(name="Never mind", value=False),
+        ],
     ).execute():
         raise typer.Exit()
 
     if not dry_run:
-        for _ in track(description="Pushing...", sequence=[
-            git.checkout(github.default_branch),
-            git.merge("dev"),
-            git.push(),
-
-            github.create_git_tag_and_release(
-                tag=str(new_version),
-                release_name=release_title,
-                release_message=release_notes,
-                object=github.get_branch(github.default_branch).commit.sha,
-                type="commit",
-            )
-        ]):
+        for _ in track(
+            description="Pushing...",
+            sequence=[
+                git.checkout(github.default_branch),
+                git.merge("dev"),
+                git.push(),
+                github.create_git_tag_and_release(
+                    tag=str(new_version),
+                    release_name=release_title,
+                    release_message=release_notes,
+                    object=github.get_branch(github.default_branch).commit.sha,
+                    type="commit",
+                ),
+            ],
+        ):
             pass
 
     print(f"[bold green]Released 3515.games {new_version}[/]")
@@ -361,6 +441,6 @@ def main():
     """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Only use when developing Kurisu itself. Otherwise, use the `kurisu` command.
     app()
