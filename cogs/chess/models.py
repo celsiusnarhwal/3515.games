@@ -150,18 +150,9 @@ class ChessGame:
 
         await self.thread.edit(name=f"Chess - {self.white.user.name} vs. {self.black.user.name}")
 
-        msg = f"In chess, your objective is to checkmate your opponent's king. Accomplish this, and you win. Yes, " \
-              f"it's really that simple.\n" \
-              f"\n" \
-              f"When it's your turn, make a move with `/chess move`. When it's not your turn (or even when it is " \
-              f"your turn), you can view the board and move history with `/chess board`.\n" \
-              f"\n" \
-              f"Players will have two minutes to move when its their turn. Fail to move in time, and I'll " \
-              f"forfeit the match on your behalf.\n" \
-              f"\n" \
-              f"{self.white.user.mention} will play as **White**. {self.black.user.mention} will play as **Black**.\n" \
-              f"\n" \
-              f"Let's play!"
+        with support.Jinja.chess() as jinja:
+            template = jinja.get_template("game-start.md")
+            msg = template.render(white=self.white.user.mention, black=self.black.user.mention)
 
         embed = discord.Embed(title="Let's play chess!", description=msg, color=support.Color.mint())
 
@@ -387,20 +378,9 @@ class ChessPlayer:
 
             await self.end_turn()
         else:
-            msg = "The move you entered is invalid. You must enter an valid move using either algebraic or " \
-                  "Universal Chess Interface (UCI) notation. If you're having trouble, here are some pointers to " \
-                  "keep in mind:\n" \
-                  "\n" \
-                  "— **Moves must be legal.** Take a good look at the `/chess board` and make sure the move you're " \
-                  "trying to make is actually legal. Remember that if you're in check, you must defend your " \
-                  "king, and if you're moving a pawn to its last rank, you must promote it.\n" \
-                  "\n" \
-                  "— **Moves are case-sensitive.** Be sure to use uppercase and lowercase letters as your " \
-                  "chosen notation format requires.\n" \
-                  "\n" \
-                  "— **Moves must be unambiguous**. The move you enter must be sufficiently specific for me to be " \
-                  "able to tell what you're trying to do. I'll accept even the most minimal notation, but when " \
-                  "in doubt — overspecific is __always__ better than underspecific."
+            with support.Jinja.chess() as jinja:
+                template = jinja.get_template("invalid-move.md")
+                msg = template.render()
 
             embed = discord.Embed(title="Invalid Move", description=msg, color=support.Color.red())
 
@@ -441,7 +421,7 @@ class ChessPlayer:
     def set_color(self):
         self.color = pychess.WHITE if self == self.game.white else pychess.BLACK
 
-    def get_embed_color(self):
+    def embed_color(self):
         embed_colors = {
             pychess.WHITE: support.Color.white(),
             pychess.BLACK: support.Color.black(),
