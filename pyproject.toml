@@ -38,7 +38,8 @@ pyperclip = "^1.8.2"
 rich-tracebacks = "^1.0.0"
 semver = "^2.13.0"
 wonderwords = "^2.2.0"
-typer = { extras = ["rich"], version = "^0.7.0" }
+black = { extras = ["d"], version = "^22.12.0" }
+typer = { extras = ["all"], version = "^0.7.0" }
 
 [tool.poetry.scripts]
 kurisu = "kurisu.kurisu:app"
