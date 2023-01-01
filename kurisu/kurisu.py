@@ -336,7 +336,7 @@ def release(dry_run: bool = typer.Option(None, "--dry-run", "-n", help="Run thro
         raise typer.Exit()
 
     if not dry_run:
-        for action in track(description="Pushing...", sequence=[
+        for _ in track(description="Pushing...", sequence=[
             git.checkout(github.default_branch),
             git.merge("dev"),
             git.push(),
