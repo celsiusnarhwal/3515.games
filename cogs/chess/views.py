@@ -665,7 +665,7 @@ class ChessEndgameView(EnhancedView):
             embed = discord.Embed(title="You did that already.", description=msg, color=support.Color.red())
             await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
-            return super().interaction_check(interaction)
+            return await super().interaction_check(interaction)
 
     @discord_button(label="Save Game", style=ButtonStyle.gray)
     async def save_game(self, button: Button, interaction: Interaction):
