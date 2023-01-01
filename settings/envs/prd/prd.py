@@ -17,5 +17,5 @@ settings = Settings(
     database={
         "provider": "postgres",
         "dsn": os.getenv("DATABASE_URL"),
-    }
+    },
 )

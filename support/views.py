@@ -20,7 +20,9 @@ class EnhancedView(discord.ui.View):
     instance attributes which are elaborated on in the documentation for its constructor.
     """
 
-    def __init__(self, ctx: discord.ApplicationContext = None, target_user: discord.User = None):
+    def __init__(
+        self, ctx: discord.ApplicationContext = None, target_user: discord.User = None
+    ):
         """
         The constructor for ``EnhancedView``.
 
@@ -57,13 +59,18 @@ class ConfirmationView(EnhancedView):
 
     async def on_timeout(self) -> None:
         self.clear_items()
-        timeout_embed = discord.Embed(title="Timeout Error", description="You took too long to respond.",
-                                      color=discord.Color.red())
+        timeout_embed = discord.Embed(
+            title="Timeout Error",
+            description="You took too long to respond.",
+            color=discord.Color.red(),
+        )
         await self.ctx.edit(content=None, embed=timeout_embed, view=self)
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         if self.target_user != interaction.user and self.target_user is not None:
-            await interaction.response.send_message("You can't do that.", ephemeral=True)
+            await interaction.response.send_message(
+                "You can't do that.", ephemeral=True
+            )
         else:
             await interaction.response.defer()
             return await super().interaction_check(interaction)
@@ -78,8 +85,13 @@ class ConfirmationView(EnhancedView):
         self.success = False
         self.stop()
 
-    async def request_confirmation(self, prompt_text=None, prompt_embeds: list[discord.Embed] = None, ephemeral=False,
-                                   edit=False):
+    async def request_confirmation(
+        self,
+        prompt_text=None,
+        prompt_embeds: list[discord.Embed] = None,
+        ephemeral=False,
+        edit=False,
+    ):
         """
         Sends a confirmation prompt.
 
@@ -90,9 +102,16 @@ class ConfirmationView(EnhancedView):
         Optional; defaults to False.
         """
         if edit:
-            await self.ctx.interaction.edit_original_message(content=prompt_text, embeds=prompt_embeds, view=self)
+            await self.ctx.interaction.edit_original_message(
+                content=prompt_text, embeds=prompt_embeds, view=self
+            )
         else:
-            await self.ctx.respond(content=prompt_text, embeds=prompt_embeds, view=self, ephemeral=ephemeral)
+            await self.ctx.respond(
+                content=prompt_text,
+                embeds=prompt_embeds,
+                view=self,
+                ephemeral=ephemeral,
+            )
         await self.wait()
         return self.success
 
@@ -118,32 +137,44 @@ class GameChallengeResponseView(ConfirmationView):
 
     async def on_timeout(self) -> None:
         self.clear_items()
-        timeout_embed = discord.Embed(title="Timeout Error",
-                                      description=f"{self.challenger.mention}'s challenge has been rescinded because "
-                                                  f"{self.target_user.mention} took too long to respond.",
-                                      color=discord.Color.red())
+        timeout_embed = discord.Embed(
+            title="Timeout Error",
+            description=f"{self.challenger.mention}'s challenge has been rescinded because "
+            f"{self.target_user.mention} took too long to respond.",
+            color=discord.Color.red(),
+        )
         await self.prompt_msg.edit(content=None, embed=timeout_embed, view=self)
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         if self.target_user != interaction.user and self.target_user is not None:
             await interaction.response.send_message(
-                "You can't respond to a challenge that wasn't addressed to you.", ephemeral=True)
+                "You can't respond to a challenge that wasn't addressed to you.",
+                ephemeral=True,
+            )
         else:
             return await super().interaction_check(interaction)
 
     async def request_response(self):
-        prompt_text = f"Hey {self.target_user.mention}! {self.challenger.mention} is challenging you to " \
-                      f"a game of {self.game_name}! Do you accept?"
+        prompt_text = (
+            f"Hey {self.target_user.mention}! {self.challenger.mention} is challenging you to "
+            f"a game of {self.game_name}! Do you accept?"
+        )
         self.prompt_msg = await self.ctx.send(prompt_text, view=self)
         await self.wait()
 
         if self.success is not None:
             if self.success:
-                await self.prompt_msg.edit(f"{self.target_user.mention} accepted the challenge!", view=None,
-                                           delete_after=7)
+                await self.prompt_msg.edit(
+                    f"{self.target_user.mention} accepted the challenge!",
+                    view=None,
+                    delete_after=7,
+                )
             else:
-                await self.prompt_msg.edit(f"{self.target_user.mention} rejected the challenge.", view=None,
-                                           delete_after=7)
+                await self.prompt_msg.edit(
+                    f"{self.target_user.mention} rejected the challenge.",
+                    view=None,
+                    delete_after=7,
+                )
 
         return self.success
 
@@ -155,11 +186,17 @@ class GameThreadURLView(EnhancedView):
 
     def __init__(self, thread: discord.Thread, **kwargs):
         super().__init__(**kwargs)
-        self.add_item(Button(label="Go to game thread", url=support.get_thread_url(thread)))
+        self.add_item(
+            Button(label="Go to game thread", url=support.get_thread_url(thread))
+        )
 
 
 class ServerBoostURLView(EnhancedView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.add_item(Button(label="Learn more about Server Boosting",
-                             url="https://support.discord.com/hc/en-us/articles/360028038352-Server-Boosting-FAQ"))
+        self.add_item(
+            Button(
+                label="Learn more about Server Boosting",
+                url="https://support.discord.com/hc/en-us/articles/360028038352-Server-Boosting-FAQ",
+            )
+        )

@@ -17,5 +17,5 @@ settings = Settings(
         "provider": "sqlite",
         "filename": "db.sqlite3",
         "create_db": True,
-    }
+    },
 )

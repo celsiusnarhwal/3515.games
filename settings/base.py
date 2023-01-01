@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     Settings configurations must respect this class' type annotations and define values for any fields that lack
     defaults. 3515.games will refuse to start if either of these conditions are not met.
-    
+
     Parameters
     ----------
     bot_name : str
@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     token : str, optional, default: os.getenv("BOT_TOKEN")
         3515.games' bot token.
     """
+
     bot_name: StrictStr
     app_id: StrictInt
     owner_id: StrictInt = 170966436125212673

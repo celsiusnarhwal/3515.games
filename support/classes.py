@@ -26,12 +26,20 @@ class HostedMultiplayerGame:
     Consolidates common attributes for hosted multiplayer games. A hosted multiplayer a game is any game that supports
     more than two players where one of those players is deemed the "Game Host".
     """
+
     name = ""
     short_name = name
 
     __all_games__ = dict()
 
-    def __init__(self, guild: discord.Guild, thread: discord.Thread, host: discord.User, *args, **kwargs):
+    def __init__(
+        self,
+        guild: discord.Guild,
+        thread: discord.Thread,
+        host: discord.User,
+        *args,
+        **kwargs,
+    ):
         self.guild = guild
         self.thread = thread
         self.host = host
@@ -53,7 +61,9 @@ class HostedMultiplayerGame:
         return cls.__all_games__.get(thread_id)
 
     @classmethod
-    def find_hosted_games(cls, user: discord.User, guild_id: int) -> HostedMultiplayerGame | None:
+    def find_hosted_games(
+        cls, user: discord.User, guild_id: int
+    ) -> HostedMultiplayerGame | None:
         """
         Retrieves games where the Game Host is a particular user and that are taking place in a
         particular server.
@@ -62,7 +72,10 @@ class HostedMultiplayerGame:
         :param guild_id: The unique identifier of the server to search for games in.
         :return: An ``UnoGame`` object associated with the specified Game Host and server if one exists; otherwise None.
         """
-        return discord.utils.find(lambda g: g.host == user and g.guild.id == guild_id, cls.__all_games__.values())
+        return discord.utils.find(
+            lambda g: g.host == user and g.guild.id == guild_id,
+            cls.__all_games__.values(),
+        )
 
     @classmethod
     def verify_unique_host(cls):
@@ -72,18 +85,30 @@ class HostedMultiplayerGame:
         """
 
         async def predicate(ctx: discord.ApplicationContext):
-            user_hosted_game = cls.find_hosted_games(user=ctx.user, guild_id=ctx.guild_id)
+            user_hosted_game = cls.find_hosted_games(
+                user=ctx.user, guild_id=ctx.guild_id
+            )
 
             if not user_hosted_game:
                 return True
             else:
-                message = f"You're already hosting {inflect.a(cls.name)} game in this server. " \
-                          f"Before you can create a new one, you must either complete, end, or transfer host powers " \
-                          f"for your current game.\n"
-                embed = discord.Embed(title="You're already hosting a game.", description=message,
-                                      color=Color.red())
-                await ctx.respond(embed=embed, view=support.views.GameThreadURLView(thread=user_hosted_game.thread),
-                                  ephemeral=True)
+                message = (
+                    f"You're already hosting {inflect.a(cls.name)} game in this server. "
+                    f"Before you can create a new one, you must either complete, end, or transfer host powers "
+                    f"for your current game.\n"
+                )
+                embed = discord.Embed(
+                    title="You're already hosting a game.",
+                    description=message,
+                    color=Color.red(),
+                )
+                await ctx.respond(
+                    embed=embed,
+                    view=support.views.GameThreadURLView(
+                        thread=user_hosted_game.thread
+                    ),
+                    ephemeral=True,
+                )
 
                 return False
 
@@ -101,15 +126,21 @@ class HostedMultiplayerGame:
             """
             Aborts an game.
             """
-            thread_msg = f"The Game Host, {self.host.mention}, has ended this {self.name} game.\n" \
-                         f"\n" \
-                         f"This thread has been locked and will be automatically deleted in 60 seconds."
-            thread_embed = discord.Embed(title=f"The Game Host has ended this {self.name} game.",
-                                         description=thread_msg,
-                                         color=Color.red(),
-                                         timestamp=discord.utils.utcnow())
+            thread_msg = (
+                f"The Game Host, {self.host.mention}, has ended this {self.name} game.\n"
+                f"\n"
+                f"This thread has been locked and will be automatically deleted in 60 seconds."
+            )
+            thread_embed = discord.Embed(
+                title=f"The Game Host has ended this {self.name} game.",
+                description=thread_msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
-            await self.thread.edit(name=f"{self.short_name} with {self.host.name} - Game Over!")
+            await self.thread.edit(
+                name=f"{self.short_name} with {self.host.name} - Game Over!"
+            )
             msg = await self.thread.send(embed=thread_embed)
             await msg.pin()
 
@@ -117,10 +148,16 @@ class HostedMultiplayerGame:
             """
             Force closes a game in the event that its associated thread is deleted.
             """
-            msg = f"Your {self.name} game in {self.guild.name} was automatically closed because its game " \
-                  f"thread was deleted."
-            embed = discord.Embed(title=f"Your {self.name} game was automatically closed.", description=msg,
-                                  color=Color.red(), timestamp=discord.utils.utcnow())
+            msg = (
+                f"Your {self.name} game in {self.guild.name} was automatically closed because its game "
+                f"thread was deleted."
+            )
+            embed = discord.Embed(
+                title=f"Your {self.name} game was automatically closed.",
+                description=msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
             await self.host.send(embed=embed)
 
@@ -128,10 +165,16 @@ class HostedMultiplayerGame:
             """
             Force closes a game in the event that the parent channel of its associated thread is deleted.
             """
-            msg = f"Your {self.name} game in {self.guild.name} was automatically closed because the parent " \
-                  f"channel of its game thread was deleted."
-            embed = discord.Embed(title="Your {self.name} game was automatically closed.", description=msg,
-                                  color=Color.red(), timestamp=discord.utils.utcnow())
+            msg = (
+                f"Your {self.name} game in {self.guild.name} was automatically closed because the parent "
+                f"channel of its game thread was deleted."
+            )
+            embed = discord.Embed(
+                title="Your {self.name} game was automatically closed.",
+                description=msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
             await self.host.send(embed=embed)
 
@@ -139,20 +182,33 @@ class HostedMultiplayerGame:
             """
             Force closes a game in the event that the Game Host leaves its associated thread.
             """
-            thread_msg = f"This {self.name} game has been automatically closed because the Game Host, " \
-                         f"{self.host.mention}, left.\n" \
-                         f"\n" \
-                         f"This thread has been locked and will be automatically deleted in 60 seconds."
-            thread_embed = discord.Embed(title=f"This {self.name} game has been automatically closed.",
-                                         description=thread_msg,
-                                         color=Color.red(), timestamp=discord.utils.utcnow())
+            thread_msg = (
+                f"This {self.name} game has been automatically closed because the Game Host, "
+                f"{self.host.mention}, left.\n"
+                f"\n"
+                f"This thread has been locked and will be automatically deleted in 60 seconds."
+            )
+            thread_embed = discord.Embed(
+                title=f"This {self.name} game has been automatically closed.",
+                description=thread_msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
-            host_msg = f"Your {self.name} game in {self.guild.name} was automatically closed because you left " \
-                       f"either the game or its associated thread."
-            host_embed = discord.Embed(title=f"Your {self.name} game was automatically closed.", description=host_msg,
-                                       color=Color.red(), timestamp=discord.utils.utcnow())
+            host_msg = (
+                f"Your {self.name} game in {self.guild.name} was automatically closed because you left "
+                f"either the game or its associated thread."
+            )
+            host_embed = discord.Embed(
+                title=f"Your {self.name} game was automatically closed.",
+                description=host_msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
-            await self.thread.edit(name=f"{self.short_name} with {self.host.name} - Game Over!")
+            await self.thread.edit(
+                name=f"{self.short_name} with {self.host.name} - Game Over!"
+            )
             msg = await self.thread.send(embed=thread_embed)
             await msg.pin()
 
@@ -162,58 +218,95 @@ class HostedMultiplayerGame:
             """
             Force closes a game in the event that there are insufficient players to continue.
             """
-            thread_msg = f"This {self.name} game has been automatically closed because there are not enough " \
-                         f"players remaining for it to continue.\n" \
-                         f"\n" \
-                         f"This thread has been locked and will be automatically deleted in 60 seconds."
-            thread_embed = discord.Embed(title=f"This {self.name} game has been automatically closed.",
-                                         description=thread_msg,
-                                         color=Color.red(), timestamp=discord.utils.utcnow())
+            thread_msg = (
+                f"This {self.name} game has been automatically closed because there are not enough "
+                f"players remaining for it to continue.\n"
+                f"\n"
+                f"This thread has been locked and will be automatically deleted in 60 seconds."
+            )
+            thread_embed = discord.Embed(
+                title=f"This {self.name} game has been automatically closed.",
+                description=thread_msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
-            host_msg = f"Your {self.name} game in {self.guild.name} was automatically closed due to insufficient " \
-                       f"players."
-            host_embed = discord.Embed(title=f"Your {self.name} game was automatically closed.", description=host_msg,
-                                       color=Color.red(), timestamp=discord.utils.utcnow())
+            host_msg = (
+                f"Your {self.name} game in {self.guild.name} was automatically closed due to insufficient "
+                f"players."
+            )
+            host_embed = discord.Embed(
+                title=f"Your {self.name} game was automatically closed.",
+                description=host_msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
-            await self.thread.edit(name=f"{self.short_name} with {self.host.name} - Game Over!")
+            await self.thread.edit(
+                name=f"{self.short_name} with {self.host.name} - Game Over!"
+            )
             msg = await self.thread.send(embed=thread_embed)
             await msg.pin()
 
             await self.host.send(embed=host_embed)
 
         async def inactivity():
-            thread_msg = f"This {self.name} game has been automatically closed due to inactivity.\n" \
-                         "\n" \
-                         "This thread has been locked and will be automatically deleted in 60 seconds."
-            thread_embed = discord.Embed(title=f"This {self.name} game has been automatically closed.",
-                                         description=thread_msg,
-                                         color=Color.red(), timestamp=discord.utils.utcnow())
+            thread_msg = (
+                f"This {self.name} game has been automatically closed due to inactivity.\n"
+                "\n"
+                "This thread has been locked and will be automatically deleted in 60 seconds."
+            )
+            thread_embed = discord.Embed(
+                title=f"This {self.name} game has been automatically closed.",
+                description=thread_msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
             host_msg = f"Your {self.name} game in {self.guild.name} was automatically closed due to inactivity."
-            host_embed = discord.Embed(title=f"Your {self.name} game was automatically closed.", description=host_msg,
-                                       color=Color.red(), timestamp=discord.utils.utcnow())
+            host_embed = discord.Embed(
+                title=f"Your {self.name} game was automatically closed.",
+                description=host_msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
-            await self.thread.edit(name=f"{self.short_name} with {self.host.name} - Game Over!")
+            await self.thread.edit(
+                name=f"{self.short_name} with {self.host.name} - Game Over!"
+            )
             msg = await self.thread.send(embed=thread_embed)
             await msg.pin()
 
             await self.host.send(embed=host_embed)
 
         async def time_limit():
-            thread_msg = f"This {self.name} game has been automatically closed because it took " \
-                         f"too long to complete.\n" \
-                         f"\n" \
-                         "This thread has been locked and will be automatically deleted in 60 seconds."
-            thread_embed = discord.Embed(title="This {self.name} game has been automatically closed.",
-                                         description=thread_msg,
-                                         color=Color.red(), timestamp=discord.utils.utcnow())
+            thread_msg = (
+                f"This {self.name} game has been automatically closed because it took "
+                f"too long to complete.\n"
+                f"\n"
+                "This thread has been locked and will be automatically deleted in 60 seconds."
+            )
+            thread_embed = discord.Embed(
+                title="This {self.name} game has been automatically closed.",
+                description=thread_msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
-            host_msg = f"Your {self.name} game in {self.guild.name} was automatically closed because it took " \
-                       f"too long to complete.\n"
-            host_embed = discord.Embed(title="Your {self.name} game was automatically closed.", description=host_msg,
-                                       color=Color.red(), timestamp=discord.utils.utcnow())
+            host_msg = (
+                f"Your {self.name} game in {self.guild.name} was automatically closed because it took "
+                f"too long to complete.\n"
+            )
+            host_embed = discord.Embed(
+                title="Your {self.name} game was automatically closed.",
+                description=host_msg,
+                color=Color.red(),
+                timestamp=discord.utils.utcnow(),
+            )
 
-            await self.thread.edit(name=f"{self.short_name} with {self.host.name} - Game Over!")
+            await self.thread.edit(
+                name=f"{self.short_name} with {self.host.name} - Game Over!"
+            )
             msg = await self.thread.send(embed=thread_embed)
             await msg.pin()
 
@@ -457,9 +550,12 @@ class GamePermissions(discord.Permissions):
         """
         permissions = cls.none()
 
-        permsets = [p[1] for p in inspect.getmembers(cls, inspect.ismethod)
-                    if not any(hasattr(parent, p[0]) for parent in cls.mro()[1:])
-                    and p[1].__name__ != "everything"]
+        permsets = [
+            p[1]
+            for p in inspect.getmembers(cls, inspect.ismethod)
+            if not any(hasattr(parent, p[0]) for parent in cls.mro()[1:])
+            and p[1].__name__ != "everything"
+        ]
 
         for permset in permsets:
             permissions += permset()
@@ -472,7 +568,9 @@ class GamePermissions(discord.Permissions):
     @staticmethod
     def _bitmath_decorator(op_func):
         def wrapper(self, other):
-            return GamePermissions(op_func(self.__class__.__base__(self.value), other).value)
+            return GamePermissions(
+                op_func(self.__class__.__base__(self.value), other).value
+            )
 
         return wrapper
 

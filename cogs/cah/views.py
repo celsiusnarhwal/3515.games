@@ -39,7 +39,9 @@ class PackSelectView(EnhancedView):
         self.cards = None
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        pack_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        pack_menu: Select = discord.utils.find(
+            lambda x: isinstance(x, Select), self.children
+        )
 
         for option in pack_menu.options:
             if option.value in pack_menu.values:
@@ -53,28 +55,42 @@ class PackSelectView(EnhancedView):
 
     @discord_button(label="Create Game", style=ButtonStyle.green, row=1)
     async def submit(self, button: Button, interaction: Interaction):
-        pack_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        pack_menu: Select = discord.utils.find(
+            lambda x: isinstance(x, Select), self.children
+        )
 
-        await interaction.edit_original_message(content="Creating your Cards Against Humanity game...",
-                                                embed=None,
-                                                view=None)
+        await interaction.edit_original_message(
+            content="Creating your Cards Against Humanity game...",
+            embed=None,
+            view=None,
+        )
 
         packs = pack_menu.values or ["CAH Base Set"]
 
         request_url = "https://restagainsthumanity.com/api"
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(request_url, params={"packs": ",".join(packs)}) as response:
+            async with session.get(
+                request_url, params={"packs": ",".join(packs)}
+            ) as response:
                 if response.status == 200:
                     self.cards = await response.json()
                 else:
-                    msg = f"I couldn't communicate with [REST Against Humanity](https://restagainsthumanity.com), " \
-                          f"my source for CAH card data. Please try again.\n" \
-                          f"\n" \
-                          f"If the problem persists, open an issue on [REST Against Humanity's GitHub page]" \
-                          f"({support.github().get_repo('rest-against-humanity').html_url}/issues/new)."
-                    embed = discord.Embed(title="Something went wrong.", description=msg, color=support.Color.red())
-                    await interaction.edit_original_message(content=None, embed=embed, view=None)
+                    msg = (
+                        f"I couldn't communicate with [REST Against Humanity](https://restagainsthumanity.com), "
+                        f"my source for CAH card data. Please try again.\n"
+                        f"\n"
+                        f"If the problem persists, open an issue on [REST Against Humanity's GitHub page]"
+                        f"({support.github().get_repo('rest-against-humanity').html_url}/issues/new)."
+                    )
+                    embed = discord.Embed(
+                        title="Something went wrong.",
+                        description=msg,
+                        color=support.Color.red(),
+                    )
+                    await interaction.edit_original_message(
+                        content=None, embed=embed, view=None
+                    )
 
                     return
 
@@ -94,20 +110,23 @@ class PackSelectView(EnhancedView):
         pack_menu.add_option(label="CAH Base Set", value="CAH Base Set", default=True)
 
         for pack in packs:
-            pack_menu.add_option(
-                label=pack,
-                value=pack
-            )
+            pack_menu.add_option(label=pack, value=pack)
 
         self.add_item(pack_menu)
 
-        msg = "Pick the packs you want to play with cards from. You can pick as many as you like, but you must pick " \
-              "at least one.\n" \
-              "\n" \
-              "(Tip: When in doubt, the CAH Base Set is never a bad choice.)"
-        embed = discord.Embed(title="Pack Selection", description=msg, color=support.Color.mint())
+        msg = (
+            "Pick the packs you want to play with cards from. You can pick as many as you like, but you must pick "
+            "at least one.\n"
+            "\n"
+            "(Tip: When in doubt, the CAH Base Set is never a bad choice.)"
+        )
+        embed = discord.Embed(
+            title="Pack Selection", description=msg, color=support.Color.mint()
+        )
 
-        embed.set_author(name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url)
+        embed.set_author(
+            name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
+        )
 
         await self.ctx.interaction.edit_original_message(embed=embed, view=self)
 
@@ -126,10 +145,14 @@ class CAHCardSelectView(CAHTerminableView):
         self.submission: cah.CAHCandidateCard = None
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        menu: Select = discord.utils.find(
+            lambda x: isinstance(x, Select), self.children
+        )
 
         if not self.candidates:
-            self.candidates = cah.CAHCandidateCard.make_candidates(self.player, *menu.values)
+            self.candidates = cah.CAHCandidateCard.make_candidates(
+                self.player, *menu.values
+            )
 
             if self.game.black_card.pick == 2:
                 self.clear_items()
@@ -143,10 +166,17 @@ class CAHCardSelectView(CAHTerminableView):
                 self.add_item(option2_button)
 
                 msg = "Choose the order in which you want to play your selected cards."
-                embed = discord.Embed(title="Card Order", description=msg, color=support.Color.mint())
-                embed.set_author(name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url)
+                embed = discord.Embed(
+                    title="Card Order", description=msg, color=support.Color.mint()
+                )
+                embed.set_author(
+                    name="Cards Against Humanity",
+                    icon_url=self.ctx.me.display_avatar.url,
+                )
                 for i, option in enumerate(self.candidates):
-                    embed.add_field(name=f"Option {i + 1}", value=option.text, inline=False)
+                    embed.add_field(
+                        name=f"Option {i + 1}", value=option.text, inline=False
+                    )
 
                 await interaction.response.defer()
                 await self.ctx.interaction.edit_original_message(embed=embed, view=self)
@@ -159,7 +189,7 @@ class CAHCardSelectView(CAHTerminableView):
     def get_menu(self):
         menu = Select(
             placeholder=f"Pick {inflect.number_to_words(self.game.black_card.pick)} white "
-                        f"{inflect.plural('card', self.game.black_card.pick)}",
+            f"{inflect.plural('card', self.game.black_card.pick)}",
             min_values=self.game.black_card.pick,
             max_values=self.game.black_card.pick,
         )
@@ -178,13 +208,19 @@ class CAHCardSelectView(CAHTerminableView):
         await self.finish()
 
     async def finish(self):
-        embed = discord.Embed(title=f"{inflect.plural('Card', self.game.black_card.pick)} Played!",
-                              description="Please wait for the other players to finish.",
-                              color=support.Color.mint())
+        embed = discord.Embed(
+            title=f"{inflect.plural('Card', self.game.black_card.pick)} Played!",
+            description="Please wait for the other players to finish.",
+            color=support.Color.mint(),
+        )
 
-        embed.add_field(name="Your Submission", value=self.submission.text, inline=False)
+        embed.add_field(
+            name="Your Submission", value=self.submission.text, inline=False
+        )
 
-        embed.set_author(name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url)
+        embed.set_author(
+            name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
+        )
         await self.ctx.interaction.edit_original_message(embed=embed, view=None)
 
         self.stop()
@@ -192,14 +228,20 @@ class CAHCardSelectView(CAHTerminableView):
     async def select_card(self):
         self.add_item(self.get_menu())
 
-        msg = f"Select {inflect.number_to_words(self.game.black_card.pick)} white " \
-              f"{inflect.plural('card', self.game.black_card.pick)} from the dropdown menu."
+        msg = (
+            f"Select {inflect.number_to_words(self.game.black_card.pick)} white "
+            f"{inflect.plural('card', self.game.black_card.pick)} from the dropdown menu."
+        )
 
-        embed = discord.Embed(title="Card Selection", description=msg, color=support.Color.mint())
+        embed = discord.Embed(
+            title="Card Selection", description=msg, color=support.Color.mint()
+        )
 
         embed.add_field(name="Black Card", value=self.game.black_card.text)
 
-        embed.set_author(name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url)
+        embed.set_author(
+            name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
+        )
 
         await self.ctx.respond(embed=embed, view=self, ephemeral=True)
 
@@ -215,9 +257,13 @@ class CAHVotingView(CAHTerminableView):
         self.selection: cah.CAHCandidateCard = None
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        menu: Select = discord.utils.find(
+            lambda x: isinstance(x, Select), self.children
+        )
 
-        self.selection = discord.utils.find(lambda c: c.uuid == menu.values[0], self.game.candidates)
+        self.selection = discord.utils.find(
+            lambda c: c.uuid == menu.values[0], self.game.candidates
+        )
 
         self.stop()
 
@@ -228,21 +274,33 @@ class CAHVotingView(CAHTerminableView):
             max_values=1,
         )
 
-        msg = "Pick your favorite submission. All submissions are anonymous; you won't know who submitted what " \
-              "until you make your choice."
+        msg = (
+            "Pick your favorite submission. All submissions are anonymous; you won't know who submitted what "
+            "until you make your choice."
+        )
 
         if self.game.settings.use_czar:
-            msg += " The player who made the submission you choose will recieve a point."
+            msg += (
+                " The player who made the submission you choose will recieve a point."
+            )
         else:
             msg += " You cannot vote for your own submission."
 
-        embed = discord.Embed(title="Voting", description=msg, color=support.Color.mint())
-        embed.set_author(name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url)
+        embed = discord.Embed(
+            title="Voting", description=msg, color=support.Color.mint()
+        )
+        embed.set_author(
+            name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
+        )
         embed.add_field(name="Black Card", value=self.game.black_card.text)
 
-        for i, candidate in enumerate([c for c in self.game.candidates if c.player.user != self.ctx.user]):
+        for i, candidate in enumerate(
+            [c for c in self.game.candidates if c.player.user != self.ctx.user]
+        ):
             menu.add_option(label=f"Submission {i + 1}", value=candidate.uuid)
-            embed.add_field(name=f"Submission {i + 1}", value=candidate.text, inline=False)
+            embed.add_field(
+                name=f"Submission {i + 1}", value=candidate.text, inline=False
+            )
 
         self.add_item(menu)
 
@@ -250,12 +308,25 @@ class CAHVotingView(CAHTerminableView):
 
         await self.wait()
 
-        embed = discord.Embed(title="Your Vote", description=self.selection.text, color=support.Color.mint())
-        embed.set_author(name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url)
-        embed.add_field(name="Submitted By", value=f"{self.selection.player.user.mention}", inline=False)
+        embed = discord.Embed(
+            title="Your Vote",
+            description=self.selection.text,
+            color=support.Color.mint(),
+        )
+        embed.set_author(
+            name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
+        )
+        embed.add_field(
+            name="Submitted By",
+            value=f"{self.selection.player.user.mention}",
+            inline=False,
+        )
 
         if not self.game.settings.use_czar:
-            embed.fields[0].value = embed.fields[0].value + "\n\nPlease wait for the other players to finish."
+            embed.fields[0].value = (
+                embed.fields[0].value
+                + "\n\nPlease wait for the other players to finish."
+            )
 
         await self.ctx.interaction.edit_original_message(embed=embed, view=None)
 
@@ -274,7 +345,9 @@ class CAHStatusCenterView(EnhancedView):
         :param interaction: The interaction.
         """
         # get the select menu
-        status_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        status_menu: Select = discord.utils.find(
+            lambda x: isinstance(x, Select), self.children
+        )
 
         choice = status_menu.values[0]
 
@@ -286,7 +359,9 @@ class CAHStatusCenterView(EnhancedView):
 
         # get embed from the appropriate method based on the user's choice
         embed = options[choice]()
-        embed.set_author(name="CAH Status Center", icon_url=self.ctx.me.display_avatar.url)
+        embed.set_author(
+            name="CAH Status Center", icon_url=self.ctx.me.display_avatar.url
+        )
 
         await interaction.response.edit_message(embed=embed)
 
@@ -299,40 +374,74 @@ class CAHStatusCenterView(EnhancedView):
         status_menu = self.get_menu()
         self.add_item(status_menu)
 
-        msg = "Pick an item from the menu below and I'll tell you what you want to know."
+        msg = (
+            "Pick an item from the menu below and I'll tell you what you want to know."
+        )
 
-        embed = discord.Embed(title="Welcome to the CAH Status Center!",
-                              description=msg,
-                              color=support.Color.mint())
+        embed = discord.Embed(
+            title="Welcome to the CAH Status Center!",
+            description=msg,
+            color=support.Color.mint(),
+        )
 
-        embed.set_author(name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url)
+        embed.set_author(
+            name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
+        )
 
         await self.ctx.respond(embed=embed, view=self, ephemeral=True)
 
     def get_menu(self) -> Select:
-        menu = Select(placeholder="What do you want to know?",
-                      min_values=1,
-                      max_values=1)
+        menu = Select(
+            placeholder="What do you want to know?", min_values=1, max_values=1
+        )
 
-        menu.add_option(label="Settings", value="settings", emoji="⚙️", description="See the settings for this game.")
-        menu.add_option(label="Players", value="players", emoji="👥", description="See who's playing this game.")
+        menu.add_option(
+            label="Settings",
+            value="settings",
+            emoji="⚙️",
+            description="See the settings for this game.",
+        )
+        menu.add_option(
+            label="Players",
+            value="players",
+            emoji="👥",
+            description="See who's playing this game.",
+        )
 
         if not self.game.is_joinable:
-            menu.add_option(label="Leaderboard", value="leaderboard", emoji="🏆", description="See the leaderboard.")
+            menu.add_option(
+                label="Leaderboard",
+                value="leaderboard",
+                emoji="🏆",
+                description="See the leaderboard.",
+            )
 
         return menu
 
     def settings(self):
-        return discord.Embed(title="⚙️ Game Settings", description=self.game.settings, color=support.Color.mint())
+        return discord.Embed(
+            title="⚙️ Game Settings",
+            description=self.game.settings,
+            color=support.Color.mint(),
+        )
 
     def players(self):
         embed = discord.Embed(title="👥 Players", color=support.Color.mint())
-        embed.add_field(name="Game Host", value=f"{self.game.host.name} ({self.game.host.mention})", inline=False)
+        embed.add_field(
+            name="Game Host",
+            value=f"{self.game.host.name} ({self.game.host.mention})",
+            inline=False,
+        )
 
         other_players = [p for p in self.game.players if p.user != self.game.host]
-        embed.add_field(name="Other Players",
-                        value="\n".join(f"— {player.user.name} ({player.user.mention})" for player in other_players),
-                        inline=False)
+        embed.add_field(
+            name="Other Players",
+            value="\n".join(
+                f"— {player.user.name} ({player.user.mention})"
+                for player in other_players
+            ),
+            inline=False,
+        )
 
         return embed
 
@@ -353,7 +462,9 @@ class CAHStatusCenterView(EnhancedView):
 
             players += f"— {group[0].points} {inflect.plural('point', group[0].points)}"
 
-            embed.add_field(name=f"{inflect.ordinal(i + 1)} Place", value=players, inline=False)
+            embed.add_field(
+                name=f"{inflect.ordinal(i + 1)} Place", value=players, inline=False
+            )
 
         return embed
 

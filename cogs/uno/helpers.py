@@ -42,10 +42,15 @@ def verify_context(level: str, verify_host: bool = False):
             if uno.UnoGame.retrieve_game(ctx.channel_id):
                 return True
             else:
-                message = f"You can only use {command_name} in designated UNO game threads. " \
-                          f"Head to a game thread and try again."
-                embed = discord.Embed(title="You can't do that here.", description=message,
-                                      color=support.Color.red())
+                message = (
+                    f"You can only use {command_name} in designated UNO game threads. "
+                    f"Head to a game thread and try again."
+                )
+                embed = discord.Embed(
+                    title="You can't do that here.",
+                    description=message,
+                    color=support.Color.red(),
+                )
                 await ctx.respond(embed=embed, ephemeral=True)
 
                 return False
@@ -53,12 +58,19 @@ def verify_context(level: str, verify_host: bool = False):
         async def is_player():
             game = uno.UnoGame.retrieve_game(ctx.channel_id)
 
-            if any(player for player in game.players.itervalues() if player.user == ctx.user):
+            if any(
+                player
+                for player in game.players.itervalues()
+                if player.user == ctx.user
+            ):
                 return True
             else:
                 message = f"Only players in this UNO game can use {command_name}."
-                embed = discord.Embed(title="You're not playing in this game.", description=message,
-                                      color=support.Color.red())
+                embed = discord.Embed(
+                    title="You're not playing in this game.",
+                    description=message,
+                    color=support.Color.red(),
+                )
                 await ctx.respond(embed=embed, ephemeral=True)
 
                 return False
@@ -69,10 +81,15 @@ def verify_context(level: str, verify_host: bool = False):
             if not game.is_joinable:
                 return True
             else:
-                message = f"You can't use {command_name} until the game has started. Wait until the Game Host starts " \
-                          f"the game, then try again."
-                embed = discord.Embed(title="This game hasn't started yet.", description=message,
-                                      color=support.Color.red())
+                message = (
+                    f"You can't use {command_name} until the game has started. Wait until the Game Host starts "
+                    f"the game, then try again."
+                )
+                embed = discord.Embed(
+                    title="This game hasn't started yet.",
+                    description=message,
+                    color=support.Color.red(),
+                )
                 await ctx.respond(embed=embed, ephemeral=True)
 
                 return False
@@ -84,8 +101,11 @@ def verify_context(level: str, verify_host: bool = False):
                 return True
             else:
                 message = f"You can only use {command_name} when it's your turn. Wait your turn, then try again."
-                embed = discord.Embed(title="It's not your turn.", description=message,
-                                      color=support.Color.red())
+                embed = discord.Embed(
+                    title="It's not your turn.",
+                    description=message,
+                    color=support.Color.red(),
+                )
                 await ctx.respond(embed=embed, ephemeral=True)
 
                 return False
@@ -96,9 +116,14 @@ def verify_context(level: str, verify_host: bool = False):
             if game.host == ctx.user:
                 return True
             else:
-                message = f"Only the Game Host for this UNO game can use {command_name}."
-                embed = discord.Embed(title="You're not the Game Host.", description=message,
-                                      color=support.Color.red())
+                message = (
+                    f"Only the Game Host for this UNO game can use {command_name}."
+                )
+                embed = discord.Embed(
+                    title="You're not the Game Host.",
+                    description=message,
+                    color=support.Color.red(),
+                )
                 await ctx.respond(embed=embed, ephemeral=True)
 
                 return False

@@ -13,12 +13,12 @@ from click import Command, Group
 
 
 def get_docs_for_click(
-        *,
-        obj: Command,
-        ctx: typer.Context,
-        indent: int = 0,
-        name: str = "",
-        call_prefix: str = "",
+    *,
+    obj: Command,
+    ctx: typer.Context,
+    indent: int = 0,
+    name: str = "",
+    call_prefix: str = "",
 ) -> str:
     docs = "#" * (1 + indent)
     command_name = name or obj.name

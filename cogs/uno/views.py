@@ -36,6 +36,7 @@ class UnoTerminableConfView(ConfirmationView, UnoTerminableView):
     inherit the functionality of both of those classes, giving :class:`ConfirmationView` objects the auto-terminating
     properties of :class:`UnoTerminableView` objects.
     """
+
     pass
 
 
@@ -94,7 +95,9 @@ class UnoCardSelectView(UnoTerminableView):
         :param interaction: The interaction.
         """
         # get the card selection menu
-        card_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        card_menu: Select = discord.utils.find(
+            lambda x: isinstance(x, Select), self.children
+        )
 
         # if there's no card menu, assume the user clicked a button and return the super call
         if not card_menu:
@@ -126,14 +129,21 @@ class UnoCardSelectView(UnoTerminableView):
             await interaction.response.edit_message(view=self)
         else:
             # if the selected option is a card, find the card with the corresponding UUID in the player's hand
-            played_card: uno.UnoCard = discord.utils.find(lambda x: x.uuid == selected_option, self.player.hand)
+            played_card: uno.UnoCard = discord.utils.find(
+                lambda x: x.uuid == selected_option, self.player.hand
+            )
 
             # verify that the card is playable
             if not self.game.is_card_playable(played_card):
-                msg = "You can only play a card that matches the color or suit of the last card played. " \
-                      "Pick a different card, or draw a card with `/uno draw` if there are no cards you can play."
-                embed = discord.Embed(title="You can't play that card.", description=msg,
-                                      color=support.Color.red())
+                msg = (
+                    "You can only play a card that matches the color or suit of the last card played. "
+                    "Pick a different card, or draw a card with `/uno draw` if there are no cards you can play."
+                )
+                embed = discord.Embed(
+                    title="You can't play that card.",
+                    description=msg,
+                    color=support.Color.red(),
+                )
                 await interaction.response.send_message(embed=embed, ephemeral=True)
                 card_menu.values.clear()
                 await self.ctx.interaction.edit_original_message(view=self)
@@ -150,15 +160,24 @@ class UnoCardSelectView(UnoTerminableView):
         A callback for a button that switches the menu to show all cards in the player's hand.
         """
         self.paginator = self.UnoCardSelectPaginator(
-            pages=DoublyLinkedList([self.cards[i:i + 23] for i in range(0, len(self.cards), 23)])
+            pages=DoublyLinkedList(
+                [self.cards[i : i + 23] for i in range(0, len(self.cards), 23)]
+            )
         )
 
-        msg = f"Pick a card from the dropdown menu. You can play any card that matches the color or suit of the " \
-              f"last card played. You can also play a Wild or Wild Draw Four card, if you have one."
-        msg += f"\n\n{self.game.last_move}" if self.game.last_move else \
-            "\n\nNo cards have been played during this round yet, so you can play any card in your hand."
+        msg = (
+            f"Pick a card from the dropdown menu. You can play any card that matches the color or suit of the "
+            f"last card played. You can also play a Wild or Wild Draw Four card, if you have one."
+        )
+        msg += (
+            f"\n\n{self.game.last_move}"
+            if self.game.last_move
+            else "\n\nNo cards have been played during this round yet, so you can play any card in your hand."
+        )
 
-        embed = discord.Embed(title="Play a Card", description=msg, color=support.Color.mint())
+        embed = discord.Embed(
+            title="Play a Card", description=msg, color=support.Color.mint()
+        )
 
         card_menu = self.get_menu()
         button = self.get_button()
@@ -174,10 +193,17 @@ class UnoCardSelectView(UnoTerminableView):
         A callback for a button that switches the menu to only show cards that can played this round.
         """
 
-        playable_cards = [card for card in self.cards if self.game.is_card_playable(card)]
+        playable_cards = [
+            card for card in self.cards if self.game.is_card_playable(card)
+        ]
         if playable_cards:
             self.paginator = self.UnoCardSelectPaginator(
-                pages=DoublyLinkedList([playable_cards[i:i + 23] for i in range(0, len(playable_cards), 23)])
+                pages=DoublyLinkedList(
+                    [
+                        playable_cards[i : i + 23]
+                        for i in range(0, len(playable_cards), 23)
+                    ]
+                )
             )
 
             card_menu = self.get_menu()
@@ -190,8 +216,9 @@ class UnoCardSelectView(UnoTerminableView):
             await interaction.response.edit_message(view=self)
         else:
             msg = "You have no cards that can be played this turn. You must draw a card with `/uno draw`."
-            embed = discord.Embed(title="No Playable Cards", description=msg,
-                                  color=support.Color.red())
+            embed = discord.Embed(
+                title="No Playable Cards", description=msg, color=support.Color.red()
+            )
 
             button = self.get_button()
             self.clear_items()
@@ -200,7 +227,10 @@ class UnoCardSelectView(UnoTerminableView):
             await interaction.response.edit_message(embed=embed, view=self)
 
     def get_button(self):
-        if discord.utils.find(lambda x: isinstance(x, Button) and x.label == "Show Playable Cards", self.children):
+        if discord.utils.find(
+            lambda x: isinstance(x, Button) and x.label == "Show Playable Cards",
+            self.children,
+        ):
             button = Button(label="Show All Cards", style=ButtonStyle.secondary)
             button.callback = self.show_all_cards
             return button
@@ -216,7 +246,9 @@ class UnoCardSelectView(UnoTerminableView):
         placeholder = "Pick a card, any card!"
 
         if len(self.paginator.pages) > 1:
-            placeholder += f" (Page {self.paginator.page_number} of {len(self.paginator.pages)})"
+            placeholder += (
+                f" (Page {self.paginator.page_number} of {len(self.paginator.pages)})"
+            )
 
         card_menu = Select(
             placeholder=placeholder,
@@ -243,12 +275,19 @@ class UnoCardSelectView(UnoTerminableView):
 
         self.add_item(self.get_button())
 
-        msg = f"Pick a card from the dropdown menu. You can play any card that matches the color or suit of the " \
-              f"last card played. You can also play a Wild or Wild Draw Four card, if you have one."
-        msg += f"\n\n{self.game.last_move}" if self.game.last_move else \
-            "\n\nNo cards have been played during this round yet, so you can play any card in your hand."
+        msg = (
+            f"Pick a card from the dropdown menu. You can play any card that matches the color or suit of the "
+            f"last card played. You can also play a Wild or Wild Draw Four card, if you have one."
+        )
+        msg += (
+            f"\n\n{self.game.last_move}"
+            if self.game.last_move
+            else "\n\nNo cards have been played during this round yet, so you can play any card in your hand."
+        )
 
-        embed = discord.Embed(title="Play a Card", description=msg, color=support.Color.mint())
+        embed = discord.Embed(
+            title="Play a Card", description=msg, color=support.Color.mint()
+        )
         await self.ctx.respond(embed=embed, view=self, ephemeral=True)
 
         await self.wait()
@@ -290,11 +329,15 @@ class UnoDrawCardView(UnoTerminableView):
         """
         Sends the draw card menu and an accompanying message to the player in chat.
         """
-        msg = "You can choose to either a) draw a card normally, or b) draw a card and, if possible, play it " \
-              "automatically. Note that Wild and Wild Draw Four cards will never be played automatically.\n" \
-              "\n" \
-              "Drawing a card will end your turn."
-        embed = discord.Embed(title="Draw a Card", description=msg, color=support.Color.mint())
+        msg = (
+            "You can choose to either a) draw a card normally, or b) draw a card and, if possible, play it "
+            "automatically. Note that Wild and Wild Draw Four cards will never be played automatically.\n"
+            "\n"
+            "Drawing a card will end your turn."
+        )
+        embed = discord.Embed(
+            title="Draw a Card", description=msg, color=support.Color.mint()
+        )
         await self.ctx.respond(embed=embed, view=self, ephemeral=True)
 
         await self.wait()
@@ -303,7 +346,9 @@ class UnoDrawCardView(UnoTerminableView):
             await self.ctx.interaction.edit_original_message(view=None)
         else:
             msg = "Okay! Make your move whenever you're ready."
-            await self.ctx.interaction.edit_original_message(content=msg, embed=None, view=None)
+            await self.ctx.interaction.edit_original_message(
+                content=msg, embed=None, view=None
+            )
 
 
 class WildColorSelectView(UnoTerminableView):
@@ -349,10 +394,14 @@ class WildColorSelectView(UnoTerminableView):
         """
         Sends the color selection menu and an accompanying message to the player in chat.
         """
-        msg = "Since you played a Wild card, you get to choose the next color in play. The next player will be " \
-              "able to play any card that matches the color you select (or a Wild card of their own, of course)."
+        msg = (
+            "Since you played a Wild card, you get to choose the next color in play. The next player will be "
+            "able to play any card that matches the color you select (or a Wild card of their own, of course)."
+        )
 
-        embed = discord.Embed(title="Color Selection", description=msg, color=support.Color.mint())
+        embed = discord.Embed(
+            title="Color Selection", description=msg, color=support.Color.mint()
+        )
 
         await self.ctx.interaction.edit_original_message(embed=embed, view=self)
 
@@ -366,16 +415,20 @@ class WildColorSelectView(UnoTerminableView):
                 "yellow": support.Color.yellow(),
             }
 
-            embed = discord.Embed(title="Color in Play Changed",
-                                  description=f"You changed the color in play to "
-                                              f"**{self.game.color_in_play.title()}**.",
-                                  color=embed_colors[self.game.color_in_play.casefold()])
+            embed = discord.Embed(
+                title="Color in Play Changed",
+                description=f"You changed the color in play to "
+                f"**{self.game.color_in_play.title()}**.",
+                color=embed_colors[self.game.color_in_play.casefold()],
+            )
             await self.ctx.interaction.edit_original_message(embed=embed, view=None)
 
         elif self.success is False:
             msg = "Okay! You can select a different card with `/uno play`."
             # await prompt.edit(content=msg, embed=None, view=None)
-            await self.ctx.interaction.edit_original_message(content=msg, embed=None, view=None)
+            await self.ctx.interaction.edit_original_message(
+                content=msg, embed=None, view=None
+            )
         return self.success
 
 
@@ -399,7 +452,9 @@ class UnoStatusCenterView(EnhancedView):
         :param interaction: The interaction.
         """
         # get the select menu
-        status_menu: Select = discord.utils.find(lambda x: isinstance(x, Select), self.children)
+        status_menu: Select = discord.utils.find(
+            lambda x: isinstance(x, Select), self.children
+        )
 
         choice = status_menu.values[0]
 
@@ -414,7 +469,9 @@ class UnoStatusCenterView(EnhancedView):
 
         # get embeds from the appropriate method based on the user's choice
         embeds = options[choice]
-        embeds[0].set_author(name="UNO Status Center", icon_url=self.ctx.me.display_avatar.url)
+        embeds[0].set_author(
+            name="UNO Status Center", icon_url=self.ctx.me.display_avatar.url
+        )
 
         await interaction.response.edit_message(embeds=embeds)
 
@@ -424,35 +481,59 @@ class UnoStatusCenterView(EnhancedView):
         """
         Creates the UNO Status Center's menu.
         """
-        status_menu = Select(placeholder="What do you want to know?",
-                             min_values=1,
-                             max_values=1)
+        status_menu = Select(
+            placeholder="What do you want to know?", min_values=1, max_values=1
+        )
 
         # these options are always available
 
-        status_menu.add_option(label="Game Settings", value="settings", emoji="⚙️",
-                               description="See the settings for this game.")
+        status_menu.add_option(
+            label="Game Settings",
+            value="settings",
+            emoji="⚙️",
+            description="See the settings for this game.",
+        )
 
-        status_menu.add_option(label="Players", value="players", emoji="👥",
-                               description="See who's playing in this game.")
+        status_menu.add_option(
+            label="Players",
+            value="players",
+            emoji="👥",
+            description="See who's playing in this game.",
+        )
 
         # these options are only available after the game has started
 
         if not self.status.game.is_joinable:
-            status_menu.add_option(label="Turn Order", value="turn", emoji="🕒",
-                                   description="See the current turn order.")
+            status_menu.add_option(
+                label="Turn Order",
+                value="turn",
+                emoji="🕒",
+                description="See the current turn order.",
+            )
 
-            status_menu.add_option(label="Leaderboard", value="leaderboard", emoji="🏆",
-                                   description="See the leaderboard.")
+            status_menu.add_option(
+                label="Leaderboard",
+                value="leaderboard",
+                emoji="🏆",
+                description="See the leaderboard.",
+            )
 
-            status_menu.add_option(label="Last Turn", value="last", emoji="⏪",
-                                   description="See what happened last turn.")
+            status_menu.add_option(
+                label="Last Turn",
+                value="last",
+                emoji="⏪",
+                description="See what happened last turn.",
+            )
 
             # this option is only available if the user is a player in the game
 
             if self.game.retrieve_player(self.invoker) is not None:
-                status_menu.add_option(label="Your Stats", value="mystats", emoji="📊",
-                                       description="See your personal game stats.")
+                status_menu.add_option(
+                    label="Your Stats",
+                    value="mystats",
+                    emoji="📊",
+                    description="See your personal game stats.",
+                )
 
         return status_menu
 
@@ -463,11 +544,15 @@ class UnoStatusCenterView(EnhancedView):
         status_menu = self.create_menu()
         self.add_item(status_menu)
 
-        msg = "Pick an item from the menu below and I'll tell you what you want to know."
+        msg = (
+            "Pick an item from the menu below and I'll tell you what you want to know."
+        )
 
-        embed = discord.Embed(title="Welcome to the UNO Status Center!",
-                              description=msg,
-                              color=support.Color.mint())
+        embed = discord.Embed(
+            title="Welcome to the UNO Status Center!",
+            description=msg,
+            color=support.Color.mint(),
+        )
 
         embed.set_author(name="UNO", icon_url=self.ctx.me.display_avatar.url)
 
@@ -479,7 +564,9 @@ class UnoStatusCenterView(EnhancedView):
         """
         settings = self.status.get_game_settings()
 
-        embed = discord.Embed(title="⚙️ Game Settings", description=settings, color=support.Color.mint())
+        embed = discord.Embed(
+            title="⚙️ Game Settings", description=settings, color=support.Color.mint()
+        )
 
         return [embed]
 
@@ -503,7 +590,9 @@ class UnoStatusCenterView(EnhancedView):
 
         msg += "\n\n(👑 = Game Host)"
 
-        embed = discord.Embed(title="👥 Players", description=msg, color=support.Color.mint())
+        embed = discord.Embed(
+            title="👥 Players", description=msg, color=support.Color.mint()
+        )
 
         return [embed]
 
@@ -521,16 +610,26 @@ class UnoStatusCenterView(EnhancedView):
             else:
                 string += f"{player.user.name}"
 
-            if self.status.game.retrieve_player(player.user, return_node=True) == self.status.game.current_player:
+            if (
+                self.status.game.retrieve_player(player.user, return_node=True)
+                == self.status.game.current_player
+            ):
                 string = f"**{string}**"
 
             string += f" ({player.user.mention})"
 
             return string
 
-        msg = "\n".join(string_builder(index, player) for index, player in enumerate(turn_order)) + "\n"
+        msg = (
+            "\n".join(
+                string_builder(index, player) for index, player in enumerate(turn_order)
+            )
+            + "\n"
+        )
 
-        embed = discord.Embed(title="🕒 Turn Order", description=msg, color=support.Color.mint())
+        embed = discord.Embed(
+            title="🕒 Turn Order", description=msg, color=support.Color.mint()
+        )
 
         return [embed]
 
@@ -558,7 +657,9 @@ class UnoStatusCenterView(EnhancedView):
                     # if there are multiple but less than four players in last place, print all of their names
                     elif len(group) <= 3:
                         string += ", & ".join(
-                            f"{index + 1}. {', '.join(player.user.name for player in group)}".rsplit(",", 1)
+                            f"{index + 1}. {', '.join(player.user.name for player in group)}".rsplit(
+                                ",", 1
+                            )
                         )
 
                     # if there are four or more players in last place, print the first player's name + "everyone else"
@@ -567,13 +668,20 @@ class UnoStatusCenterView(EnhancedView):
 
                     string += f" — {group[0].points} points"
                 else:
-                    string += "&".join(
-                        f"{index + 1}. {', '.join(player.user.name for player in group)}".rsplit(",", 1)
-                    ) + f" — {group[0].points} points"
+                    string += (
+                        "&".join(
+                            f"{index + 1}. {', '.join(player.user.name for player in group)}".rsplit(
+                                ",", 1
+                            )
+                        )
+                        + f" — {group[0].points} points"
+                    )
 
                 string += "\n"
 
-        embed = discord.Embed(title="🏆 Leaderboard", description=string, color=support.Color.mint())
+        embed = discord.Embed(
+            title="🏆 Leaderboard", description=string, color=support.Color.mint()
+        )
 
         return [embed]
 
@@ -588,7 +696,9 @@ class UnoStatusCenterView(EnhancedView):
         if turn_record:
             embed.description = "Here's what happened last turn:"
         else:
-            embed.description = "Nothing's happened this round yet. Check back once something happens."
+            embed.description = (
+                "Nothing's happened this round yet. Check back once something happens."
+            )
 
         return [embed] + self.status.get_last_turn()
 

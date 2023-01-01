@@ -21,6 +21,7 @@ import support
 
 # decorators
 
+
 def is_celsius_narhwal(user: discord.User = None):
     """
     A function that checks if a given user is 3515.games' owner, celsiusnarhwal#3515.
@@ -34,7 +35,9 @@ def is_celsius_narhwal(user: discord.User = None):
             return True
         else:
             msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
-            embed = discord.Embed(title="You can't do that.", description=msg, color=support.Color.red())
+            embed = discord.Embed(
+                title="You can't do that.", description=msg, color=support.Color.red()
+            )
             await ctx.respond(embed=embed, ephemeral=True)
 
             return False
@@ -56,14 +59,23 @@ def bot_has_permissions(expected_permissions: discord.Permissions):
         if actual_permissions >= expected_permissions:
             return True
         else:
-            message = f"I'm missing the following permissions that I need in order to use " \
-                      f"`/{ctx.command.qualified_name}` in this channel: \n\n"
+            message = (
+                f"I'm missing the following permissions that I need in order to use "
+                f"`/{ctx.command.qualified_name}` in this channel: \n\n"
+            )
 
-            message += "\n".join(f"- {p}" for p in alianator.resolve(expected_permissions - actual_permissions))
+            message += "\n".join(
+                f"- {p}"
+                for p in alianator.resolve(expected_permissions - actual_permissions)
+            )
 
             message += "\n\n Once I've been given those permissions, try again."
 
-            embed = discord.Embed(title="I need more power!", description=message, color=support.Color.red())
+            embed = discord.Embed(
+                title="I need more power!",
+                description=message,
+                color=support.Color.red(),
+            )
 
             await ctx.respond(embed=embed, ephemeral=True)
 
@@ -82,10 +94,15 @@ def invoked_in_text_channel():
         if isinstance(ctx.channel, discord.TextChannel):
             return True
         else:
-            message = f"You can only use {command_name} in regular text channels - not threads. " \
-                      f"Go to a text channel, then try again."
-            embed = discord.Embed(title="You can't do that in a thread.", description=message,
-                                  color=support.Color.red())
+            message = (
+                f"You can only use {command_name} in regular text channels - not threads. "
+                f"Go to a text channel, then try again."
+            )
+            embed = discord.Embed(
+                title="You can't do that in a thread.",
+                description=message,
+                color=support.Color.red(),
+            )
 
             await ctx.respond(embed=embed, ephemeral=True)
             return False
@@ -95,7 +112,10 @@ def invoked_in_text_channel():
 
 # miscellaneous
 
-def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary) -> list[pages.PaginatorButton]:
+
+def pagimoji(
+    button_style: ButtonStyle = ButtonStyle.secondary,
+) -> list[pages.PaginatorButton]:
     """
     Returns a list of emoji buttons for use with :class:`discord.ext.pages.Paginator`
     objects.
@@ -105,9 +125,11 @@ def paginator_emoji_buttons(button_style: ButtonStyle = ButtonStyle.secondary) -
     return [
         pages.PaginatorButton("first", label="", emoji="⏮", style=button_style),
         pages.PaginatorButton("prev", label="", emoji="⏪", style=button_style),
-        pages.PaginatorButton("page_indicator", label="", style=ButtonStyle.gray, disabled=True),
+        pages.PaginatorButton(
+            "page_indicator", label="", style=ButtonStyle.gray, disabled=True
+        ),
         pages.PaginatorButton("next", label="", emoji="⏩", style=button_style),
-        pages.PaginatorButton("last", label="", emoji="⏭", style=button_style)
+        pages.PaginatorButton("last", label="", emoji="⏭", style=button_style),
     ]
 
 
@@ -137,7 +159,7 @@ def split_list(seq: list, size: int) -> list:
     :param seq: The list to split.
     :param size: The size of each sublist.
     """
-    return [seq[i:i + size] for i in range(0, len(seq), size)]
+    return [seq[i : i + size] for i in range(0, len(seq), size)]
 
 
 def pyproject() -> TOMLDocument:

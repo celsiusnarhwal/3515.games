@@ -69,50 +69,70 @@ class CAHGame(HostedMultiplayerGame):
         """
 
         if return_node:
-            return discord.utils.find(lambda node: node.value.user.id == user.id, self.players.iternodes())
+            return discord.utils.find(
+                lambda node: node.value.user.id == user.id, self.players.iternodes()
+            )
         else:
-            return discord.utils.find(lambda player: player.user.id == user.id, self.players.itervalues())
+            return discord.utils.find(
+                lambda player: player.user.id == user.id, self.players.itervalues()
+            )
 
     async def open_lobby(self):
         """
         Sends an introductory message at the creation of an CAH game thread and pins said message to that thread.
         """
-        intro_message = f"{self.host.mention} is the Game Host.\n" \
-                        f"\n" \
-                        f"To **join**, type `/cah join`. \n" \
-                        f"\n" \
-                        f"To **spectate**, you don't have to do anything! Anyone can spectate " \
-                        f"by simply being in the thread.\n" \
-                        f"\n" \
-                        f"@everyone mentions will be used to notify players of important game events. Players are " \
-                        f"advised to make sure their notification settings for this server are __not__ set to " \
-                        f"suppress @everyone mentions.\n" \
-                        f"\n" \
-                        f"If you're a spectator, you'll also be pinged by these " \
-                        f"@everyone mentions. If that's a problem, you'll have to either suppress @everyone mentions " \
-                        f"in your notification settings for this server or stop spectating and leave the thread.\n" \
-                        f"\n" \
-                        f"The Game Host can begin the game at any time with `/cah host start`. Once the game " \
-                        f"has begun, no new players will be able to join."
+        intro_message = (
+            f"{self.host.mention} is the Game Host.\n"
+            f"\n"
+            f"To **join**, type `/cah join`. \n"
+            f"\n"
+            f"To **spectate**, you don't have to do anything! Anyone can spectate "
+            f"by simply being in the thread.\n"
+            f"\n"
+            f"@everyone mentions will be used to notify players of important game events. Players are "
+            f"advised to make sure their notification settings for this server are __not__ set to "
+            f"suppress @everyone mentions.\n"
+            f"\n"
+            f"If you're a spectator, you'll also be pinged by these "
+            f"@everyone mentions. If that's a problem, you'll have to either suppress @everyone mentions "
+            f"in your notification settings for this server or stop spectating and leave the thread.\n"
+            f"\n"
+            f"The Game Host can begin the game at any time with `/cah host start`. Once the game "
+            f"has begun, no new players will be able to join."
+        )
 
-        intro_embed = discord.Embed(title=f"Welcome to {posessive(self.host.name)} Cards Against Humanity game!",
-                                    description=intro_message,
-                                    color=support.Color.mint())
+        intro_embed = discord.Embed(
+            title=f"Welcome to {posessive(self.host.name)} Cards Against Humanity game!",
+            description=intro_message,
+            color=support.Color.mint(),
+        )
 
-        settings_embed = discord.Embed(title="Game Settings", description=str(self.settings),
-                                       color=support.Color.mint())
+        settings_embed = discord.Embed(
+            title="Game Settings",
+            description=str(self.settings),
+            color=support.Color.mint(),
+        )
 
-        self.lobby_intro_msg = await self.thread.send(embeds=[intro_embed, settings_embed])
+        self.lobby_intro_msg = await self.thread.send(
+            embeds=[intro_embed, settings_embed]
+        )
         await self.lobby_intro_msg.pin()
 
         if self.settings.use_voice:
             await self.create_voice_channel()
-            vc_msg = f"Cards Against Humanity is even better with voice chat! Joining the game will grant you access " \
-                     f"a private voice channel just for you and the other players. You're not required to use the " \
-                     f"channel to play - I think it's more fun if you do, though."
-            vc_embed = discord.Embed(title="Join the voice channel!", description=vc_msg,
-                                     color=support.Color.magenta())
-            await self.thread.send(embed=vc_embed, view=cah.CAHVoiceURLView(self.voice_channel))
+            vc_msg = (
+                f"Cards Against Humanity is even better with voice chat! Joining the game will grant you access "
+                f"a private voice channel just for you and the other players. You're not required to use the "
+                f"channel to play - I think it's more fun if you do, though."
+            )
+            vc_embed = discord.Embed(
+                title="Join the voice channel!",
+                description=vc_msg,
+                color=support.Color.magenta(),
+            )
+            await self.thread.send(
+                embed=vc_embed, view=cah.CAHVoiceURLView(self.voice_channel)
+            )
 
     async def create_voice_channel(self) -> discord.VoiceChannel:
         """
@@ -120,44 +140,59 @@ class CAHGame(HostedMultiplayerGame):
         """
         guild_categories = self.guild.by_category()
         my_category = discord.utils.find(
-            lambda c: c[0] is not None and c[0].name.casefold() == "3515.games", guild_categories
+            lambda c: c[0] is not None and c[0].name.casefold() == "3515.games",
+            guild_categories,
         )
         if my_category:
             my_category = my_category[0]
         else:
-            my_category = await self.guild.create_category("3515.games", position=len(guild_categories) + 1)
+            my_category = await self.guild.create_category(
+                "3515.games", position=len(guild_categories) + 1
+            )
 
         overwrites = {
             self.guild.me: discord.PermissionOverwrite.from_pair(
-                allow=support.GamePermissions.cah() + support.GamePermissions.cah_voice(),
-                deny=discord.Permissions.none()
+                allow=support.GamePermissions.cah()
+                + support.GamePermissions.cah_voice(),
+                deny=discord.Permissions.none(),
             ),
-
             self.guild.default_role: discord.PermissionOverwrite.from_pair(
                 allow=discord.Permissions.none(),
-                deny=support.GamePermissions.cah() + support.GamePermissions.cah_voice()
-            )
+                deny=support.GamePermissions.cah()
+                + support.GamePermissions.cah_voice(),
+            ),
         }
 
-        self.voice_channel = await my_category.create_voice_channel(f"{self.short_name} with {self.host.name}!",
-                                                                    overwrites=overwrites)
+        self.voice_channel = await my_category.create_voice_channel(
+            f"{self.short_name} with {self.host.name}!", overwrites=overwrites
+        )
 
-        embed = discord.Embed(title="Nothing to see (or say) here.",
-                              description="You should head to the game thread instead.",
-                              color=support.Color.red())
+        embed = discord.Embed(
+            title="Nothing to see (or say) here.",
+            description="You should head to the game thread instead.",
+            color=support.Color.red(),
+        )
 
-        await self.voice_channel.send(embed=embed, view=support.GameThreadURLView(self.thread))
+        await self.voice_channel.send(
+            embed=embed, view=support.GameThreadURLView(self.thread)
+        )
 
     async def send_vc_deletion_warning(self):
         """
         Sends a warning message to the game thread that the voice channel has been deleted.
         """
-        msg = "A moderator has deleted the voice channel for this game. That's fine - " \
-              "the game will continue on without it."
-        embed = discord.Embed(title="Voice Channel Deleted", description=msg, color=support.Color.red())
+        msg = (
+            "A moderator has deleted the voice channel for this game. That's fine - "
+            "the game will continue on without it."
+        )
+        embed = discord.Embed(
+            title="Voice Channel Deleted", description=msg, color=support.Color.red()
+        )
         await self.thread.send(content="@everyone", embed=embed)
 
-    async def add_player(self, ctx: discord.ApplicationContext, user: discord.User, is_host=False):
+    async def add_player(
+        self, ctx: discord.ApplicationContext, user: discord.User, is_host=False
+    ):
         """
         Adds a player to a not-yet-started CAH game.
 
@@ -171,41 +206,54 @@ class CAHGame(HostedMultiplayerGame):
         player = CAHPlayer(user=user, game=self)
         self.players.append(player)
 
-        join_message_embed = discord.Embed(title="A new player has joined the game!",
-                                           description=f"{user.mention} joined the game. Say hello!",
-                                           color=support.Color.mint())
+        join_message_embed = discord.Embed(
+            title="A new player has joined the game!",
+            description=f"{user.mention} joined the game. Say hello!",
+            color=support.Color.mint(),
+        )
 
         await self.thread.send(embed=join_message_embed)
 
         if self.voice_channel:
             await self.voice_channel.set_permissions(
-                target=player.user,
-                overwrite=player.voice_overwrites()
+                target=player.user, overwrite=player.voice_overwrites()
             )
 
         if not is_host:
-            msg = f"If you didn't mean to join, you can leave the game with `/cah leave`. You can leave at any time, " \
-                  f"but if the game has already started, you won't be able to rejoin.\n" \
-                  f"\n" \
-                  f"Be advised that the Game Host, {self.host.mention}, can kick you at any time, " \
-                  f"and if you go AFK mid-game, I'll have you automatically removed for inactivity. Please remember " \
-                  f"to be courteous to your fellow players.\n" \
-                  f"\n" \
-                  f"Have fun!"
+            msg = (
+                f"If you didn't mean to join, you can leave the game with `/cah leave`. You can leave at any time, "
+                f"but if the game has already started, you won't be able to rejoin.\n"
+                f"\n"
+                f"Be advised that the Game Host, {self.host.mention}, can kick you at any time, "
+                f"and if you go AFK mid-game, I'll have you automatically removed for inactivity. Please remember "
+                f"to be courteous to your fellow players.\n"
+                f"\n"
+                f"Have fun!"
+            )
 
-            embed = discord.Embed(title=f"Welcome to Cards Against Humanity, {user.name}!", description=msg,
-                                  color=support.Color.mint())
+            embed = discord.Embed(
+                title=f"Welcome to Cards Against Humanity, {user.name}!",
+                description=msg,
+                color=support.Color.mint(),
+            )
 
             if self.voice_channel:
-                vc_msg = f"Cards Against Humanity is best played with voice chat! You can join this game's private " \
-                         f"voice channel, {self.voice_channel.mention}, by selecting it in the channel list or " \
-                         f"using the button below."
-                embed.add_field(name="Join the voice channel!", value=vc_msg, inline=False)
+                vc_msg = (
+                    f"Cards Against Humanity is best played with voice chat! You can join this game's private "
+                    f"voice channel, {self.voice_channel.mention}, by selecting it in the channel list or "
+                    f"using the button below."
+                )
+                embed.add_field(
+                    name="Join the voice channel!", value=vc_msg, inline=False
+                )
 
-            await ctx.respond(embed=embed,
-                              ephemeral=True,
-                              view=cah.CAHVoiceURLView(self.voice_channel) if
-                              self.voice_channel else None)
+            await ctx.respond(
+                embed=embed,
+                ephemeral=True,
+                view=cah.CAHVoiceURLView(self.voice_channel)
+                if self.voice_channel
+                else None,
+            )
 
     async def remove_player(self, player_node: dllistnode):
         """
@@ -216,9 +264,11 @@ class CAHGame(HostedMultiplayerGame):
 
         player: CAHPlayer = player_node.value
 
-        embed = discord.Embed(title="A player has left the game.",
-                              description=f"{player.user.mention} has left the game.",
-                              color=support.Color.red())
+        embed = discord.Embed(
+            title="A player has left the game.",
+            description=f"{player.user.mention} has left the game.",
+            color=support.Color.red(),
+        )
 
         await self.thread.send(embed=embed)
 
@@ -237,15 +287,23 @@ class CAHGame(HostedMultiplayerGame):
             if player == self.card_czar.value:
                 self.card_czar = self.card_czar.next
                 msg = f"{self.card_czar.value.user.mention} is now the Card Czar."
-                embed = discord.Embed(title="The Card Czar has changed!", description=msg, color=support.Color.orange())
+                embed = discord.Embed(
+                    title="The Card Czar has changed!",
+                    description=msg,
+                    color=support.Color.orange(),
+                )
                 embed.set_thumbnail(url=self.card_czar.value.user.display_avatar.url)
 
-                await self.thread.send(content=f"{self.card_czar.value.user.mention}, you are now the Card Czar.",
-                                       embed=embed)
+                await self.thread.send(
+                    content=f"{self.card_czar.value.user.mention}, you are now the Card Czar.",
+                    embed=embed,
+                )
             else:
                 await player.force_pick()
 
-        player_candidate = discord.utils.find(lambda c: c.player == player, self.candidates)
+        player_candidate = discord.utils.find(
+            lambda c: c.player == player, self.candidates
+        )
         if player_candidate:
             self.candidates.remove(player_candidate)
 
@@ -262,18 +320,22 @@ class CAHGame(HostedMultiplayerGame):
         :param player: The CAHPlayer object corresponding to the player to be kicked.
         """
         msg = f"{player.user.mention} has been removed for inactivity."
-        embed = discord.Embed(title="Player Kicked",
-                              description=msg,
-                              color=support.Color.red())
+        embed = discord.Embed(
+            title="Player Kicked", description=msg, color=support.Color.red()
+        )
 
         await self.thread.send(embed=embed)
         await self.remove_player(self.retrieve_player(player.user, return_node=True))
 
-        msg = f"You were removed from {self.host.mention}'s Cards Against Humanity game in {self.guild.name} " \
-              f"for inactivity."
-        embed = discord.Embed(title=f"You timed out of {self.host.name}'s Cards Against Humanity game.",
-                              description=msg,
-                              color=support.Color.red())
+        msg = (
+            f"You were removed from {self.host.mention}'s Cards Against Humanity game in {self.guild.name} "
+            f"for inactivity."
+        )
+        embed = discord.Embed(
+            title=f"You timed out of {self.host.name}'s Cards Against Humanity game.",
+            description=msg,
+            color=support.Color.red(),
+        )
 
         await player.user.send(embed=embed)
 
@@ -286,27 +348,41 @@ class CAHGame(HostedMultiplayerGame):
 
         random.shuffle(self.players)
 
-        msg = "In Cards Against Humanity, your goal is to earn points by being funny. For some of you, this will " \
-              "be a very challenging task.\n" \
-              "\n" \
-              "Every round, you'll be given a fill-in-the-blank prompt in the form of a " \
-              "black card. You'll then use `/cah play` to fill in those blanks with the funniest white cards that " \
-              "happen to be at your disposal."
+        msg = (
+            "In Cards Against Humanity, your goal is to earn points by being funny. For some of you, this will "
+            "be a very challenging task.\n"
+            "\n"
+            "Every round, you'll be given a fill-in-the-blank prompt in the form of a "
+            "black card. You'll then use `/cah play` to fill in those blanks with the funniest white cards that "
+            "happen to be at your disposal."
+        )
 
         if self.settings.use_czar:
-            msg += " Once everyone has played a white card, the Card Czar will pick whatever submission they " \
-                   "think is funniest, and whoever played it gets a point."
+            msg += (
+                " Once everyone has played a white card, the Card Czar will pick whatever submission they "
+                "think is funniest, and whoever played it gets a point."
+            )
         else:
-            msg += "Once everyone has played a white card, all players will vote on what they think the funniest " \
-                   "submission is. Whichever player played the card that recieved the most votes will get a point."
+            msg += (
+                "Once everyone has played a white card, all players will vote on what they think the funniest "
+                "submission is. Whichever player played the card that recieved the most votes will get a point."
+            )
 
-        msg += f" The first player to reach **{self.settings.points_to_win} points** wins the game.\n" \
-               f"\n" \
-               f"Let's play!"
+        msg += (
+            f" The first player to reach **{self.settings.points_to_win} points** wins the game.\n"
+            f"\n"
+            f"Let's play!"
+        )
 
-        embed = discord.Embed(title="Let's play Cards Against Humanity!", description=msg, color=support.Color.mint())
-        embed.set_footer(text="Legal: Writing from Cards Against Humanity is licensed under CC BY-NC-SA 4.0. "
-                              "3515.games is not affiliated with or endorsed by Cards Against Humanity, LLC.")
+        embed = discord.Embed(
+            title="Let's play Cards Against Humanity!",
+            description=msg,
+            color=support.Color.mint(),
+        )
+        embed.set_footer(
+            text="Legal: Writing from Cards Against Humanity is licensed under CC BY-NC-SA 4.0. "
+            "3515.games is not affiliated with or endorsed by Cards Against Humanity, LLC."
+        )
 
         with support.Assets.cah():
             cah_logo = discord.File("cah_logo.png", filename="cah_logo.png")
@@ -320,7 +396,9 @@ class CAHGame(HostedMultiplayerGame):
             player.add_cards(10)
 
         msg = "10 white cards have been dealt to each player. Check them out with `/cah hand`."
-        embed = discord.Embed(title="The game begins!", description=msg, color=support.Color.mint())
+        embed = discord.Embed(
+            title="The game begins!", description=msg, color=support.Color.mint()
+        )
         await self.thread.send(embed=embed)
 
         await asyncio.sleep(2)
@@ -332,25 +410,34 @@ class CAHGame(HostedMultiplayerGame):
         Starts a new round of a CAH game.
         """
         self.turn_uuid = shortuuid.uuid()
-        self.card_czar = self.card_czar.next if self.card_czar and self.card_czar.next else self.players.first
+        self.card_czar = (
+            self.card_czar.next
+            if self.card_czar and self.card_czar.next
+            else self.players.first
+        )
         self.black_card = self.cardset.get_random_black()
         self.candidates.clear()
 
         for player in self.players.itervalues():
             player.has_submitted = False
 
-        card_embed = discord.Embed(title="Black Card",
-                                   description=self.black_card.text,
-                                   color=support.Color.black())
+        card_embed = discord.Embed(
+            title="Black Card",
+            description=self.black_card.text,
+            color=support.Color.black(),
+        )
         card_embed.set_footer(
             text=f"{self.card_czar.value.user.name} is the Card Czar.",
-            icon_url=self.card_czar.value.user.display_avatar.url
+            icon_url=self.card_czar.value.user.display_avatar.url,
         )
 
-        await self.thread.send(content=f"@everyone Pick {inflect.number_to_words(self.black_card.pick)} "
-                                       f"white {inflect.plural('card', self.black_card.pick)} with "
-                                       f"`/cah play`. {self.card_czar.value.user.mention} is the "
-                                       f"Card Czar.", embed=card_embed)
+        await self.thread.send(
+            content=f"@everyone Pick {inflect.number_to_words(self.black_card.pick)} "
+            f"white {inflect.plural('card', self.black_card.pick)} with "
+            f"`/cah play`. {self.card_czar.value.user.mention} is the "
+            f"Card Czar.",
+            embed=card_embed,
+        )
 
         await self.turn_timer()
 
@@ -362,16 +449,23 @@ class CAHGame(HostedMultiplayerGame):
         self.is_voting = True
 
         msg = f"**{self.card_czar.value.user.name}** is the Card Czar."
-        embed = discord.Embed(title="It's voting time!", description=msg, color=support.Color.mint())
+        embed = discord.Embed(
+            title="It's voting time!", description=msg, color=support.Color.mint()
+        )
         embed.set_thumbnail(url=self.card_czar.value.user.display_avatar.url)
 
         for i, candidate in enumerate(self.candidates):
-            embed.add_field(name=f"Submission {i + 1}", value=candidate.text, inline=True)
+            embed.add_field(
+                name=f"Submission {i + 1}", value=candidate.text, inline=True
+            )
             if i + 1 % 3 == 0:
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
 
-        await self.thread.send(content=f"{self.card_czar.value.user.mention} Select your favorite submission "
-                                       f"with `/cah vote`.", embed=embed)
+        await self.thread.send(
+            content=f"{self.card_czar.value.user.mention} Select your favorite submission "
+            f"with `/cah vote`.",
+            embed=embed,
+        )
 
         await self.turn_timer()
 
@@ -400,11 +494,13 @@ class CAHGame(HostedMultiplayerGame):
         else:
             msg = "The players have "
 
-        msg += f"chosen {victor.user.mention}'s submission.\n" \
-               f"\n" \
-               f"**{victor.user.name}** now has **{victor.points} " \
-               f"{inflect.plural('point', victor.points)}**, putting them in " \
-               f"{victor.get_ranking()} place"
+        msg += (
+            f"chosen {victor.user.mention}'s submission.\n"
+            f"\n"
+            f"**{victor.user.name}** now has **{victor.points} "
+            f"{inflect.plural('point', victor.points)}**, putting them in "
+            f"{victor.get_ranking()} place"
+        )
 
         if victor.points < self.settings.points_to_win:
             point_gap = self.settings.points_to_win - victor.points
@@ -412,10 +508,14 @@ class CAHGame(HostedMultiplayerGame):
         else:
             msg += " and winning them the game."
 
-        embed = discord.Embed(title=f"{victor.user.name} gains a point!",
-                              description=msg,
-                              color=support.Color.mint())
-        embed.add_field(name="Winning Submission", value=winning_submission.text, inline=False)
+        embed = discord.Embed(
+            title=f"{victor.user.name} gains a point!",
+            description=msg,
+            color=support.Color.mint(),
+        )
+        embed.add_field(
+            name="Winning Submission", value=winning_submission.text, inline=False
+        )
         embed.set_thumbnail(url=victor.user.display_avatar.url)
 
         await self.thread.send(embed=embed)
@@ -434,12 +534,17 @@ class CAHGame(HostedMultiplayerGame):
         """
         self.__all_games__.pop(self.thread.id)
 
-        msg = f"Congratulations, {game_winner.user.mention}! You won Cards Against Humanity!\n" \
-              f"\n" \
-              f"This thread will be automatically deleted in 60 seconds. Thanks for playing!"
+        msg = (
+            f"Congratulations, {game_winner.user.mention}! You won Cards Against Humanity!\n"
+            f"\n"
+            f"This thread will be automatically deleted in 60 seconds. Thanks for playing!"
+        )
 
-        embed = discord.Embed(title=f"Game Over! {game_winner.user.name} Wins!", description=msg,
-                              color=support.Color.mint())
+        embed = discord.Embed(
+            title=f"Game Over! {game_winner.user.name} Wins!",
+            description=msg,
+            color=support.Color.mint(),
+        )
         embed.set_thumbnail(url=game_winner.user.display_avatar.url)
         await self.thread.edit(name=f"CAH with {self.host.name} - Game Over!")
         msg = await self.thread.send(content="@everyone", embed=embed)
@@ -457,11 +562,16 @@ class CAHGame(HostedMultiplayerGame):
             """
             The time limit trigger for playing cards.
             """
-            outstanding_players = [player for player in self.players.itervalues() if not player.has_submitted
-                                   and player != self.card_czar.value]
+            outstanding_players = [
+                player
+                for player in self.players.itervalues()
+                if not player.has_submitted and player != self.card_czar.value
+            ]
             mentions = [player.user.mention for player in outstanding_players]
             msg = "The mentioned players have timed out. I've made their submissions for them."
-            embed = discord.Embed(title="Time's up.", description=msg, color=support.Color.red())
+            embed = discord.Embed(
+                title="Time's up.", description=msg, color=support.Color.red()
+            )
             await self.thread.send(content="".join(mentions), embed=embed)
 
             for player in outstanding_players:
@@ -475,8 +585,12 @@ class CAHGame(HostedMultiplayerGame):
             The time limit trigger for voting.
             """
             msg = "You timed out. I've cast your vote for you."
-            embed = discord.Embed(title="Time's up.", description=msg, color=support.Color.red())
-            await self.thread.send(content=self.card_czar.value.user.mention, embed=embed)
+            embed = discord.Embed(
+                title="Time's up.", description=msg, color=support.Color.red()
+            )
+            await self.thread.send(
+                content=self.card_czar.value.user.mention, embed=embed
+            )
 
             await self.card_czar.value.increment_timeouts()
 
@@ -494,7 +608,9 @@ class CAHGame(HostedMultiplayerGame):
         """
         Returns the game leaderboard.
         """
-        point_order = reversed(SortedKeyList(self.players.itervalues(), key=lambda p: p.points))
+        point_order = reversed(
+            SortedKeyList(self.players.itervalues(), key=lambda p: p.points)
+        )
 
         leaderboard = []
         determinant = 0
@@ -513,16 +629,20 @@ class CAHGame(HostedMultiplayerGame):
 
         :param player_node: The node of the player to kick.
         """
-        embed = discord.Embed(title="Player Kicked",
-                              description=f"{player_node.value.user.mention} has been kicked from the game.",
-                              color=support.Color.red())
+        embed = discord.Embed(
+            title="Player Kicked",
+            description=f"{player_node.value.user.mention} has been kicked from the game.",
+            color=support.Color.red(),
+        )
 
         await self.thread.send(embed=embed)
         await self.remove_player(player_node)
 
-        embed = discord.Embed(title=f"You were kicked from {posessive(self.host.name)} CAH game.",
-                              description=f"You were kicked from {self.host.name}'s CAH game in {self.guild.name}.",
-                              color=support.Color.red())
+        embed = discord.Embed(
+            title=f"You were kicked from {posessive(self.host.name)} CAH game.",
+            description=f"You were kicked from {self.host.name}'s CAH game in {self.guild.name}.",
+            color=support.Color.red(),
+        )
 
         embed.timestamp = discord.utils.utcnow()
 
@@ -537,19 +657,25 @@ class CAHGame(HostedMultiplayerGame):
         old_host = self.host
         self.host = new_host
 
-        embed = discord.Embed(title="The Game Host has changed!",
-                              description=f"{old_host.mention} has transferred host powers to {new_host.mention}. "
-                                          f"{new_host.mention} is now the Game Host.",
-                              color=support.Color.orange())
+        embed = discord.Embed(
+            title="The Game Host has changed!",
+            description=f"{old_host.mention} has transferred host powers to {new_host.mention}. "
+            f"{new_host.mention} is now the Game Host.",
+            color=support.Color.orange(),
+        )
 
         await self.thread.send(content="@everyone", embed=embed)
 
-        await self.thread.edit(name=self.thread.name.replace(old_host.name, new_host.name))
+        await self.thread.edit(
+            name=self.thread.name.replace(old_host.name, new_host.name)
+        )
 
         intro = self.lobby_intro_msg
         intro_0 = intro.embeds[0]
         intro_0.title = intro_0.title.replace(old_host.name, new_host.name)
-        intro_0.description = intro_0.description.replace(old_host.mention, new_host.mention)
+        intro_0.description = intro_0.description.replace(
+            old_host.mention, new_host.mention
+        )
         intro.embeds[0] = intro_0
         await self.lobby_intro_msg.edit(embeds=intro.embeds)
 
@@ -565,9 +691,11 @@ class CAHPopularVoteGame(CAHGame):
     async def remove_player(self, player_node: dllistnode):
         player: CAHPlayer = player_node.value
 
-        embed = discord.Embed(title="A player has left the game.",
-                              description=f"{player.user.mention} has left the game.",
-                              color=support.Color.red())
+        embed = discord.Embed(
+            title="A player has left the game.",
+            description=f"{player.user.mention} has left the game.",
+            color=support.Color.red(),
+        )
 
         await self.thread.send(embed=embed)
 
@@ -586,7 +714,9 @@ class CAHPopularVoteGame(CAHGame):
         else:
             await player.force_pick()
 
-        player_candidate = discord.utils.find(lambda c: c.player == player, self.candidates)
+        player_candidate = discord.utils.find(
+            lambda c: c.player == player, self.candidates
+        )
         if player_candidate:
             self.candidates.remove(player_candidate)
 
@@ -605,13 +735,18 @@ class CAHPopularVoteGame(CAHGame):
             player.has_submitted = False
             player.has_voted = False
 
-        card_embed = discord.Embed(title="Black Card",
-                                   description=self.black_card.text,
-                                   color=support.Color.black())
+        card_embed = discord.Embed(
+            title="Black Card",
+            description=self.black_card.text,
+            color=support.Color.black(),
+        )
 
-        await self.thread.send(content=f"@everyone Pick {inflect.number_to_words(self.black_card.pick)} "
-                                       f"white {inflect.plural('card', self.black_card.pick)} with "
-                                       f"`/cah play`.", embed=card_embed)
+        await self.thread.send(
+            content=f"@everyone Pick {inflect.number_to_words(self.black_card.pick)} "
+            f"white {inflect.plural('card', self.black_card.pick)} with "
+            f"`/cah play`.",
+            embed=card_embed,
+        )
 
         await self.turn_timer()
 
@@ -620,10 +755,14 @@ class CAHPopularVoteGame(CAHGame):
         self.is_voting = True
 
         msg = f"Vote for your favorite submission with `/cah vote`."
-        embed = discord.Embed(title="It's voting time!", description=msg, color=support.Color.mint())
+        embed = discord.Embed(
+            title="It's voting time!", description=msg, color=support.Color.mint()
+        )
 
         for i, candidate in enumerate(self.candidates):
-            embed.add_field(name=f"Submission {i + 1}", value=candidate.text, inline=True)
+            embed.add_field(
+                name=f"Submission {i + 1}", value=candidate.text, inline=True
+            )
             if i + 1 % 3 == 0:
                 embed.add_field(name="\u200b", value="\u200b", inline=False)
 
@@ -632,7 +771,9 @@ class CAHPopularVoteGame(CAHGame):
         await self.turn_timer()
 
     async def submit_vote(self, candidate: CAHCandidateCard):
-        real_candidate = discord.utils.find(lambda c: c.uuid == candidate.uuid, self.candidates)
+        real_candidate = discord.utils.find(
+            lambda c: c.uuid == candidate.uuid, self.candidates
+        )
         real_candidate.votes += 1
 
         if all(player.has_voted for player in self.players.itervalues()):
@@ -640,7 +781,11 @@ class CAHPopularVoteGame(CAHGame):
             max_points = max(candidate.votes for candidate in self.candidates)
 
             # get a list of candidates with the highest vote total
-            potential_winners = [candidate for candidate in self.candidates if candidate.votes == max_points]
+            potential_winners = [
+                candidate
+                for candidate in self.candidates
+                if candidate.votes == max_points
+            ]
 
             # pick a winner at random from the aforementioned list. this is redundant if there is only one potential
             # winner, but fairly resolves ties in the event there are multiple potential winners.
@@ -648,10 +793,16 @@ class CAHPopularVoteGame(CAHGame):
 
     async def turn_timer(self):
         async def play_callback():
-            outstanding_players = [player for player in self.players.itervalues() if not player.has_submitted]
+            outstanding_players = [
+                player
+                for player in self.players.itervalues()
+                if not player.has_submitted
+            ]
             mentions = [player.user.mention for player in outstanding_players]
             msg = "The mentioned players have timed out. I've made their submissions for them."
-            embed = discord.Embed(title="Time's up.", description=msg, color=support.Color.red())
+            embed = discord.Embed(
+                title="Time's up.", description=msg, color=support.Color.red()
+            )
             await self.thread.send(content="".join(mentions), embed=embed)
 
             for player in outstanding_players:
@@ -661,11 +812,19 @@ class CAHPopularVoteGame(CAHGame):
                     await player.force_pick()
 
         async def vote_callback():
-            outstanding_players = [player for player in self.players.itervalues() if not player.has_submitted]
+            outstanding_players = [
+                player
+                for player in self.players.itervalues()
+                if not player.has_submitted
+            ]
             mentions = [player.user.mention for player in outstanding_players]
 
-            msg = "The mentioned players have timed out. I've cast their votes for them."
-            embed = discord.Embed(title="Time's up.", description=msg, color=support.Color.red())
+            msg = (
+                "The mentioned players have timed out. I've cast their votes for them."
+            )
+            embed = discord.Embed(
+                title="Time's up.", description=msg, color=support.Color.red()
+            )
             await self.thread.send(content="".join(mentions), embed=embed)
 
             for player in outstanding_players:
@@ -683,7 +842,14 @@ class CAHPopularVoteGame(CAHGame):
 
 
 class CAHGameSettings:
-    def __init__(self, max_players: int, points_to_win: int, timeout: int, use_czar: bool, use_voice: bool):
+    def __init__(
+        self,
+        max_players: int,
+        points_to_win: int,
+        timeout: int,
+        use_czar: bool,
+        use_voice: bool,
+    ):
         self.max_players = max_players
         self.points_to_win = points_to_win
         self.timeout = timeout
@@ -691,21 +857,29 @@ class CAHGameSettings:
         self.use_voice = use_voice
 
     def __str__(self):
-        players_str = f"__**Maximum Players**: {self.max_players}__\n" \
-                      f"Up to {self.max_players} can join this CAH game. Once that quota is filled, " \
-                      f"no one else will be able to join unless a player leaves or is removed by the Game Host."
+        players_str = (
+            f"__**Maximum Players**: {self.max_players}__\n"
+            f"Up to {self.max_players} can join this CAH game. Once that quota is filled, "
+            f"no one else will be able to join unless a player leaves or is removed by the Game Host."
+        )
 
-        points_str = f"__**Points to Win**: {self.points_to_win}__\n" \
-                     f"The first player to reach {self.points_to_win} points will win the game."
+        points_str = (
+            f"__**Points to Win**: {self.points_to_win}__\n"
+            f"The first player to reach {self.points_to_win} points will win the game."
+        )
 
-        timeout_str = f"__**Timeout**: {self.timeout} seconds__\n" \
-                      f"Each player will have {self.timeout} seconds to play white cards when prompted. " \
-                      f"When it's voting time, {'the Card Czar' if self.use_czar else 'players'} will have " \
-                      f"{self.timeout} seconds to vote for a white card."
+        timeout_str = (
+            f"__**Timeout**: {self.timeout} seconds__\n"
+            f"Each player will have {self.timeout} seconds to play white cards when prompted. "
+            f"When it's voting time, {'the Card Czar' if self.use_czar else 'players'} will have "
+            f"{self.timeout} seconds to vote for a white card."
+        )
 
-        voting_str = f"__**Voting Mode**: {'Card Czar' if self.use_czar else 'Popular Vote'}__\n" \
-                     f"At the end of each round, the funniest submission will be decided by " \
-                     f"{'a Card Czar' if self.use_czar else 'popular vote'}."
+        voting_str = (
+            f"__**Voting Mode**: {'Card Czar' if self.use_czar else 'Popular Vote'}__\n"
+            f"At the end of each round, the funniest submission will be decided by "
+            f"{'a Card Czar' if self.use_czar else 'popular vote'}."
+        )
 
         return "\n\n".join([players_str, points_str, timeout_str, voting_str])
 
@@ -727,10 +901,12 @@ class CAHPlayer:
         """
         Shows the player the white cards they're currently holding.
         """
-        embed = discord.Embed(title="Your White Cards",
-                              description=f"Here are the white cards you're currently holding:\n\n"
-                                          f"{chr(10).join([f'- {card}' for card in self.hand])}",
-                              color=support.Color.white())
+        embed = discord.Embed(
+            title="Your White Cards",
+            description=f"Here are the white cards you're currently holding:\n\n"
+            f"{chr(10).join([f'- {card}' for card in self.hand])}",
+            color=support.Color.white(),
+        )
 
         await ctx.respond(embed=embed, ephemeral=True)
 
@@ -738,7 +914,9 @@ class CAHPlayer:
         """
         Prompts the player to pick white cards to play.
         """
-        candidate: CAHCandidateCard = await cah.CAHCardSelectView(ctx=ctx, player=self).select_card()
+        candidate: CAHCandidateCard = await cah.CAHCardSelectView(
+            ctx=ctx, player=self
+        ).select_card()
 
         if candidate:
             self.reset_timeouts()
@@ -751,13 +929,20 @@ class CAHPlayer:
         being removed from the game.
         """
         # pick x number of cards from the player's hand at random, depending on how many white cards need to be played
-        cards = [self.hand[i] for i in random.sample(range(len(self.hand)), self.game.black_card.pick)]
+        cards = [
+            self.hand[i]
+            for i in random.sample(range(len(self.hand)), self.game.black_card.pick)
+        ]
         # create candidates from those cards and randomly choose one of them to submit
-        candidate: CAHCandidateCard = random.choice(CAHCandidateCard.make_candidates(self, *cards))
+        candidate: CAHCandidateCard = random.choice(
+            CAHCandidateCard.make_candidates(self, *cards)
+        )
 
         await self.submit_candidate(candidate, player_removal=player_removal)
 
-    async def submit_candidate(self, candidate: CAHCandidateCard, player_removal: bool = False):
+    async def submit_candidate(
+        self, candidate: CAHCandidateCard, player_removal: bool = False
+    ):
         """
         Submits the player's candidate card.
         :param candidate: The candidate card to submit.
@@ -776,15 +961,20 @@ class CAHPlayer:
 
         self.add_cards(10 - len(self.hand))
 
-        if all(player.has_submitted for player in self.game.players.itervalues()
-               if player != self.game.card_czar.value):
+        if all(
+            player.has_submitted
+            for player in self.game.players.itervalues()
+            if player != self.game.card_czar.value
+        ):
             await self.game.start_voting()
 
     async def vote(self, ctx: discord.ApplicationContext):
         """
         Prompts the player to vote for a candidate card.
         """
-        selection: CAHCandidateCard = await cah.CAHVotingView(ctx=ctx, game=self.game).vote()
+        selection: CAHCandidateCard = await cah.CAHVotingView(
+            ctx=ctx, game=self.game
+        ).vote()
 
         if selection:
             self.has_voted = True
@@ -814,15 +1004,19 @@ class CAHPlayer:
         if self.game.host == self.user:
             overwrites = {
                 "allow": discord.Permissions.voice() - discord.Permissions.stream,
-                "deny": discord.Permissions.none()
+                "deny": discord.Permissions.none(),
             }
         else:
             overwrites = {
-                "allow": discord.Permissions(connect=True, speak=True, use_voice_activation=True),
-                "deny": discord.Permissions.none()
+                "allow": discord.Permissions(
+                    connect=True, speak=True, use_voice_activation=True
+                ),
+                "deny": discord.Permissions.none(),
             }
 
-        overwrites["allow"] += discord.Permissions(view_channel=True, read_message_history=True)
+        overwrites["allow"] += discord.Permissions(
+            view_channel=True, read_message_history=True
+        )
 
         return discord.PermissionOverwrite.from_pair(**overwrites)
 
@@ -833,8 +1027,12 @@ class CAHPlayer:
         :param with_string: If True, the method will return the full ranking string in the
         format "Xth of Y (tied with Z others)".
         """
-        leaderboard_group = discord.utils.find(lambda group: self in group, self.game.get_leaderboard())
-        ranking = inflect.ordinal(self.game.get_leaderboard().index(leaderboard_group) + 1)
+        leaderboard_group = discord.utils.find(
+            lambda group: self in group, self.game.get_leaderboard()
+        )
+        ranking = inflect.ordinal(
+            self.game.get_leaderboard().index(leaderboard_group) + 1
+        )
 
         if with_string:
             ranking += f" of {len(self.game.players)}"
@@ -923,22 +1121,34 @@ class CAHCandidateCard:
         proper_nouns = []
         for card in white_cards:
             words = re.sub(r"[.?!,]", "", card).split()
-            proper_nouns.extend([word for word, pos in nltk.pos_tag(words) if pos.startswith("NNP")])
+            proper_nouns.extend(
+                [word for word, pos in nltk.pos_tag(words) if pos.startswith("NNP")]
+            )
 
         for c1, c2 in zip(white_cards, reversed(white_cards)):
-            tokens = DoublyLinkedList(re.split(r"((?:\\_){5})", player.game.black_card.text))
+            tokens = DoublyLinkedList(
+                re.split(r"((?:\\_){5})", player.game.black_card.text)
+            )
             if not tokens[-1]:
                 tokens.pop()
 
             for card in c1, c2:
                 if underscores in tokens:
-                    underscore_node: dllistnode = tokens.nodeat([*tokens].index(underscores))
+                    underscore_node: dllistnode = tokens.nodeat(
+                        [*tokens].index(underscores)
+                    )
 
-                    strip: bool = underscore_node.prev is None or underscore_node.next is not None
+                    strip: bool = (
+                        underscore_node.prev is None or underscore_node.next is not None
+                    )
 
-                    decapitalize: bool = (underscore_node.prev is not None
-                                          and not underscore_node.prev.value.rstrip().endswith(tuple(punctuation))
-                                          and card.split()[0] not in proper_nouns)
+                    decapitalize: bool = (
+                        underscore_node.prev is not None
+                        and not underscore_node.prev.value.rstrip().endswith(
+                            tuple(punctuation)
+                        )
+                        and card.split()[0] not in proper_nouns
+                    )
 
                     if strip:
                         card = card.rstrip(punctuation)
@@ -978,8 +1188,14 @@ class CAHCardSet:
             return card[0].upper() + re.sub(r"\b$", ".", card[1:])
 
         # due to Discord limitations, white cards must be 60 characters or fewer
-        self.black: list[CAHBlackCard] = [CAHBlackCard(**card) for card in cards["black"]]
-        self.white: list[str] = [sanitize_white(card) for card in cards["white"] if len(sanitize_white(card)) <= 60]
+        self.black: list[CAHBlackCard] = [
+            CAHBlackCard(**card) for card in cards["black"]
+        ]
+        self.white: list[str] = [
+            sanitize_white(card)
+            for card in cards["white"]
+            if len(sanitize_white(card)) <= 60
+        ]
         self.backup: CAHCardSet = copy.deepcopy(self)
 
     def get_random_black(self) -> CAHBlackCard:
@@ -1003,7 +1219,9 @@ class CAHCardSet:
             self.reset()
             num_cards = min(num_cards, len(self.white))
 
-        cards = [self.white[i] for i in random.sample(range(len(self.white)), num_cards)]
+        cards = [
+            self.white[i] for i in random.sample(range(len(self.white)), num_cards)
+        ]
         self.white = list(set(self.white) - set(cards))
 
         return cards

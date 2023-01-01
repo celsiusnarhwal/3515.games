@@ -49,19 +49,21 @@ class RPSGame:
         view = support.ConfirmationView(ctx=ctx)
         challenge_confirmation = await view.request_confirmation(
             prompt_text=f"Challenge {self.opponent.user.mention} to Rock-Paper-Scissors ({self.game_format})?",
-            ephemeral=True
+            ephemeral=True,
         )
 
         if challenge_confirmation:
-            await ctx.interaction.edit_original_message(content=f"Waiting on {self.opponent.user.mention}...",
-                                                        view=None)
+            await ctx.interaction.edit_original_message(
+                content=f"Waiting on {self.opponent.user.mention}...", view=None
+            )
 
             # ask the challenge recipient whether they accept the challenge
-            view = support.GameChallengeResponseView(ctx=ctx,
-                                                     target_user=self.opponent.user,
-                                                     challenger=self.challenger.user,
-                                                     game_name=f"Rock-Paper-Scissors ({self.game_format})"
-                                                     )
+            view = support.GameChallengeResponseView(
+                ctx=ctx,
+                target_user=self.opponent.user,
+                challenger=self.challenger.user,
+                game_name=f"Rock-Paper-Scissors ({self.game_format})",
+            )
 
             view.timeout = 60
             challenge_acceptance = await view.request_response()
@@ -70,7 +72,9 @@ class RPSGame:
                 return True
         else:
             if challenge_confirmation is not None:
-                await ctx.interaction.edit_original_message(content="Okay! Your challenge was canceled.", view=None)
+                await ctx.interaction.edit_original_message(
+                    content="Okay! Your challenge was canceled.", view=None
+                )
                 return False
 
     async def game_intro(self, ctx):
@@ -79,18 +83,25 @@ class RPSGame:
 
         :param ctx: An ApplicationContext object.
         """
-        game_intro_text = f"**Players:** {self.challenger.user.mention} vs." \
-                          f" {self.opponent.user.mention}\n" \
-                          f"**Rules:** {self.game_format} (first player to {self.points_to_win} points wins)\n" \
-                          f"\n" \
-                          f"Let's play!"
+        game_intro_text = (
+            f"**Players:** {self.challenger.user.mention} vs."
+            f" {self.opponent.user.mention}\n"
+            f"**Rules:** {self.game_format} (first player to {self.points_to_win} points wins)\n"
+            f"\n"
+            f"Let's play!"
+        )
 
-        intro_embed = discord.Embed(title="Rock-Paper-Scissors: Game Start!", description=game_intro_text,
-                                    color=support.Color.mint())
+        intro_embed = discord.Embed(
+            title="Rock-Paper-Scissors: Game Start!",
+            description=game_intro_text,
+            color=support.Color.mint(),
+        )
 
         with support.Assets.rps():
             intro_gif = random.choice(os.listdir("intro_gifs"))
-            gif_file = discord.File(os.path.join("intro_gifs", intro_gif), filename=intro_gif)
+            gif_file = discord.File(
+                os.path.join("intro_gifs", intro_gif), filename=intro_gif
+            )
             intro_embed.set_image(url=f"attachment://{intro_gif}")
 
             await ctx.send(embed=intro_embed, file=gif_file)
@@ -102,8 +113,9 @@ class RPSGame:
         :param ctx: An ApplicationContext object.
         :return: True if move selection completed successfully, False otherwise.
         """
-        return await rps.RPSChooseMoveView(ctx=ctx, players=self.players).start_move_selection(
-            round_number=self.current_round)
+        return await rps.RPSChooseMoveView(
+            ctx=ctx, players=self.players
+        ).start_move_selection(round_number=self.current_round)
 
     async def report_round_results(self, ctx):
         """
@@ -125,7 +137,10 @@ class RPSGame:
             result = "It's a draw."
         else:
             # if the winning case for the challenger's move is the opponent's move, the challenger wins.
-            if winning_cases[self.challenger.selected_move] == self.opponent.selected_move:
+            if (
+                winning_cases[self.challenger.selected_move]
+                == self.opponent.selected_move
+            ):
                 winner = self.challenger
             else:
                 # if it's not a draw and the challenger doesn't win, the opponent wins.
@@ -134,24 +149,33 @@ class RPSGame:
             winner.score += 1
             result = f"{winner.user.mention} wins."
 
-        results_text = f"{self.challenger.user.mention} plays **{self.challenger.selected_move}**.\n" \
-                       f"{self.opponent.user.mention} plays **{self.opponent.selected_move}**.\n" \
-                       f"\n" \
-                       f"**Result:** {result}\n" \
-                       f"\n" \
-                       f"**Score:** {self.challenger.user.mention} {self.challenger.score} - " \
-                       f"{self.opponent.score} {self.opponent.user.mention}"
+        results_text = (
+            f"{self.challenger.user.mention} plays **{self.challenger.selected_move}**.\n"
+            f"{self.opponent.user.mention} plays **{self.opponent.selected_move}**.\n"
+            f"\n"
+            f"**Result:** {result}\n"
+            f"\n"
+            f"**Score:** {self.challenger.user.mention} {self.challenger.score} - "
+            f"{self.opponent.score} {self.opponent.user.mention}"
+        )
 
-        results_embed = discord.Embed(title=f"Round {self.current_round} Results", description=results_text,
-                                      color=support.Color.mint())
+        results_embed = discord.Embed(
+            title=f"Round {self.current_round} Results",
+            description=results_text,
+            color=support.Color.mint(),
+        )
 
         # each page in the match record can contain the results of up to three rounds. this limitation, and the
         # implementation of pagination in the match record to begin with, aims to prevent the match record from
         # exceeding Discord's character limit when its sent as an embed in chat.
         if len(self.match_record[-1]) < 3:
-            self.match_record[-1].append(f"**__{results_embed.title}__**\n\n{results_embed.description}")
+            self.match_record[-1].append(
+                f"**__{results_embed.title}__**\n\n{results_embed.description}"
+            )
         else:
-            self.match_record.append([f"**__{results_embed.title}__**\n\n{results_embed.description}"])
+            self.match_record.append(
+                [f"**__{results_embed.title}__**\n\n{results_embed.description}"]
+            )
 
         await ctx.send(embed=results_embed)
 
@@ -165,7 +189,10 @@ class RPSGame:
 
         :return: The victorious player if applicable, otherwise None.
         """
-        return next((player for player in self.players if player.score == self.points_to_win), None)
+        return next(
+            (player for player in self.players if player.score == self.points_to_win),
+            None,
+        )
 
     async def end_match(self, ctx, winner: RPSPlayer):
         """
@@ -176,8 +203,9 @@ class RPSGame:
         """
         self.match_record[-1].append(f"**Match Winner:** {winner.user.mention}")
 
-        await rps.RPSMatchEndView(ctx=ctx, match_record=self.match_record).show_match_results(players=self.players,
-                                                                                              winner=winner)
+        await rps.RPSMatchEndView(
+            ctx=ctx, match_record=self.match_record
+        ).show_match_results(players=self.players, winner=winner)
 
 
 class RPSPlayer:

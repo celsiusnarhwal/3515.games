@@ -24,6 +24,7 @@ from cogs import chess
 
 # decorators
 
+
 def verify_context(level: str):
     """
     A decorator which implements a context verification system for chess matches. This system has four levels. In
@@ -47,10 +48,15 @@ def verify_context(level: str):
             if chess.ChessGame.retrieve_game(ctx.channel.id):
                 return True
             else:
-                message = f"You can only use {command_name} in designated chess game threads. " \
-                          f"Head to a game thread and try again."
-                embed = discord.Embed(title="You can't do that here.", description=message,
-                                      color=support.Color.red())
+                message = (
+                    f"You can only use {command_name} in designated chess game threads. "
+                    f"Head to a game thread and try again."
+                )
+                embed = discord.Embed(
+                    title="You can't do that here.",
+                    description=message,
+                    color=support.Color.red(),
+                )
                 await ctx.respond(embed=embed, ephemeral=True)
 
                 return False
@@ -62,8 +68,11 @@ def verify_context(level: str):
                 return True
             else:
                 message = f"Only players in this chess match can use {command_name}."
-                embed = discord.Embed(title="You're not playing in this match.", description=message,
-                                      color=support.Color.red())
+                embed = discord.Embed(
+                    title="You're not playing in this match.",
+                    description=message,
+                    color=support.Color.red(),
+                )
                 await ctx.respond(embed=embed, ephemeral=True)
 
                 return False
@@ -74,10 +83,15 @@ def verify_context(level: str):
             if game.has_started:
                 return True
             else:
-                message = f"You can't use {command_name} until the match has begun. Wait until the match has begun, " \
-                          f"then try again."
-                embed = discord.Embed(title="This match hasn't started yet.", description=message,
-                                      color=support.Color.red())
+                message = (
+                    f"You can't use {command_name} until the match has begun. Wait until the match has begun, "
+                    f"then try again."
+                )
+                embed = discord.Embed(
+                    title="This match hasn't started yet.",
+                    description=message,
+                    color=support.Color.red(),
+                )
                 await ctx.respond(embed=embed, ephemeral=True)
 
                 return False
@@ -89,8 +103,11 @@ def verify_context(level: str):
                 return True
             else:
                 message = f"You can only use {command_name} when it's your turn. Wait your turn, then try again."
-                embed = discord.Embed(title="It's not your turn.", description=message,
-                                      color=support.Color.red())
+                embed = discord.Embed(
+                    title="It's not your turn.",
+                    description=message,
+                    color=support.Color.red(),
+                )
                 await ctx.respond(embed=embed, ephemeral=True)
 
                 return False
@@ -132,4 +149,6 @@ def get_board_png(**kwargs) -> discord.File:
 
 @db.db_session
 def get_saved_games(user: discord.User):
-    return db.ChessGame.select(lambda g: g.user_id == str(user.id)).order_by(lambda g: db.desc(g.date_saved))
+    return db.ChessGame.select(lambda g: g.user_id == str(user.id)).order_by(
+        lambda g: db.desc(g.date_saved)
+    )
