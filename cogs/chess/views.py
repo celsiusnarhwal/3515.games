@@ -37,7 +37,7 @@ class ChessSelect(Select):
             super().add_option(**kwargs)
 
 
-# who needs an interactive chess board, anyway?
+# tw // eldritch horror
 class ChessMoveView(EnhancedView):
     """
     Provides a user interface for a player to move a piece.
