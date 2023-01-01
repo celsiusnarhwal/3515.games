@@ -11,16 +11,17 @@ Kurisu, 3515.games' development CLI, provides command-line shortcuts for common 
 import importlib
 import json
 import os
-from datetime import datetime
 import pathlib
 import subprocess
 import sys
 import urllib.parse
+from datetime import datetime
+from difflib import SequenceMatcher
 from enum import Enum
 
+import discord
 import git as pygit
 import gitignorefile as gitignore
-from difflib import SequenceMatcher
 import inflect as ifl
 import pyperclip
 import semver
@@ -80,13 +81,14 @@ def copyright(verbose: bool = typer.Option(None, "--verbose", "-v", help="Show t
         notice = template.render(year=datetime.now().year).strip("\n") + "\n\n"
 
         for file in [f for f in root.walkfiles("*.py") if not is_ignored(f)]:
-            match SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio():
-                case ratio if 0.9 <= ratio < 1:
-                    write(file, notice + "".join(file.lines()[6:]))
-                case ratio if ratio == 1:
-                    pass
-                case _:
-                    write(file, notice + file.text())
+            ratio = SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio()
+
+            if 0.9 <= ratio < 1:
+                write(file, notice + "".join(file.lines()[6:]))
+            elif ratio == 1:
+                pass
+            else:
+                write(file, notice + file.text())
 
     if changed:
         output = f"[green]Changed [bold]{changed}[/bold] {inflect.plural('file', changed)}"
@@ -242,6 +244,14 @@ def portal(gate: PortalGate = typer.Argument(PortalGate.home, show_default="home
     }
 
     typer.launch(blue + orange[gate])
+
+
+@app.command(name="pycord")
+def pycord():
+    """
+    Open the Pycord documentation.
+    """
+    typer.launch(f"https://docs.pycord.dev/en/v{discord.__version__}/")
 
 
 @app.command(name="release", rich_help_panel="Dangerous Commands")

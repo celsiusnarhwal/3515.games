@@ -21,6 +21,7 @@ $ kurisu [OPTIONS] COMMAND [ARGS]...
 * [`invite`](#kurisu-invite): Generate an invite link for 3515.games. By default, this generates an invite link for the development instance.
 * [`licenses`](#kurisu-licenses): Create Markdown-formatted documentation of 3515.games' software licenses.
 * [`portal`](#kurisu-portal): Open the Discord Developer Portal.
+* [`pycord`](#kurisu-pycord): Open the Pycord documentation.
 * [`release`](#kurisu-release): Create a new release. This command is interactive only.
 * [`settings`](#kurisu-settings): Manage settings configurations.
 
@@ -104,6 +105,20 @@ $ kurisu portal [OPTIONS] [GATE]:[home|docs|app]
 **Arguments**:
 
 * `[GATE]:[home|docs|app]`: Where on the developer portal to go. Choose from home (the home page), docs (the documentation), or app (3515.games.dev's application page).  [default: (home)]
+
+**Options**:
+
+* `--help`: Show the help message and exit.
+
+## `kurisu pycord`
+
+Open the Pycord documentation.
+
+**Usage**:
+
+```console
+$ kurisu pycord [OPTIONS]
+```
 
 **Options**:
 
