@@ -7,10 +7,9 @@
 from __future__ import annotations
 
 import discord
+import discord.ui
 from discord import Interaction, ButtonStyle
 from discord.ui import Button, button as discord_button
-
-import support
 
 
 class EnhancedView(discord.ui.View):
@@ -45,7 +44,7 @@ class EnhancedView(discord.ui.View):
     async def full_stop(self):
         self.stop()
         self.disable_children()
-        await self.ctx.interaction.edit_original_message(view=self)
+        await self.ctx.interaction.edit_original_response(view=self)
 
 
 class ConfirmationView(EnhancedView):
@@ -102,7 +101,7 @@ class ConfirmationView(EnhancedView):
         Optional; defaults to False.
         """
         if edit:
-            await self.ctx.interaction.edit_original_message(
+            await self.ctx.interaction.edit_original_response(
                 content=prompt_text, embeds=prompt_embeds, view=self
             )
         else:
@@ -165,18 +164,72 @@ class GameChallengeResponseView(ConfirmationView):
         if self.success is not None:
             if self.success:
                 await self.prompt_msg.edit(
-                    f"{self.target_user.mention} accepted the challenge!",
+                    content=f"{self.target_user.mention} accepted the challenge!",
                     view=None,
                     delete_after=7,
                 )
             else:
                 await self.prompt_msg.edit(
-                    f"{self.target_user.mention} rejected the challenge.",
+                    content=f"{self.target_user.mention} rejected the challenge.",
                     view=None,
                     delete_after=7,
                 )
 
         return self.success
+
+
+# note: currently unused
+class UserSelectionView(EnhancedView):
+    """
+    Provides an interface for selecting users from a dropdown menu.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.timeout = None
+        self.users = []
+
+    @discord.ui.user_select(placeholder="Select a user", max_values=25)
+    async def user_select(self, select: discord.ui.Select, interaction: Interaction):
+        self.users = select.values
+
+        if self.users:
+            self.stop()
+
+    async def present(
+        self,
+        prompt_text=None,
+        prompt_embeds: list[discord.Embed] = None,
+        ephemeral=False,
+        edit=False,
+    ):
+        """
+        Sends a user selection prompt.
+
+        Parameters
+        ----------
+        prompt_text : str, optional, default: None
+            The text the prompt should contain.
+        prompt_embeds : list[discord.Embed], optional, default: None
+            A list of embeds the prompt should contain.
+        ephemeral : bool, optional, default: False
+            Whether the prompt should be sent as an ephemeral message.
+        edit : bool, optional, default: False
+            Whether the prompt should edit an existing interaction response or create a new one.
+        """
+        if edit:
+            await self.ctx.interaction.edit_original_response(
+                content=prompt_text, embeds=prompt_embeds, view=self
+            )
+        else:
+            await self.ctx.respond(
+                content=prompt_text,
+                embeds=prompt_embeds,
+                view=self,
+                ephemeral=ephemeral,
+            )
+        await self.wait()
+        return self.users
 
 
 class GameThreadURLView(EnhancedView):
@@ -186,17 +239,4 @@ class GameThreadURLView(EnhancedView):
 
     def __init__(self, thread: discord.Thread, **kwargs):
         super().__init__(**kwargs)
-        self.add_item(
-            Button(label="Go to game thread", url=support.get_thread_url(thread))
-        )
-
-
-class ServerBoostURLView(EnhancedView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.add_item(
-            Button(
-                label="Learn more about Server Boosting",
-                url="https://support.discord.com/hc/en-us/articles/360028038352-Server-Boosting-FAQ",
-            )
-        )
+        self.add_item(Button(label="Go to game thread", url=thread.jump_url))
