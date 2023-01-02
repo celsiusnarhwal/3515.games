@@ -146,7 +146,7 @@ class UnoCardSelectView(UnoTerminableView):
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)
                 card_menu.values.clear()
-                await self.ctx.interaction.edit_original_message(view=self)
+                await self.ctx.interaction.edit_original_response(view=self)
             else:
                 # if it's playable, validate the interaction and stop the view
                 self.selected_card = played_card
@@ -293,7 +293,7 @@ class UnoCardSelectView(UnoTerminableView):
         await self.wait()
 
         if self.success:
-            await self.ctx.interaction.edit_original_message(view=self)
+            await self.ctx.interaction.edit_original_response(view=self)
             return self.selected_card
         else:
             return None
@@ -343,10 +343,10 @@ class UnoDrawCardView(UnoTerminableView):
         await self.wait()
 
         if self.success:
-            await self.ctx.interaction.edit_original_message(view=None)
+            await self.ctx.interaction.edit_original_response(view=None)
         else:
             msg = "Okay! Make your move whenever you're ready."
-            await self.ctx.interaction.edit_original_message(
+            await self.ctx.interaction.edit_original_response(
                 content=msg, embed=None, view=None
             )
 
@@ -403,7 +403,7 @@ class WildColorSelectView(UnoTerminableView):
             title="Color Selection", description=msg, color=support.Color.mint()
         )
 
-        await self.ctx.interaction.edit_original_message(embed=embed, view=self)
+        await self.ctx.interaction.edit_original_response(embed=embed, view=self)
 
         await self.wait()
 
@@ -421,12 +421,12 @@ class WildColorSelectView(UnoTerminableView):
                 f"**{self.game.color_in_play.title()}**.",
                 color=embed_colors[self.game.color_in_play.casefold()],
             )
-            await self.ctx.interaction.edit_original_message(embed=embed, view=None)
+            await self.ctx.interaction.edit_original_response(embed=embed, view=None)
 
         elif self.success is False:
             msg = "Okay! You can select a different card with `/uno play`."
             # await prompt.edit(content=msg, embed=None, view=None)
-            await self.ctx.interaction.edit_original_message(
+            await self.ctx.interaction.edit_original_response(
                 content=msg, embed=None, view=None
             )
         return self.success

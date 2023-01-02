@@ -437,7 +437,7 @@ class ChessMoveView(EnhancedView):
 
                 if interaction:
                     await interaction.response.defer()
-                    await interaction.edit_original_message(
+                    await interaction.edit_original_response(
                         embed=select_menu.embed,
                         file=board_png,
                         attachments=[],
@@ -483,7 +483,7 @@ class ChessMoveView(EnhancedView):
             with chess.get_board_png(**self.image_data) as board_png:
                 embed.set_image(url=f"attachment://{board_png.filename}")
                 await interaction.response.defer()
-                await interaction.edit_original_message(
+                await interaction.edit_original_response(
                     embed=embed, file=board_png, attachments=[], view=self
                 )
 
@@ -762,7 +762,7 @@ class ChessBoardView(EnhancedView):
         with chess.get_board_png(**self.image_data) as board_png:
             if interaction:
                 await interaction.response.defer()
-                await interaction.edit_original_message(
+                await interaction.edit_original_response(
                     file=board_png, attachments=[], view=self
                 )
             else:
@@ -1253,7 +1253,7 @@ class ChessReplayView(EnhancedView):
     async def present(self, interaction):
         with chess.get_board_png(**self.image_data) as board_png:
             await interaction.response.defer()
-            await interaction.edit_original_message(
+            await interaction.edit_original_response(
                 file=board_png, attachments=[], view=self
             )
 

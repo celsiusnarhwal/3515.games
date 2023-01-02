@@ -59,7 +59,7 @@ class PackSelectView(EnhancedView):
             lambda x: isinstance(x, Select), self.children
         )
 
-        await interaction.edit_original_message(
+        await interaction.edit_original_response(
             content="Creating your Cards Against Humanity game...",
             embed=None,
             view=None,
@@ -88,7 +88,7 @@ class PackSelectView(EnhancedView):
                         description=msg,
                         color=support.Color.red(),
                     )
-                    await interaction.edit_original_message(
+                    await interaction.edit_original_response(
                         content=None, embed=embed, view=None
                     )
 
@@ -128,7 +128,7 @@ class PackSelectView(EnhancedView):
             name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
         )
 
-        await self.ctx.interaction.edit_original_message(embed=embed, view=self)
+        await self.ctx.interaction.edit_original_response(embed=embed, view=self)
 
         await self.wait()
 
@@ -179,7 +179,7 @@ class CAHCardSelectView(CAHTerminableView):
                     )
 
                 await interaction.response.defer()
-                await self.ctx.interaction.edit_original_message(embed=embed, view=self)
+                await self.ctx.interaction.edit_original_response(embed=embed, view=self)
             else:
                 self.submission = self.candidates[0]
                 await self.finish()
@@ -221,7 +221,7 @@ class CAHCardSelectView(CAHTerminableView):
         embed.set_author(
             name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
         )
-        await self.ctx.interaction.edit_original_message(embed=embed, view=None)
+        await self.ctx.interaction.edit_original_response(embed=embed, view=None)
 
         self.stop()
 
@@ -328,7 +328,7 @@ class CAHVotingView(CAHTerminableView):
                 + "\n\nPlease wait for the other players to finish."
             )
 
-        await self.ctx.interaction.edit_original_message(embed=embed, view=None)
+        await self.ctx.interaction.edit_original_response(embed=embed, view=None)
 
         return self.selection
 
@@ -369,7 +369,7 @@ class CAHStatusCenterView(EnhancedView):
 
     async def open_status_center(self):
         """
-        Sends the UNO Status Center menu in chat.
+        Sends the CAH Status Center menu in chat.
         """
         status_menu = self.get_menu()
         self.add_item(status_menu)
@@ -433,15 +433,16 @@ class CAHStatusCenterView(EnhancedView):
             inline=False,
         )
 
-        other_players = [p for p in self.game.players if p.user != self.game.host]
-        embed.add_field(
-            name="Other Players",
-            value="\n".join(
-                f"— {player.user.name} ({player.user.mention})"
-                for player in other_players
-            ),
-            inline=False,
-        )
+        match [p for p in self.game.players if p.user != self.game.host]:
+            case other_players if other_players:
+                embed.add_field(
+                    name="Other Players",
+                    value="\n".join(
+                        f"— {player.user.name} ({player.user.mention})"
+                        for player in other_players
+                    ),
+                    inline=False,
+                )
 
         return embed
 

@@ -159,7 +159,7 @@ class AboutView(EnhancedView):
     #     embed.set_author(name="About", icon_url=original_message.author.display_avatar.url)
     #
     #     await interaction.response.defer()
-    #     await interaction.edit_original_message(embed=embed, attachments=[], view=InviteView(ctx=self.ctx))
+    #     await interaction.edit_original_response(embed=embed, attachments=[], view=InviteView(ctx=self.ctx))
 
     async def show_about(self, interaction: Interaction = None):
         with support.Assets.about():
@@ -174,7 +174,7 @@ class AboutView(EnhancedView):
             about_embed.set_image(url="attachment://bot_logo.png")
             if interaction:
                 await interaction.response.defer()
-                await interaction.edit_original_message(
+                await interaction.edit_original_response(
                     embed=about_embed, file=bot_logo, attachments=[], view=self
                 )
             else:

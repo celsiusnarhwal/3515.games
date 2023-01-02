@@ -53,7 +53,7 @@ class RPSGame:
         )
 
         if challenge_confirmation:
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content=f"Waiting on {self.opponent.user.mention}...", view=None
             )
 
@@ -72,7 +72,7 @@ class RPSGame:
                 return True
         else:
             if challenge_confirmation is not None:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Okay! Your challenge was canceled.", view=None
                 )
                 return False

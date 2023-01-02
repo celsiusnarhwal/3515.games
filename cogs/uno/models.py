@@ -691,11 +691,11 @@ class UnoPlayer:
 
                 if confirmation:
                     if not selected_card.color.casefold() == "wild":
-                        await ctx.interaction.edit_original_message(
+                        await ctx.interaction.edit_original_response(
                             content="Good luck! 🤞🏾", embeds=[], view=None
                         )
                 else:
-                    await ctx.interaction.edit_original_message(
+                    await ctx.interaction.edit_original_response(
                         content="Okay! Make your move whenever you're ready.",
                         embeds=[],
                         view=None,
@@ -776,7 +776,7 @@ class UnoPlayer:
                 )
                 embed.set_thumbnail(url=card.emoji().url)
 
-                await ctx.interaction.edit_original_message(embeds=[embed], view=None)
+                await ctx.interaction.edit_original_response(embeds=[embed], view=None)
 
                 if len(self.hand) - 1 == 1:
                     embed = discord.Embed(
@@ -797,7 +797,7 @@ class UnoPlayer:
                 )
                 embed.set_thumbnail(url=card.emoji().url)
 
-                await ctx.interaction.edit_original_message(embeds=[embed], view=None)
+                await ctx.interaction.edit_original_response(embeds=[embed], view=None)
 
                 processor = UnoEventProcessor(self.game)
                 await processor.card_drawn_event(player=self)
@@ -805,7 +805,7 @@ class UnoPlayer:
                 await self.end_turn()
         elif view.success is False:
             msg = "Okay! Make your move whenever you're ready."
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content=msg, embeds=[], view=None
             )
 
@@ -857,7 +857,7 @@ class UnoPlayer:
                     color=support.Color.green(),
                 )
 
-                await ctx.interaction.edit_original_message(embeds=[embed], view=None)
+                await ctx.interaction.edit_original_response(embeds=[embed], view=None)
                 await processor.callout_event(
                     challenger=self, recipient=recipient, callout_success=True
                 )
@@ -868,13 +868,13 @@ class UnoPlayer:
                     color=support.Color.brand_red(),
                 )
 
-                await ctx.interaction.edit_original_message(embeds=[embed], view=None)
+                await ctx.interaction.edit_original_response(embeds=[embed], view=None)
                 await processor.callout_event(
                     challenger=self, recipient=recipient, callout_success=False
                 )
                 await self.end_turn()
         else:
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content="Okay! Make your move whenever you're ready.",
                 embeds=[],
                 view=None,
@@ -955,7 +955,7 @@ class _UnoCardEnum(Enum):
         return self.name.lower()
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
 
 class _UnoCardColorMeta(EnumMeta):

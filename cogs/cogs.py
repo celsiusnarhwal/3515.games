@@ -239,7 +239,7 @@ class UnoCog(MasterCog):
 
         if confirmation:
             # create an UnoGame object and associated game thread
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content="Creating your UNO game...", embeds=[], view=None
             )
             game_thread = await ctx.channel.create_thread(
@@ -283,7 +283,7 @@ class UnoCog(MasterCog):
                 color=support.Color.red(),
             )
 
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 embeds=[cancellation_embed], view=None
             )
 
@@ -376,12 +376,12 @@ class UnoCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Removing you from the game...", view=None, embeds=[]
                 )
                 await uno_game.remove_player(player_node=player_node)
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Okay! You're still in the game!", view=None, embeds=[]
                 )
 
@@ -458,14 +458,14 @@ class UnoCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Roger that! <:ritsu_salute:727962077888512221>",
                     embeds=[],
                     view=None,
                 )
                 await player.say_uno()
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Better hope you don't get called out, then. 😒",
                     embeds=[],
                     view=None,
@@ -562,13 +562,13 @@ class UnoCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Let's get started!", embeds=[], view=None
                 )
                 await uno_game.start_game()
 
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Okay! Just use `/uno host start` "
                     "whenever you're ready.",
                     embeds=[],
@@ -602,12 +602,12 @@ class UnoCog(MasterCog):
         )
 
         if confirmation:
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content="Aborting your UNO game...", embeds=[], view=None
             )
             await uno_game.force_close(reason="host_abortion")
         else:
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content="Okay! The game is still on.", embeds=[], view=None
             )
 
@@ -668,12 +668,12 @@ class UnoCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content=f"Kicking {player.name}...", embeds=[], view=None
                 )
                 await uno_game.kick_player(player_node)
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content=f"Okay! {player.mention} remains in the game.",
                     embeds=[],
                     view=None,
@@ -753,7 +753,7 @@ class UnoCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content=f"Transferring host powers to {player.mention}...",
                     embeds=[],
                     view=None,
@@ -761,7 +761,7 @@ class UnoCog(MasterCog):
                 await uno_game.transfer_host(player)
 
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Ok! You're still the Game Host.", embeds=[], view=None
                 )
 
@@ -925,7 +925,7 @@ class ChessCog(MasterCog):
 
             if challenge_confirmation:
                 # ask the challenge recipient whether they accept the challenge
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content=f"Waiting on {opponent.mention}...", embeds=[], view=None
                 )
 
@@ -942,7 +942,7 @@ class ChessCog(MasterCog):
                     return
             else:
                 if challenge_confirmation is not None:
-                    await ctx.interaction.edit_original_message(
+                    await ctx.interaction.edit_original_response(
                         content="Okay! Your challenge was canceled.",
                         embeds=[],
                         view=None,
@@ -1012,7 +1012,7 @@ class ChessCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content=f"You're ready to go. Waiting on "
                     f"{player.opponent.user.mention}...",
                     view=None,
@@ -1020,7 +1020,7 @@ class ChessCog(MasterCog):
                 )
                 await player.ready()
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content=f"That's cool. Use `/chess ready` whenever you're ready.",
                     view=None,
                     embeds=[],
@@ -1089,12 +1089,12 @@ class ChessCog(MasterCog):
         )
 
         if confirmation:
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content="Forfeiting the match...", view=None, embeds=[]
             )
             await player.forfeit()
         else:
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content=f"Okay! The game is still on.", view=None, embeds=[]
             )
 
@@ -1147,12 +1147,12 @@ class ChessCog(MasterCog):
                 )
 
                 if confirmation:
-                    await ctx.interaction.edit_original_message(
+                    await ctx.interaction.edit_original_response(
                         content="Proposing a draw...", view=None, embeds=[]
                     )
                     await player.propose_draw()
                 else:
-                    await ctx.interaction.edit_original_message(
+                    await ctx.interaction.edit_original_response(
                         content=f"Okay! You can propose a draw at any time if you change your mind.",
                         view=None,
                         embeds=[],
@@ -1314,50 +1314,12 @@ class CAHCog(MasterCog):
         )
 
         if confirmation:
-            msg = (
-                f"You're about to create a Cards Against Humanity game. There are a few important "
-                f"things you need to know:\n"
-                f"\n"
-                f"**Cards Against Humanity games are contained within "
-                f"[threads](https://support.discord.com/hc/en-us/articles/4403205878423-Threads-FAQ).** "
-                f"I'll handle the creation and management of the thread for you. If you can "
-                f"``Manage Threads``, please refrain from editing or deleting the thread until the game is "
-                f"over (trust me, I've got this).\n"
-                f"\n"
-                f"**Anyone can join.** Anyone who can both see and talk in this channel will be able to "
-                f"join or spectate your game.\n"
-                f"\n"
-                f"**You're in control.** You'll be the Game Host for this CAH game. This "
-                f"entitles you to certain special powers, like removing players from the game or ending the game"
-                f"early. However...\n "
-                f"\n"
-                f"**With power comes responsibility.** The game won't start until you use "
-                f"`/cah host start`, and if you leave the game or its thread at any time, the game will "
-                f"immediately end for all players.\n"
-                f"\n"
-                f"**I'm watching for inactivity.** Players determined to be inactive may be automatically "
-                f"removed from the game by yours truly. __You're not exempt from this__, and if *you* get "
-                f"removed, the game will end for everyone else, since you're the Game Host. Keep that in "
-                f"mind.\n"
-                f"\n"
-                f"**Content warning, again.** Just to reiterate, this game has lots of very very "
-                f"NSFW 18+ put-the-kids-to-bed type stuff. If that makes you uncomfortable, this is your last "
-                f"chance to turn back.\n"
-                f"\n"
-                f"Before we start, let's review your game settings.\n"
-                f"\n"
-                f"__Game Settings__\n"
-                f"**Players**: {players}\n"
-                f"**Points to Win**: {points}\n"
-                f"**Timeout**: {timeout} seconds\n"
-                f"**Voting Mode**: {voting}\n"
-                f"**Voice Channel**: {voice}\n"
-                f"\n"
-                f"Once the game has been created, these settings can't be changed.\n"
-                f"\n"
-                f"Proceed with creating this Cards Against Humanity game?"
-                ""
-            )
+            with support.Jinja.cah() as jinja:
+                template = jinja.get_template("create-game.md")
+                msg = template.render(
+                    max_players=players, points=points, timeout=timeout
+                )
+
             embed = discord.Embed(
                 title="Creating a Cards Against Humanity Game",
                 description=msg,
@@ -1426,7 +1388,7 @@ class CAHCog(MasterCog):
                     description=msg,
                     color=support.Color.red(),
                 )
-                await ctx.interaction.edit_original_message(embeds=[embed], view=None)
+                await ctx.interaction.edit_original_response(embeds=[embed], view=None)
         else:
             msg = (
                 f"You canceled the creation of this Cards Against Humanity game. You can create a new game with "
@@ -1437,7 +1399,7 @@ class CAHCog(MasterCog):
                 description=msg,
                 color=support.Color.red(),
             )
-            await ctx.interaction.edit_original_message(embeds=[embed], view=None)
+            await ctx.interaction.edit_original_response(embeds=[embed], view=None)
 
     @cah_group.command(name="join", description="Join a Cards Against Humanity game.")
     @cah.verify_context(level="thread")
@@ -1520,12 +1482,12 @@ class CAHCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Removing you from the game...", view=None, embeds=[]
                 )
                 await cah_game.remove_player(player_node=player_node)
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Okay! You're still in the game!", view=None, embeds=[]
                 )
 
@@ -1611,13 +1573,13 @@ class CAHCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Let's get started!", embeds=[], view=None
                 )
                 await cah_game.start_game()
 
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Okay! Just use `/cah host start` "
                     "whenever you're ready.",
                     embeds=[],
@@ -1651,12 +1613,12 @@ class CAHCog(MasterCog):
         )
 
         if confirmation:
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content="Aborting your CAH game...", embeds=[], view=None
             )
             await cah_game.force_close(reason="host_abortion")
         else:
-            await ctx.interaction.edit_original_message(
+            await ctx.interaction.edit_original_response(
                 content="Okay! The game is still on.", embeds=[], view=None
             )
 
@@ -1726,12 +1688,12 @@ class CAHCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content=f"Kicking {player.name}...", embeds=[], view=None
                 )
                 await cah_game.kick_player(player_node)
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content=f"Okay! {player.mention} remains in the game.",
                     embeds=[],
                     view=None,
@@ -1811,7 +1773,7 @@ class CAHCog(MasterCog):
             )
 
             if confirmation:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content=f"Transferring host powers to {player.mention}...",
                     embeds=[],
                     view=None,
@@ -1819,7 +1781,7 @@ class CAHCog(MasterCog):
                 await cah_game.transfer_host(player)
 
             else:
-                await ctx.interaction.edit_original_message(
+                await ctx.interaction.edit_original_response(
                     content="Ok! You're still the Game Host.", embeds=[], view=None
                 )
 
