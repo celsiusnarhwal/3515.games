@@ -7,6 +7,9 @@
 """
 The base settings configuration.
 """
+import traceback
+from types import FunctionType
+from typing import Type
 
 import discord
 from pydantic import BaseSettings, Field, StrictInt, StrictStr
@@ -25,6 +28,9 @@ class Settings(BaseSettings):
     bot_name : str
         The name of 3515.games' bot user.
     app_id : int
+    database : dict
+        A dictionary of options for 3515.games' database connection. For supported options, see Pony's documentation:
+        https://docs.ponyorm.org/database.html#binding-the-database-object-to-a-specific-database
         3515.games' application ID.
     owner_id : int, optional, default: 170966436125212673
         The user ID of 3515.games' owner. The default corresponds to celsiusnarhwal#3515.
@@ -41,20 +47,26 @@ class Settings(BaseSettings):
         startup and will thus not be usable.
     nltk_corpora : list[str], optional, default: ["averaged_perceptron_tagger"]
         A list of NLTK corpora to download on startup. (See: https://www.nltk.org/book/ch02)
-    database : dict
-        A dictionary of options for 3515.games' database connection. For supported options, see Pony's documentation:
-        https://docs.ponyorm.org/database.html#binding-the-database-object-to-a-specific-database
     token : str, optional, default: os.getenv("BOT_TOKEN")
         3515.games' bot token.
+    tracer : FunctionType, optional, default: traceback.print_exception
+        A function that will be called Pycord raises an exception during the execution of an application command.
+    suppressed_warnings: list[Warning], optional, default: [RuntimeWarning]
+        A list of warnings to suppress. (See: https://docs.python.org/3/library/warnings.html#warning-filter)
     """
 
+    # Required
     bot_name: StrictStr
     app_id: StrictInt
+    database: dict
+
+    # Optional
     owner_id: StrictInt = 170966436125212673
     intents: discord.Intents = discord.Intents.default() + discord.Intents.members
     debug_guilds: list[StrictInt] = []
     extensions: list[StrictStr] = []
     disabled_cogs: list[discord.Cog] = []
     nltk_corpora: list[StrictStr] = ["averaged_perceptron_tagger"]
-    database: dict
     token: StrictStr = Field(..., env="BOT_TOKEN")
+    tracer: FunctionType = traceback.print_exc
+    suppressed_warnings: list[Type[Warning]] = [RuntimeWarning]
