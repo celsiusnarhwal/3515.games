@@ -10,6 +10,7 @@ Bot events, setup functions, and the program main.
 
 import inspect
 import logging
+import warnings
 
 import alianator
 import discord
@@ -40,6 +41,28 @@ async def on_ready():
     print(f"{settings.bot_name} is ready to play! 🎉", fg="green")
     await bot.register_commands(force=True)
     await bot.sync_commands(force=True)
+
+
+@bot.event
+async def on_application_command_error(
+    ctx: discord.ApplicationContext, exception: discord.DiscordException
+):
+    """
+    Handles errors that occur during execution of application commands.
+
+    Parameters
+    ----------
+    ctx : discord.ApplicationContext
+        The command context.
+    exception : discord.DiscordException
+        The exception that was raised.
+    """
+    try:
+        raise exception
+    except discord.CheckFailure:
+        pass
+    except discord.DiscordException:
+        settings.tracer()
 
 
 @bot.event
@@ -119,6 +142,14 @@ def configure_logging():
     logger.addHandler(handler)
 
 
+def suppress_warnings():
+    """
+    Suppresss warnings as indicated by the bot's settings.
+    """
+    for warning in settings.suppressed_warnings:
+        warnings.filterwarnings("ignore", category=warning)
+
+
 def configure_cogs():
     """
     Initializes cogs.
@@ -161,6 +192,7 @@ def setup():
     Calls the previous functions.
     """
     configure_logging()
+    suppress_warnings()
     configure_cogs()
     configure_nltk()
     configure_database()
