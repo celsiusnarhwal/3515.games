@@ -17,6 +17,7 @@ import chess as pychess
 import discord
 from chess import square_name
 
+import shrine
 import support
 from cogs import chess
 from support import posessive
@@ -181,8 +182,8 @@ class ChessGame:
             name=f"Chess - {self.white.user.name} vs. {self.black.user.name}"
         )
 
-        with support.Jinja.chess() as jinja:
-            template = jinja.get_template("game-start.md")
+        with shrine.Torii.chess() as torii:
+            template = torii.get_template("game-start.md")
             msg = template.render(
                 white=self.white.user.mention, black=self.black.user.mention
             )
@@ -455,8 +456,8 @@ class ChessPlayer:
 
             await self.end_turn()
         else:
-            with support.Jinja.chess() as jinja:
-                template = jinja.get_template("invalid-move.md")
+            with shrine.Torii.chess() as torii:
+                template = torii.get_template("invalid-move.md")
                 msg = template.render()
 
             embed = discord.Embed(
