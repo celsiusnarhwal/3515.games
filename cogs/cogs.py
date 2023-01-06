@@ -7,6 +7,8 @@
 """
 All of 3515.games' commands and listeners are defined in this module.
 """
+import inspect
+import sys
 
 import discord
 import inflect as ifl
@@ -14,6 +16,7 @@ from discord.commands import Option, SlashCommandGroup, slash_command
 from discord.ext import commands
 from llist import dllistnode
 
+import shrine
 import support
 from cogs import about, rps, uno, chess, cah
 
@@ -69,6 +72,84 @@ class GeneriCog(MasterCog):
 
         await ctx.respond(embed=embed, ephemeral=True)
 
+    @slash_command(
+        description="Create a voice channel for a supported game. You won't be able to delete this channel manually."
+    )
+    async def voice(self, ctx: discord.ApplicationContext):
+        supported_games: list[support.HostedMultiplayerGame] = [
+            uno.UnoGame,
+            cah.CAHGame,
+        ]
+
+        for game in supported_games:
+            game_obj = game.retrieve_game(ctx.channel_id)
+            if game_obj:
+                if game_obj.host == ctx.user:
+                    channel = await game_obj.create_voice_channel()
+                    msg = (
+                        f"Your voice channel is {channel.mention}.\n As the Game Host, you can mute and defean the "
+                        f"channel's members and even use Priority Speaker. Try it out!\n"
+                        f"\n"
+                        f"Other players will get access to this channel as soon as they join the game."
+                    )
+
+                    embed = discord.Embed(
+                        title="Voice channel created!",
+                        description=msg,
+                        color=support.Color.mint(),
+                    )
+                    await ctx.respond(embed=embed, ephemeral=True)
+
+                    msg = (
+                        f"Players can access {channel.mention} after joining the game."
+                    )
+                    embed = discord.Embed(
+                        title="Voice channel created!",
+                        description=msg,
+                        color=support.Color.mint(),
+                    )
+
+                    await game_obj.thread.send(
+                        embed=embed, view=support.GameVoiceURLView(channel)
+                    )
+                else:
+                    msg = "Only the Game Host can create a voice channel for this game."
+                    embed = discord.Embed(
+                        title="You're not the Game Host.",
+                        description=msg,
+                        color=support.Color.red(),
+                    )
+
+                    await ctx.respond(embed=embed, ephemeral=True)
+                break
+        else:
+            msg = (
+                "To create a voice channel, you must use this command in the game thread of a supported game of "
+                "which you are the Game Host. Currently, supported games include:\n\n"
+            )
+
+            for game in supported_games:
+                msg += f"- {game.name}"
+                if game is not supported_games[-1]:
+                    msg += "\n"
+
+            embed = discord.Embed(
+                title="You can't do that here.",
+                description=msg,
+                color=support.Color.red(),
+            )
+
+            await ctx.respond(embed=embed, ephemeral=True)
+
+    @commands.Cog.listener(name="on_guild_channel_delete")
+    async def on_guild_channel_delete(self, channel: discord.VoiceChannel):
+        if type(channel) == discord.VoiceChannel:
+            if (
+                channel.category.name.casefold() == "3515.games"
+                and len(channel.category.channels) == 0
+            ):
+                await channel.category.delete()
+
 
 class RockPaperScissorsCog(MasterCog):
     """
@@ -95,14 +176,17 @@ class RockPaperScissorsCog(MasterCog):
         ),
     ):
         """
-        Challenges a user to a Rock-Paper-Scissors match between them and the command invoker.
+        Challenge a user to a Rock-Paper-Scissors game between themselves and the command invoker.
 
-        :param ctx: An ApplicationContext object.
-        :param opponent: The user to be challenged.
-        :param game_format: The format of the Rock-Paper-Scissors match; this can be either "Best of Three",
-        "Best of Five", or "Best of Nine".
+        Parameters
+        ----------
+        ctx : discord.ApplicationContext
+            The invocation context.
+        opponent : discord.User
+            The user to challenge to a Rock-Paper-Scissors game.
+        game_format : str
+            The game format. Must be one of "Best of Three", "Best of Five", or "Best of Nine".
         """
-
         # the user cannot challenge themselves
         if ctx.user == opponent:
             msg = "You can't play with yourself. Choose someone else to challenge."
@@ -212,19 +296,23 @@ class UnoCog(MasterCog):
         ),
     ):
         """
-        Creates an UNO game and corresponding game thread.
+        Create an UNO game.
 
-        :param ctx: An ApplicationContext object.
-        :param players: The maximum number of players that will be allowed to join the game. Minimum is 2,
-            maximum is 20.
-        :param points: The number of points that will be required to win the game. Minimum is 100, maximum is 500.
-            Optional; defaults to 500.
-        :param timeout: The number of seconds each player will have to move when its their turn.
+        Parameters
+        ----------
+        ctx : discord.ApplicationContext
+            The invocation context.
+        players : int
+            The maximum number of players that can join the game.
+        points
+            The number of points required to win the game.
+        timeout
+            The number of seconds in which players must finish their turns before being penalized.
         """
 
         # tell the user important information about creating an UNO game
-        with support.Jinja.uno() as jinja:
-            template = jinja.get_template("create-game.md")
+        with shrine.Torii.uno() as torii:
+            template = torii.get_template("create-game.md")
             msg = template.render(players=players, points=points, timeout=timeout)
 
         embed = discord.Embed(
@@ -293,9 +381,12 @@ class UnoCog(MasterCog):
     @uno.verify_context(level="thread")
     async def join_game(self, ctx: discord.ApplicationContext):
         """
-        Joins the invoker to an UNO game. Can only be used in UNO game threads.
+        Join the invoker to an UNO game.
 
-        :param ctx: An ApplicationContext object.
+        Parameters
+        ----------
+        ctx : discord.ApplicationContext
+            The invocation context.
         """
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
 
@@ -338,9 +429,12 @@ class UnoCog(MasterCog):
     @uno.verify_context(level="player")
     async def leave_game(self, ctx: discord.ApplicationContext):
         """
-        Voluntarily removes the player from an UNO game. Can only be used in UNO game threads.
+        Leave an UNO game on behalf of the invoking player.
 
-        :param ctx: An ApplicationContext object.
+        Parameters
+        ----------
+        ctx : discord.ApplicationContext
+            The invocation context.
         """
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player_node = uno_game.retrieve_player(ctx.user, return_node=True)
@@ -518,12 +612,17 @@ class UnoCog(MasterCog):
     @uno.verify_context(level="thread", verify_host=True)
     async def start_game(self, ctx: discord.ApplicationContext):
         """
-        Starts an UNO game that has already been created and which at least one player aside from the Game Host has
-        joined. Can only be used by UNO Game Hosts in UNO game threads. Not to be confused with
-        ``create_public_game()`` and ``create_private_game()``, which create UNO games that must later be started with
-        this command.
+        Start an UNO game.
 
-        :param ctx: An ApplicationContext object.
+        Parameters
+        ----------
+        ctx : discord.ApplicationContext
+            The invocation context.
+
+        Notes
+        -----
+        This is not to be confused with :meth:`UnoCog.create_game`, which creates games that this method
+        may then start.
         """
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
 
@@ -579,10 +678,18 @@ class UnoCog(MasterCog):
     @uno.verify_context(level="thread", verify_host=True)
     async def abort_game(self, ctx: discord.ApplicationContext):
         """
-        Aborts an ongoing UNO game, forcefully ending it for all players. Can only be used by UNO Game Hosts in UNO game
-        threads.
+        Terminate an UNO game.
 
-        :param ctx: An ApplicationContext object.
+        Parameters
+        ----------
+        ctx : discord.ApplicationContext
+            The invocation context.
+
+        Notes
+        -----
+        This method is called only upon the invocation of its associated command by the Game Host. Separate faculties
+        exist for the normal conclusion of games in which a player has met the win condition and the automatic
+        termination of games that can no longer continue.
         """
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         message = (
@@ -621,10 +728,20 @@ class UnoCog(MasterCog):
         player: Option(discord.User, "Mention a player to kick."),
     ):
         """
-        Kicks a player from an UNO game. Can only be used by UNO Game Hosts in UNO game threads.
+        Kick a player from an UNO game.
 
-        :param player: The player to kick.
-        :param ctx: An ApplicationContext object.
+        Parameters
+        ----------
+        ctx : discord.ApplicationContext
+            The invocation context.
+        player : discord.User
+            The player to kick.
+
+        Notes
+        -----
+        This method is only called upon the invocation of its associated command by the Game Host. Separate faculties
+        exist for removing players from games by their own volition (see :meth:`UnoCog.leave_game`) and automatically
+        removing players who have been deemed inactive.
         """
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player_node: dllistnode = uno_game.retrieve_player(player, return_node=True)
@@ -648,10 +765,6 @@ class UnoCog(MasterCog):
         else:
             msg = (
                 f"{player.mention} will be able to rejoin the game if it hasn't already started. "
-                f"If they don't rejoin, they'll remain a spectator.\n"
-                f"\n"
-                f"If you want to permanently remove them from both the game and the thread, "
-                f"use `/uno host ban` instead.\n"
                 f"\n"
                 f"Kick {player.mention}?"
             )
@@ -768,12 +881,17 @@ class UnoCog(MasterCog):
     @commands.Cog.listener()
     async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
         """
-        A listener that runs whenever a user is removed from a thread. This runs whenever *any* user is removed from
-        *any* thread in the server, regardless of whether they're playing an UNO game or being removed from an UNO game
-        thread. The purpose of this listener is to enable the automatic removal of UNO players from games when they
-        leave associated game threads.
+        A listener that runs whenever a user is removed from a thread.
 
-        :param thread_member: A discord.ThreadMember object representing the removed user.
+        Parameters
+        ----------
+        thread_member : discord.ThreadMember
+            The user that was removed from the thread.
+
+        Notes
+        -----
+        The purpose of this listener is to enable the automatic removal of UNO players from games when they
+        leave associated game threads.
         """
         uno_game = uno.UnoGame.retrieve_game(thread_member.thread_id)
         player_node = uno_game.retrieve_player(thread_member, return_node=True)
@@ -785,11 +903,17 @@ class UnoCog(MasterCog):
     @commands.Cog.listener()
     async def on_raw_thread_delete(self, thread: discord.RawThreadDeleteEvent):
         """
-        A listener that runs whenever a thread is deleted. This runs whenever *any* thread in the server is deleted,
-        whether or not is an UNO game thread. The purpose of this listener is to enable the automatic closure of UNO
-        games whose associated game threads are deleted.
+        A listener that runs whenever a thread is deleted.
 
-        :param thread: A discord.RawThreadDeleteEvent object representing the deleted thread.
+        Parameters
+        ----------
+        thread : discord.RawThreadDeleteEvent
+            The event of the thread deletion.
+
+        Notes
+        -----
+        The purpose of this listener is to enable the automatic closure of UNO games whose associated game threads
+        are deleted.
         """
         uno_game = uno.UnoGame.retrieve_game(thread.thread_id)
 
@@ -798,13 +922,19 @@ class UnoCog(MasterCog):
             await uno_game.force_close(reason="thread_deletion")
 
     @commands.Cog.listener()
-    async def on_guild_channel_delete(self, channel):
+    async def on_guild_channel_delete(self, channel: discord.TextChannel):
         """
-        A listener that runs whenever a channel is deleted. This runs whenever *any* channel in the server is deleted,
-        whether or not it contains UNO game threads. The purpose of this listener is to enable the automatic closure
-        of UNO games whose associated game threads' parent channels are deleted.
+        A listener that runs whenever a channel is deleted in a server.
 
-        :param channel: The deleted channel.
+        Parameters
+        ----------
+        channel : discord.abc.GuildChannel
+            The channel that was deleted.
+
+        Notes
+        -----
+        The purpose of this listener is to enable the automatic closure of UNO games whose associated game
+        threads' parent channels are deleted.
         """
         # call force_close_channel_deletion() for all channel threads associated with UNO games
         for thread in [
@@ -1284,17 +1414,7 @@ class CAHCog(MasterCog):
             choices=["Card Czar", "Popular Vote"],
             default="Card Czar",
         ),
-        voice: Option(
-            str,
-            description="Choose whether to create a private voice channel "
-            "for your game. The default is Don't Create.",
-            choices=["Create", "Don't Create"],
-            default="Don't Create",
-        ),
     ):
-
-        if voice == "Create" and not await cah.check_voice_permissions(ctx):
-            return
 
         msg = (
             "Cards Against Humanity is a pretty vulgar game. You're likely to see content that may gross you out, "
@@ -1303,10 +1423,13 @@ class CAHCog(MasterCog):
         embed = discord.Embed(
             title="Content Warning", description=msg, color=support.Color.orange()
         )
-        embed.set_footer(
-            text="Are you a moderator? You can disable Cards Against Humanity in this server by changing "
-            "the permissions for the /cah command in Server Settings > Integrations > 3515.games."
-        )
+
+        if ctx.user.guild_permissions.manage_guild:
+            embed.set_footer(
+                text="Whoa, it looks like you're a moderator! Just so you know, you can disable Cards Against Humanity "
+                "in this server by changing the permissions for the /cah command in Server Settings > Integrations "
+                "> 3515.games."
+            )
 
         view = support.ConfirmationView(ctx=ctx)
         confirmation = await view.request_confirmation(
@@ -1314,8 +1437,8 @@ class CAHCog(MasterCog):
         )
 
         if confirmation:
-            with support.Jinja.cah() as jinja:
-                template = jinja.get_template("create-game.md")
+            with shrine.Torii.cah() as torii:
+                template = torii.get_template("create-game.md")
                 msg = template.render(
                     max_players=players, points=points, timeout=timeout
                 )
@@ -1348,7 +1471,6 @@ class CAHCog(MasterCog):
                     points_to_win=points,
                     timeout=timeout,
                     use_czar=bool(voting == "Card Czar"),
-                    use_voice=bool(voice == "Create"),
                 )
 
                 game_class = (
@@ -1809,24 +1931,15 @@ class CAHCog(MasterCog):
             await cah_game.force_close(reason="thread_deletion")
 
     @commands.Cog.listener(name="on_guild_channel_delete")
-    async def on_guild_channel_delete(
-        self, channel: discord.TextChannel | discord.VoiceChannel
-    ):
-        if type(channel) == discord.TextChannel:
-            for thread in [thread for thread in channel.threads]:
-                cah_game = cah.CAHGame.retrieve_game(thread.id)
-                if cah_game:
-                    await cah_game.force_close(reason="channel_deletion")
-        elif type(channel) == discord.VoiceChannel:
-            if (
-                channel.category.name.casefold() == "3515.games"
-                and len(channel.category.channels) == 0
-            ):
-                await channel.category.delete()
-
-            cah_game: cah.CAHGame = discord.utils.find(
-                lambda g: g.voice_channel == channel, cah.CAHGame.__all_games__.values()
-            )
-
+    async def on_guild_channel_delete(self, channel: discord.TextChannel):
+        for thread in [thread for thread in channel.threads]:
+            cah_game = cah.CAHGame.retrieve_game(thread.id)
             if cah_game:
-                await cah_game.send_vc_deletion_warning()
+                await cah_game.force_close(reason="channel_deletion")
+
+
+all_cogs = [
+    cog
+    for _, cog in inspect.getmembers(sys.modules[__name__], inspect.isclass)
+    if issubclass(cog, MasterCog)
+]

@@ -144,12 +144,27 @@ def get_thread_url(thread: discord.Thread) -> str:
 
 def posessive(string: str) -> str:
     """
-    Returns a string with a possessive ending. Strings ending in "s" will be appended with a sole apostrophe; other
+    Append a string with a posessive ending. Strings ending in "s" will be appended with a sole apostrophe; other
     strings will be appended with both an apostrophe and an "s".
 
-    :param string: The string to append the possessive ending to.
+    Parameters
+    ----------
+    string : str
+        The string.
+
+    Returns
+    -------
+    str
+        The modified string.
+
+    Examples
+    --------
+    >>> posessive("Zander")
+    "Zander's"
+    >>> posessive("Celsius")
+    "Celsius'"
     """
-    return f"{string}'" if string.endswith("s") else f"{string}'s"
+    return string + "'" if string.endswith("s") else string + "'s"
 
 
 def split_list(seq: list, size: int) -> list:
