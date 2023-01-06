@@ -6,10 +6,12 @@
 
 from __future__ import annotations
 
+import sys
+
 import discord
 import discord.ui
 from discord import Interaction, ButtonStyle
-from discord.ui import Button, button as discord_button
+from discord.ui import Button, button as discord_button, Item
 
 
 class EnhancedView(discord.ui.View):
@@ -36,6 +38,9 @@ class EnhancedView(discord.ui.View):
         self.target_user: discord.User = target_user
         self.timeout = None
         self.success = None  # views can use this to indicate their successful completion (vs. timing out)
+
+    def on_error(self, error: Exception, item: Item, interaction: Interaction) -> None:
+        sys.excepthook(type(error), error, error.__traceback__)
 
     def disable_children(self):
         for child in self.children:
@@ -240,3 +245,13 @@ class GameThreadURLView(EnhancedView):
     def __init__(self, thread: discord.Thread, **kwargs):
         super().__init__(**kwargs)
         self.add_item(Button(label="Go to game thread", url=thread.jump_url))
+
+
+class GameVoiceURLView(EnhancedView):
+    """
+    Provides a URL button that points to a game's associated voice channel.
+    """
+
+    def __init__(self, channel: discord.VoiceChannel, **kwargs):
+        super().__init__(**kwargs)
+        self.add_item(Button(label="Join voice channel", url=channel.jump_url))
