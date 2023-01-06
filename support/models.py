@@ -13,7 +13,6 @@ from typing import Self
 import discord
 import inflect as ifl
 from discord.ext import commands
-from jinja2 import Environment, FileSystemLoader
 from path import Path
 
 import support
@@ -25,6 +24,28 @@ class HostedMultiplayerGame:
     """
     Consolidates common attributes for hosted multiplayer games. A hosted multiplayer a game is any game that supports
     more than two players where one of those players is deemed the "Game Host".
+
+    Parameters
+    ----------
+    guild: discord.Guild
+        The guild in which the game is being played.
+    thread: discord.Thread
+        The thread in which the game is being played.
+    host: discord.User
+        The user who is the Game Host.
+
+    Attributes
+    ----------
+    name: str
+        The full name of the game.
+    short_name: str
+        The short name of the game. Unless explicitly defined, this will be the same as the full name.
+    min_players: int
+        The minimum number of players required to play the game.
+    lobby_intro_msg: discord.Message
+        The introduction message sent to the game thread when the game is created.
+    __all_games__: dict
+        A dictionary that maps game objects to the IDs of the threads in which they are being played.
     """
 
     name = ""
@@ -46,7 +67,9 @@ class HostedMultiplayerGame:
 
         self.short_name = self.short_name or self.name
 
+        self.lobby_intro_msg = None
         self.min_players = 2
+        self.voice_channel: discord.VoiceChannel = None
 
         self.__all_games__[self.thread.id] = self
 
@@ -113,6 +136,38 @@ class HostedMultiplayerGame:
                 return False
 
         return commands.check(predicate)
+
+    async def transfer_host(self, new_host: discord.User):
+        """
+        Transfers Game Host privileges from one user to another.
+
+        :param new_host: The user to transfer host privileges to.
+        """
+        old_host = self.host
+        self.host = new_host
+
+        embed = discord.Embed(
+            title="The Game Host has changed!",
+            description=f"{old_host.mention} has transferred host powers to {new_host.mention}. "
+            f"{new_host.mention} is now the Game Host.",
+            color=support.Color.orange(),
+        )
+
+        await self.thread.send(content="@everyone", embed=embed)
+
+        await self.thread.edit(
+            name=self.thread.name.replace(old_host.name, new_host.name)
+        )
+
+        intro = self.lobby_intro_msg
+        intro_0 = intro.embeds[0]
+        intro_0.title = intro_0.title.replace(old_host.name, new_host.name)
+        intro_0.description = intro_0.description.replace(
+            old_host.mention, new_host.mention
+        )
+        intro.embeds[0] = intro_0
+        await self.lobby_intro_msg.edit(embeds=intro.embeds)
+
 
     async def force_close(self, reason):
         """
@@ -328,6 +383,47 @@ class HostedMultiplayerGame:
         await asyncio.sleep(60)
         await self.thread.delete()
 
+    async def create_voice_channel(self) -> discord.VoiceChannel:
+        guild_categories = self.guild.by_category()
+        my_category = discord.utils.find(
+            lambda c: c[0] is not None and c[0].name.casefold() == "3515.games",
+            guild_categories,
+        )
+        if my_category:
+            my_category = my_category[0]
+        else:
+            my_category = await self.guild.create_category(
+                "3515.games", position=len(guild_categories) + 1
+            )
+
+        overwrites = {
+            self.guild.me: discord.PermissionOverwrite.from_pair(
+                allow=support.GamePermissions.vc(), deny=discord.Permissions.none()
+            ),
+            self.host: discord.PermissionOverwrite.from_pair(
+                allow=support.GamePermissions.vc(), deny=discord.Permissions.none()
+            ),
+            self.guild.default_role: discord.PermissionOverwrite.from_pair(
+                allow=discord.Permissions.none(), deny=support.GamePermissions.vc()
+            ),
+        }
+
+        self.voice_channel = await my_category.create_voice_channel(
+            f"{self.short_name} with {self.host.name}!", overwrites=overwrites
+        )
+
+        embed = discord.Embed(
+            title="Nothing to see (or say) here.",
+            description="You should head to the game thread instead.",
+            color=support.Color.red(),
+        )
+
+        await self.voice_channel.send(
+            embed=embed, view=support.GameThreadURLView(self.thread)
+        )
+
+        return self.voice_channel
+
 
 class Color(discord.Color):
     """
@@ -381,54 +477,6 @@ class Assets(Path):
         return cls("kurisu/assets")
 
 
-class Jinja(Environment):
-    """
-    Jinja2 environments.
-    """
-
-    @classmethod
-    def _get_env(cls, pointer: Assets) -> Self:
-        """
-        Notes
-        -----
-        The `deline` filter, which replaces all newlines in a string with spaces, is used to counteract
-        Discord's treatment of carriage returns as newlines.
-        """
-        env = cls(loader=FileSystemLoader(pointer / "templates"))
-        env.filters["deline"] = lambda content: content.replace("\n", " ")
-        return env
-
-    @classmethod
-    def about(cls):
-        return cls._get_env(Assets.about())
-
-    @classmethod
-    def rps(cls):
-        return cls._get_env(Assets.rps())
-
-    @classmethod
-    def uno(cls):
-        return cls._get_env(Assets.uno())
-
-    @classmethod
-    def chess(cls):
-        return cls._get_env(Assets.chess())
-
-    @classmethod
-    def cah(cls):
-        return cls._get_env(Assets.cah())
-
-    @classmethod
-    def kurisu(cls):
-        return cls._get_env(Assets.kurisu())
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-
 class GamePermissions(discord.Permissions):
     """
     Implements permission set constants for 3515.games.
@@ -437,11 +485,14 @@ class GamePermissions(discord.Permissions):
     # the integers used to instantiate the Permissions objects are obtained from Discord's bot permissions calculator:
     # https://discord.com/developers
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.update(read_messages=True, send_messages=True)
+
     @classmethod
     def universal(cls):
         """
-        The set of permissions universally required by all of 3515.games' functionality. All other permission sets
-        implemented by :class:`GamePermissions` are *in addition* to this one.
+        The set of permissions universally required by all of 3515.games' functionality.
 
         Returns a :class:`GamePermissions` object with the following permissions:
 
@@ -455,22 +506,24 @@ class GamePermissions(discord.Permissions):
         """
         The set of permissions required for Rock-Paper-Scissors.
 
-        Returns a :class:`GamePermissions` object with ``GamePermissions.universal()`` and the following
-        permissions:
+        Returns a :class:`GamePermissions` object with the following permissions:
 
+        - Read Messages/View Channels
+        - Send Messages
         - Embed Links
         - Attach Files
         """
-        return cls.universal() + cls(49152)
+        return cls(49152)
 
     @classmethod
     def uno(cls):
         """
         The set of permissions required for UNO games.
 
-        Returns a :class:`GamePermissions` object with ``GamePermissions.universal()`` and the following
-        permissions:
+        Returns a :class:`GamePermissions` object with the permissions:
 
+        - Read Messages/View Channels
+        - Send Messages
         - Create Public Threads
         - Send Messages in Threads
         - Manage Messages
@@ -487,9 +540,11 @@ class GamePermissions(discord.Permissions):
         """
         The set of permissions required for chess.
 
-        Returns a :class:`GamePermissions` object with ``GamePermissions.universal()`` and the following
+        Returns a :class:`GamePermissions` object with the following
         permissions:
 
+        - Read Messages/View Channels
+        - Send Messages
         - Create Public Threads
         - Send Messages in Threads
         - Manage Messages
@@ -506,9 +561,10 @@ class GamePermissions(discord.Permissions):
         The set of permissions required for public CAH games. This is currently equivalent to
         ``GamePermissions.uno()``.
 
-        Returns a :class:`GamePermissions` object with ``GamePermissions.universal()`` and the following
-        permissions:
+        Returns a :class:`GamePermissions` object with the following permissions:
 
+        - Read Messages/View Channels
+        - Send Messages
         - Create Public Threads
         - Send Messages in Threads
         - Manage Messages
@@ -543,6 +599,28 @@ class GamePermissions(discord.Permissions):
         return cls.voice() + cls.read_message_history + cls.manage_channels - cls.stream
 
     @classmethod
+    def vc(cls):
+        """
+        The set of permissions required to create voice channels for supported games.
+
+        Returns a :class:`GamePermissions` object with the following permissions:
+
+        - Read Messages/View Channels
+        - Send Messages
+        - Manage Channels
+        - Read Message History
+        - Connect
+        - Speak
+        - Mute Members
+        - Deafen Members
+        - Move Members
+        - Use Voice Activity
+        - Priority Speaker
+
+        """
+        return cls.voice() + cls.read_message_history + cls.manage_channels - cls.stream
+
+    @classmethod
     def everything(cls):
         """
         Returns a :class:`GamePermissions` object with the combined set of all other predefined permission sets in the
@@ -561,34 +639,6 @@ class GamePermissions(discord.Permissions):
             permissions += permset()
 
         return permissions
-
-    # the following methods make GamePermissions objects backwards-compatible with discord.flags.BaseFlags
-    # arithmetic operations
-
-    @staticmethod
-    def _bitmath_decorator(op_func):
-        def wrapper(self, other):
-            return GamePermissions(
-                op_func(self.__class__.__base__(self.value), other).value
-            )
-
-        return wrapper
-
-    @_bitmath_decorator
-    def __and__(self, other):
-        return self & other
-
-    @_bitmath_decorator
-    def __or__(self, other):
-        return self | other
-
-    @_bitmath_decorator
-    def __add__(self, other):
-        return self + other
-
-    @_bitmath_decorator
-    def __sub__(self, other):
-        return self - other
 
     def __iter__(self):
         return self.__class__.__base__.__iter__(self.__class__.__base__(self.value))

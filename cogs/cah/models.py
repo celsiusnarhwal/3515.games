@@ -17,6 +17,7 @@ import inflect as ifl
 import nltk
 import shortuuid
 from llist import dllist as DoublyLinkedList, dllistnode
+from pydantic import BaseSettings
 from sortedcontainers import SortedKeyList
 
 import support
@@ -42,7 +43,6 @@ class CAHGame(HostedMultiplayerGame):
         self.is_joinable = True
         self.voice_channel: discord.VoiceChannel = None
         self.banned_users = set()
-        self.lobby_intro_msg: discord.Message = None
 
         self.card_czar = dllistnode()
         self.is_voting = False
@@ -118,78 +118,6 @@ class CAHGame(HostedMultiplayerGame):
         )
         await self.lobby_intro_msg.pin()
 
-        if self.settings.use_voice:
-            await self.create_voice_channel()
-            vc_msg = (
-                f"Cards Against Humanity is even better with voice chat! Joining the game will grant you access "
-                f"a private voice channel just for you and the other players. You're not required to use the "
-                f"channel to play - I think it's more fun if you do, though."
-            )
-            vc_embed = discord.Embed(
-                title="Join the voice channel!",
-                description=vc_msg,
-                color=support.Color.magenta(),
-            )
-            await self.thread.send(
-                embed=vc_embed, view=cah.CAHVoiceURLView(self.voice_channel)
-            )
-
-    async def create_voice_channel(self) -> discord.VoiceChannel:
-        """
-        Creates a voice channel for a CAH game.
-        """
-        guild_categories = self.guild.by_category()
-        my_category = discord.utils.find(
-            lambda c: c[0] is not None and c[0].name.casefold() == "3515.games",
-            guild_categories,
-        )
-        if my_category:
-            my_category = my_category[0]
-        else:
-            my_category = await self.guild.create_category(
-                "3515.games", position=len(guild_categories) + 1
-            )
-
-        overwrites = {
-            self.guild.me: discord.PermissionOverwrite.from_pair(
-                allow=support.GamePermissions.cah()
-                + support.GamePermissions.cah_voice(),
-                deny=discord.Permissions.none(),
-            ),
-            self.guild.default_role: discord.PermissionOverwrite.from_pair(
-                allow=discord.Permissions.none(),
-                deny=support.GamePermissions.cah()
-                + support.GamePermissions.cah_voice(),
-            ),
-        }
-
-        self.voice_channel = await my_category.create_voice_channel(
-            f"{self.short_name} with {self.host.name}!", overwrites=overwrites
-        )
-
-        embed = discord.Embed(
-            title="Nothing to see (or say) here.",
-            description="You should head to the game thread instead.",
-            color=support.Color.red(),
-        )
-
-        await self.voice_channel.send(
-            embed=embed, view=support.GameThreadURLView(self.thread)
-        )
-
-    async def send_vc_deletion_warning(self):
-        """
-        Sends a warning message to the game thread that the voice channel has been deleted.
-        """
-        msg = (
-            "A moderator has deleted the voice channel for this game. That's fine - "
-            "the game will continue on without it."
-        )
-        embed = discord.Embed(
-            title="Voice Channel Deleted", description=msg, color=support.Color.red()
-        )
-        await self.thread.send(content="@everyone", embed=embed)
-
     async def add_player(
         self, ctx: discord.ApplicationContext, user: discord.User, is_host=False
     ):
@@ -237,23 +165,7 @@ class CAHGame(HostedMultiplayerGame):
                 color=support.Color.mint(),
             )
 
-            if self.voice_channel:
-                vc_msg = (
-                    f"Cards Against Humanity is best played with voice chat! You can join this game's private "
-                    f"voice channel, {self.voice_channel.mention}, by selecting it in the channel list or "
-                    f"using the button below."
-                )
-                embed.add_field(
-                    name="Join the voice channel!", value=vc_msg, inline=False
-                )
-
-            await ctx.respond(
-                embed=embed,
-                ephemeral=True,
-                view=cah.CAHVoiceURLView(self.voice_channel)
-                if self.voice_channel
-                else None,
-            )
+            await ctx.respond(embed=embed, ephemeral=True)
 
     async def remove_player(self, player_node: dllistnode):
         """
@@ -623,6 +535,18 @@ class CAHGame(HostedMultiplayerGame):
 
         return leaderboard
 
+    async def transfer_host(self, new_host: discord.User):
+        old_host = self.host
+        await super().transfer_host(new_host)
+
+        await self.voice_channel.set_permissions(
+            target=old_host, overwrite=self.retrieve_player(old_host).voice_overwrites()
+        )
+
+        await self.voice_channel.set_permissions(
+            target=new_host, overwrite=self.retrieve_player(new_host).voice_overwrites()
+        )
+
     async def kick_player(self, player_node: dllistnode):
         """
         Kicks a player from the game.
@@ -647,37 +571,6 @@ class CAHGame(HostedMultiplayerGame):
         embed.timestamp = discord.utils.utcnow()
 
         await player_node.value.user.send(embed=embed)
-
-    async def transfer_host(self, new_host: discord.User):
-        """
-        Transfers Game Host privileges from one user to another.
-
-        :param new_host: The user to transfer host privileges to.
-        """
-        old_host = self.host
-        self.host = new_host
-
-        embed = discord.Embed(
-            title="The Game Host has changed!",
-            description=f"{old_host.mention} has transferred host powers to {new_host.mention}. "
-            f"{new_host.mention} is now the Game Host.",
-            color=support.Color.orange(),
-        )
-
-        await self.thread.send(content="@everyone", embed=embed)
-
-        await self.thread.edit(
-            name=self.thread.name.replace(old_host.name, new_host.name)
-        )
-
-        intro = self.lobby_intro_msg
-        intro_0 = intro.embeds[0]
-        intro_0.title = intro_0.title.replace(old_host.name, new_host.name)
-        intro_0.description = intro_0.description.replace(
-            old_host.mention, new_host.mention
-        )
-        intro.embeds[0] = intro_0
-        await self.lobby_intro_msg.edit(embeds=intro.embeds)
 
 
 class CAHPopularVoteGame(CAHGame):
@@ -841,20 +734,11 @@ class CAHPopularVoteGame(CAHGame):
             await play_callback() if not self.is_voting else await vote_callback()
 
 
-class CAHGameSettings:
-    def __init__(
-        self,
-        max_players: int,
-        points_to_win: int,
-        timeout: int,
-        use_czar: bool,
-        use_voice: bool,
-    ):
-        self.max_players = max_players
-        self.points_to_win = points_to_win
-        self.timeout = timeout
-        self.use_czar = use_czar
-        self.use_voice = use_voice
+class CAHGameSettings(BaseSettings):
+    max_players: int
+    points_to_win: int
+    timeout: int
+    use_czar: bool
 
     def __str__(self):
         players_str = (

@@ -18,8 +18,10 @@ import inflect as ifl
 import tomlkit as toml
 from discord.ext import pages as discord_pages
 from llist import dllistnode, dllist as DoublyLinkedList
+from pydantic import BaseSettings
 from sortedcontainers import SortedKeyList
 
+import shrine
 import support
 from cogs import uno
 from support import HostedMultiplayerGame, posessive
@@ -59,7 +61,6 @@ class UnoGame(HostedMultiplayerGame):
         self.card_in_play: UnoCard = None
         self.color_in_play: str = ""
         self.suit_in_play: str = ""
-        self.lobby_intro_msg: discord.Message = None
         self.turn_record = []
         self.status = UnoStatusCenter(game=self)
 
@@ -93,12 +94,18 @@ class UnoGame(HostedMultiplayerGame):
                 lambda player: player.user.id == user.id, self.players.itervalues()
             )
 
+    async def force_close(self, reason):
+        if self.voice_channel:
+            await self.voice_channel.delete()
+
+        await super().force_close(reason)
+
     async def open_lobby(self):
         """
         Sends an introductory message at the creation of an UNO game thread and pins said message to that thread.
         """
-        with support.Jinja.uno() as jinja:
-            template = jinja.get_template("lobby-open.md")
+        with shrine.Torii.uno() as torii:
+            template = torii.get_template("lobby-open.md")
             intro_message = template.render(host=self.host.mention)
 
         intro_embed = discord.Embed(
@@ -140,8 +147,8 @@ class UnoGame(HostedMultiplayerGame):
                 random.choice(open("uno_start_lines.txt").readlines()).strip() + "\n\n"
             )
 
-        with support.Jinja.uno() as jinja:
-            template = jinja.get_template("game-start.md")
+        with shrine.Torii.uno() as torii:
+            template = torii.get_template("game-start.md")
             msg = template.render(funny=funny, rules=rules)
 
         embed = discord.Embed(
@@ -171,7 +178,8 @@ class UnoGame(HostedMultiplayerGame):
         if user not in await self.thread.fetch_members():
             await self.thread.add_user(user)
 
-        self.players.append(UnoPlayer(user=user, game=self))
+        player = UnoPlayer(user=user, game=self)
+        self.players.append(player)
 
         join_message_embed = discord.Embed(
             title="A new player has joined the game!",
@@ -180,6 +188,11 @@ class UnoGame(HostedMultiplayerGame):
         )
 
         await self.thread.send(embed=join_message_embed)
+
+        if self.voice_channel:
+            await self.voice_channel.set_permissions(
+                target=player.user, overwrite=player.voice_overwrites()
+            )
 
         if not is_host:
             msg = (
@@ -230,6 +243,10 @@ class UnoGame(HostedMultiplayerGame):
             await player.end_turn()
 
         self.players.remove(player_node)
+
+        if self.voice_channel and player.user in self.voice_channel.members:
+            await player.user.move_to(None)
+            await self.voice_channel.set_permissions(target=player.user, overwrite=None)
 
     async def walk_players(
         self, player_node: dllistnode, steps: int, use_value=False
@@ -482,6 +499,18 @@ class UnoGame(HostedMultiplayerGame):
             or not self.color_in_play
         )
 
+    async def transfer_host(self, new_host: discord.User):
+        old_host = self.host
+        await super().transfer_host(new_host)
+
+        await self.voice_channel.set_permissions(
+            target=old_host, overwrite=self.retrieve_player(old_host).voice_overwrites()
+        )
+
+        await self.voice_channel.set_permissions(
+            target=new_host, overwrite=self.retrieve_player(new_host).voice_overwrites()
+        )
+
     async def kick_player(self, player_node: dllistnode):
         """
         Kicks a player from the game.
@@ -507,54 +536,15 @@ class UnoGame(HostedMultiplayerGame):
 
         await player_node.value.user.send(embed=embed)
 
-    async def transfer_host(self, new_host: discord.User):
-        """
-        Transfers Game Host privileges from one user to another.
 
-        :param new_host: The user to transfer host privileges to.
-        """
-        old_host = self.host
-        self.host = new_host
-
-        embed = discord.Embed(
-            title="The Game Host has changed!",
-            description=f"{old_host.mention} has transferred host powers to {new_host.mention}. "
-            f"{new_host.mention} is now the Game Host.",
-            color=support.Color.orange(),
-        )
-
-        await self.thread.send(content="@everyone", embed=embed)
-
-        await self.thread.edit(
-            name=self.thread.name.replace(old_host.name, new_host.name)
-        )
-
-        intro = self.lobby_intro_msg
-        intro_0 = intro.embeds[0]
-        intro_0.title = intro_0.title.replace(old_host.name, new_host.name)
-        intro_0.description = intro_0.description.replace(
-            old_host.mention, new_host.mention
-        )
-        intro.embeds[0] = intro_0
-        await self.lobby_intro_msg.edit(embeds=intro.embeds)
-
-
-class UnoGameSettings:
+class UnoGameSettings(BaseSettings):
     """
     Represents the settings for an UNO game.
     """
 
-    def __init__(self, max_players, points_to_win, timeout):
-        """
-        The constructor for ``UnoGameSettings``.
-
-        :param max_players: The maximum number of players allowed to join the game.
-        :param points_to_win: The number of points required to win the game.
-        :param timeout: The number of seconds within which players must complete their turns.
-        """
-        self.max_players = max_players
-        self.points_to_win = points_to_win
-        self.timeout = timeout
+    max_players: int
+    points_to_win: int
+    timeout: int
 
     def __str__(self):
         players_str = (
@@ -585,7 +575,7 @@ class UnoPlayer:
     Represents a player in an UNO game.
     """
 
-    def __init__(self, user: discord.User, game: UnoGame):
+    def __init__(self, user: discord.Member, game: UnoGame):
         """
         The constructor for ``UnoPlayer``.
 
@@ -917,6 +907,29 @@ class UnoPlayer:
             self.hand_value -= card.point_value()
         else:
             self.hand_value += card.point_value()
+
+    def voice_overwrites(self) -> discord.Permissions:
+        """
+        Returns the voice channel permission overwrites for the player.
+        """
+        if self.game.host == self.user:
+            overwrites = {
+                "allow": support.GamePermissions.vc(),
+                "deny": discord.Permissions.none(),
+            }
+        else:
+            overwrites = {
+                "allow": discord.Permissions(
+                    connect=True, speak=True, use_voice_activation=True
+                ),
+                "deny": discord.Permissions.none(),
+            }
+
+        overwrites["allow"] += discord.Permissions(
+            view_channel=True, read_message_history=True
+        )
+
+        return discord.PermissionOverwrite.from_pair(**overwrites)
 
     async def reset_timeouts(self):
         """
