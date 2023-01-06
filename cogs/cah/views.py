@@ -115,14 +115,14 @@ class PackSelectView(EnhancedView):
         self.add_item(pack_menu)
 
         msg = (
-            "Pick the packs you want to play with cards from. You can pick as many as you like, but you must pick "
-            "at least one.\n"
-            "\n"
-            "(Tip: When in doubt, the CAH Base Set is never a bad choice.)"
+            "Pick the packs you want to play with cards from. You can pick as many as you like."
         )
+
         embed = discord.Embed(
             title="Pack Selection", description=msg, color=support.Color.mint()
         )
+
+        embed.set_footer(text="I'll default to the CAH Base Set if you leave this empty.")
 
         embed.set_author(
             name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
@@ -468,13 +468,3 @@ class CAHStatusCenterView(EnhancedView):
             )
 
         return embed
-
-
-class CAHVoiceURLView(EnhancedView):
-    """
-    Provides a URL button that points to a CAH game's associated voice channel.
-    """
-
-    def __init__(self, channel: discord.VoiceChannel, **kwargs):
-        super().__init__(**kwargs)
-        self.add_item(Button(label="Join voice channel", url=channel.jump_url))
