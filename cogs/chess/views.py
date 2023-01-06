@@ -20,7 +20,7 @@ from discord import Interaction, ButtonStyle
 from discord.ui import Select, Modal, InputText, Button, button as discord_button
 from path import Path
 
-import database.models as db
+import database.models as orm
 import support
 from cogs import chess
 from support import EnhancedView
@@ -841,18 +841,18 @@ class ChessEndgameView(EnhancedView):
         else:
             result = "Draw"
 
-        with db.db_session:
-            saved_games = chess.get_saved_games(interaction.user)
+        with orm.db_session:
+            saved_games = orm.ChessGame.get_user_games(interaction.user)
             if saved_games.count() >= 25:
                 saved_games.first().delete()
 
-            db.ChessGame(
+            orm.ChessGame(
                 user_id=str(interaction.user.id),
                 white=self.game.white.user.name,
                 black=self.game.black.user.name,
                 server=self.game.guild.name,
                 result=result,
-                date=self.game.thread.created_at.strftime("%Y-%m-%d"),
+                date=self.game.thread.created_at,
                 pgn=pgn.accept(chess.pychess_pgn.StringExporter()).replace(
                     '\n[Round "?"]\n', ""
                 ),
@@ -884,7 +884,7 @@ class ChessReplayMenuView(EnhancedView):
 
         await interaction.response.edit_message(view=self)
 
-    @db.db_session
+    @orm.db_session
     def get_menu(self) -> Select:
         menu = Select(
             min_values=1,
@@ -896,10 +896,10 @@ class ChessReplayMenuView(EnhancedView):
 
         menu.callback = self.select_menu_callback
 
-        for game in chess.get_saved_games(self.ctx.user):
+        for game in orm.ChessGame.get_user_games(self.ctx.user):
             menu.add_option(
                 label=f"{game.white} vs. {game.black}",
-                description=f"{game.server} / {game.result} / {game.date}",
+                description=f"{game.server} / {game.result} / {game.date.strftime('%Y.%m.%d')}",
                 value=str(game.id),
             )
 
@@ -918,8 +918,8 @@ class ChessReplayMenuView(EnhancedView):
         )
         game_id = int(select_menu.values[0])
 
-        with db.db_session:
-            game = db.ChessGame.get(id=game_id)
+        with orm.db_session:
+            game = orm.ChessGame.get(id=game_id)
 
         view = ChessReplayView(game.pgn)
         await view.initiate_view(interaction)
@@ -939,8 +939,8 @@ class ChessReplayMenuView(EnhancedView):
         )
         game_id = int(select_menu.values[0])
 
-        with db.db_session:
-            game = db.ChessGame.get(id=game_id)
+        with orm.db_session:
+            game = orm.ChessGame.get(id=game_id)
 
         with TemporaryDirectory() as tmp:
             with Path(tmp):
@@ -999,8 +999,8 @@ class ChessReplayMenuView(EnhancedView):
         )
         game_id = int(select_menu.values[0])
 
-        with db.db_session:
-            db.ChessGame[game_id].delete()
+        with orm.db_session:
+            orm.ChessGame[game_id].delete()
 
         self.remove_item(select_menu)
         self.add_item(self.get_menu())
@@ -1013,8 +1013,8 @@ class ChessReplayMenuView(EnhancedView):
         )
         replay_button.disabled = delete_button.disabled = True
 
-        with db.db_session:
-            if chess.get_saved_games(self.ctx.user):
+        with orm.db_session:
+            if orm.ChessGame.get_user_games(self.ctx.user):
                 await interaction.response.edit_message(view=self)
                 await interaction.followup.send("Game deleted!", ephemeral=True)
             else:
@@ -1030,18 +1030,18 @@ class ChessReplayMenuView(EnhancedView):
         row=3,
     )
     async def delete_all_games(self, button: Button, interaction: Interaction):
-        with db.db_session:
-            db.ChessGame.select(lambda g: g.user_id == str(interaction.user.id)).delete(
-                bulk=True
-            )
+        with orm.db_session:
+            orm.ChessGame.select(
+                lambda g: g.user_id == str(interaction.user.id)
+            ).delete(bulk=True)
 
         await interaction.response.edit_message(
             content="All games deleted!", embed=None, view=None
         )
 
     async def initiate_view(self):
-        with db.db_session:
-            if not chess.get_saved_games(self.ctx.user):
+        with orm.db_session:
+            if not orm.ChessGame.get_user_games(self.ctx.user):
                 msg = "You haven't saved any games. Save a game or two, then check back here."
                 embed = discord.Embed(
                     title="Nothing to see here.",
