@@ -16,14 +16,28 @@ $ kurisu [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* [`app`](#kurisu-app): Open 3515.games.dev on the Discord Developer Portal.
 * [`copyright`](#kurisu-copyright): Attach copyright notices to all non-gitignored Python source files.
-* [`docs`](#kurisu-docs): Generate Kurisu's documentation.
+* [`docs`](#kurisu-docs): Open the documentation for the Discord API, Pycord, or Numpydoc.
+* [`document`](#kurisu-document): Generate Kurisu's documentation.
 * [`invite`](#kurisu-invite): Generate an invite link for 3515.games. By default, this generates an invite link for the development instance.
 * [`licenses`](#kurisu-licenses): Create Markdown-formatted documentation of 3515.games' software licenses.
-* [`portal`](#kurisu-portal): Open the Discord Developer Portal.
-* [`pycord`](#kurisu-pycord): Open the Pycord documentation.
 * [`release`](#kurisu-release): Create a new release. This command is interactive only.
 * [`settings`](#kurisu-settings): Manage settings configurations.
+
+## `kurisu app`
+
+Open 3515.games.dev on the Discord Developer Portal.
+
+**Usage**:
+
+```console
+$ kurisu app [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show the help message and exit.
 
 ## `kurisu copyright`
 
@@ -44,12 +58,30 @@ $ kurisu copyright [OPTIONS]
 
 ## `kurisu docs`
 
+Open the documentation for the Discord API, Pycord, or Numpydoc.
+
+**Usage**:
+
+```console
+$ kurisu docs [OPTIONS] SITE:{discord|pycord|numpydoc}
+```
+
+**Arguments**:
+
+* `SITE:{discord|pycord|numpydoc}`: The documentation site to open.  [required]
+
+**Options**:
+
+* `--help`: Show the help message and exit.
+
+## `kurisu document`
+
 Generate Kurisu's documentation.
 
 **Usage**:
 
 ```console
-$ kurisu docs [OPTIONS]
+$ kurisu document [OPTIONS]
 ```
 
 **Options**:
@@ -90,38 +122,6 @@ $ kurisu licenses [OPTIONS]
 
 * `-o, --output PATH`: The file to write the documentation to. If neither this nor -c are provided, the documentation will be printed to standard output.
 * `-c, --copy`: Copy the documentaton to the clipboard. If neither this nor -o are provided, the documentation will be printed to standard output.
-* `--help`: Show the help message and exit.
-
-## `kurisu portal`
-
-Open the Discord Developer Portal.
-
-**Usage**:
-
-```console
-$ kurisu portal [OPTIONS] [GATE]:[home|docs|app]
-```
-
-**Arguments**:
-
-* `[GATE]:[home|docs|app]`: Where on the developer portal to go. Choose from home (the home page), docs (the documentation), or app (3515.games.dev's application page).  [default: (home)]
-
-**Options**:
-
-* `--help`: Show the help message and exit.
-
-## `kurisu pycord`
-
-Open the Pycord documentation.
-
-**Usage**:
-
-```console
-$ kurisu pycord [OPTIONS]
-```
-
-**Options**:
-
 * `--help`: Show the help message and exit.
 
 ## `kurisu release`

@@ -32,6 +32,7 @@ from path import Path
 from rich import print
 from rich.progress import track
 
+import shrine
 import kurisu.settings
 import prompts
 import support
@@ -88,8 +89,8 @@ def copyright(
     is_ignored = gitignore.parse(root / ".gitignore")
     changed = 0
 
-    with support.Jinja.kurisu() as jinja:
-        template = jinja.get_template("copyright.jinja")
+    with shrine.Torii.kurisu() as torii:
+        template = torii.get_template("copyright.jinja")
         notice = template.render(year=datetime.now().year).strip("\n") + "\n\n"
 
         for file in [f for f in root.walkfiles("*.py") if not is_ignored(f)]:
@@ -115,8 +116,33 @@ def copyright(
     echo(output)
 
 
+class DocSite(str, Enum):
+    DISCORD = "discord"
+    PYCORD = "pycord"
+    NUMPYDOC = "numpydoc"
+
+
 @app.command(name="docs")
 def docs(
+    site: DocSite = typer.Argument(
+        ..., help="The documentation site to open.", show_default=False
+    )
+):
+    """
+    Open the documentation for the Discord API, Pycord, or Numpydoc.
+    """
+
+    sites = {
+        DocSite.DISCORD: "https://discord.com/developers/docs",
+        DocSite.PYCORD: f"https://docs.pycord.dev/en/v{discord.__version__}",
+        DocSite.NUMPYDOC: "https://numpydoc.readthedocs.io/en/latest/format.html",
+    }
+
+    typer.launch(sites[site])
+
+
+@app.command(name="document", rich_help_panel="Meta Commands")
+def document(
     ctx: typer.Context,
     output: pathlib.Path = typer.Option(
         here / "README.md",
@@ -276,42 +302,14 @@ def licenses(
             print("[bold green]License documentation copied to clipboard[/]")
 
 
-class PortalGate(str, Enum):
-    home = "home"
-    docs = "docs"
-    app = "app"
-
-
-@app.command(name="portal")
-def portal(
-    gate: PortalGate = typer.Argument(
-        PortalGate.home,
-        show_default="home",
-        help="Where on the developer portal to go. Choose from "
-        "home (the home page), docs (the documentation), or "
-        "app (3515.games.dev's application page).",
+@app.command(name="app")
+def portal():
+    """
+    Open 3515.games.dev on the Discord Developer Portal.
+    """
+    typer.launch(
+        f"https://discord.com/developers/applications/{settings.app_id}/information/"
     )
-):
-    """
-    Open the Discord Developer Portal.
-    """
-    blue = "https://discord.com/developers"
-
-    orange = {
-        "home": "/",
-        "docs": "/docs",
-        "app": f"/applications/{settings.app_id}/information/",
-    }
-
-    typer.launch(blue + orange[gate])
-
-
-@app.command(name="pycord")
-def pycord():
-    """
-    Open the Pycord documentation.
-    """
-    typer.launch(f"https://docs.pycord.dev/en/v{discord.__version__}/")
 
 
 @app.command(name="release", rich_help_panel="Dangerous Commands")

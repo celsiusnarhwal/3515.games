@@ -11,6 +11,7 @@ import typer
 from path import Path
 from rich import print
 
+import shrine
 import prompts
 import support
 
@@ -95,8 +96,8 @@ def new(
         ).execute()
     )
 
-    with support.Jinja.kurisu() as jinja:
-        template = jinja.get_template("settings.py.jinja")
+    with shrine.Torii.kurisu() as torii:
+        template = torii.get_template("settings.py.jinja")
         env_dir = (configs_dir / environment).makedirs_p()
         env_dir.joinpath("__init__.py").touch()
         env_dir.joinpath(config).with_suffix(".py").write_text(
