@@ -77,7 +77,9 @@ def register_filter(func: FunctionType) -> FunctionType:
     return func
 
 
-def register_global(_function: FunctionType = None, *, call: bool = False) -> FunctionType:
+def register_global(
+    _function: FunctionType = None, *, call: bool = False
+) -> FunctionType:
     """
     Decorator for registering a function as a Jinja2 template global with :class:`Torii`.
 

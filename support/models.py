@@ -168,7 +168,6 @@ class HostedMultiplayerGame:
         intro.embeds[0] = intro_0
         await self.lobby_intro_msg.edit(embeds=intro.embeds)
 
-
     async def force_close(self, reason):
         """
         Force closes a game.

@@ -114,15 +114,15 @@ class PackSelectView(EnhancedView):
 
         self.add_item(pack_menu)
 
-        msg = (
-            "Pick the packs you want to play with cards from. You can pick as many as you like."
-        )
+        msg = "Pick the packs you want to play with cards from. You can pick as many as you like."
 
         embed = discord.Embed(
             title="Pack Selection", description=msg, color=support.Color.mint()
         )
 
-        embed.set_footer(text="I'll default to the CAH Base Set if you leave this empty.")
+        embed.set_footer(
+            text="I'll default to the CAH Base Set if you leave this empty."
+        )
 
         embed.set_author(
             name="Cards Against Humanity", icon_url=self.ctx.me.display_avatar.url
@@ -179,7 +179,9 @@ class CAHCardSelectView(CAHTerminableView):
                     )
 
                 await interaction.response.defer()
-                await self.ctx.interaction.edit_original_response(embed=embed, view=self)
+                await self.ctx.interaction.edit_original_response(
+                    embed=embed, view=self
+                )
             else:
                 self.submission = self.candidates[0]
                 await self.finish()
