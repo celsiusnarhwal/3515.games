@@ -21,11 +21,6 @@ mind.
 {% endfilter %}
 
 {% filter deline %}
-**Content warning, again.** Just to reiterate, this game has lots of very very NSFW 18+ put-the-kids-to bed type
-stuff. If that makes you uncomfortable, this is your last chance to turn back.
-{% endfilter %}
-
-{% filter deline %}
 Before we start, let's review your game settings.
 {% endfilter %}
 
