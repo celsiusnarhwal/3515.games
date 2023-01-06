@@ -4,6 +4,6 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-from support.classes import *
+from support.models import *
 from support.helpers import *
 from support.views import *
