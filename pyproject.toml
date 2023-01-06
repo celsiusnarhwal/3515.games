@@ -35,7 +35,7 @@ jishaku = "^2.5.1"
 pip-licenses = "^4.0.3"
 ptpython = "^3.0.22"
 pyperclip = "^1.8.2"
-rich-tracebacks = "^1.0.0"
+rich-tracebacks = "^1.2.1"
 semver = "^2.13.0"
 wonderwords = "^2.2.0"
 black = { extras = ["d"], version = "^22.12.0" }

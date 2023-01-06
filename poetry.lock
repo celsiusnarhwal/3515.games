@@ -1935,14 +1935,14 @@ jupyter = ["ipywidgets (>=7.5.1,<8.0.0)"]
 
 [[package]]
 name = "rich-tracebacks"
-version = "1.0.1"
+version = "1.2.1"
 description = "Automatic installation of Rich's traceback handler"
 category = "dev"
 optional = false
 python-versions = ">=3.6.3,<4.0.0"
 files = [
-    {file = "rich_tracebacks-1.0.1-py3-none-any.whl", hash = "sha256:ce5f9337d28b3004a3d43d72d9f8b3a72ebc141deacf790d17172d6d6e1ec1a6"},
-    {file = "rich_tracebacks-1.0.1.tar.gz", hash = "sha256:a63f04e12eea26523b7edc485d0eecf4ef26a4b890971c31a6fe51cf050fa2cd"},
+    {file = "rich_tracebacks-1.2.1-py3-none-any.whl", hash = "sha256:2bba596aa753e045c6acd26f977b14f5e6ba2e3a86d928789393c361b72c6dac"},
+    {file = "rich_tracebacks-1.2.1.tar.gz", hash = "sha256:0613d0510254d27f11c5e8148388118e001f075e77b932ccdfc8967e2e69186b"},
 ]
 
 [package.dependencies]
@@ -2411,4 +2411,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.1"
-content-hash = "34690acbf9435910786b211e4acf32df7f518645ac98e9f9c74cc01a5c959197"
+content-hash = "d44143037cb4d3798efa92f0d5c5022d026b0397bb588d737ab0005bbad58399"
