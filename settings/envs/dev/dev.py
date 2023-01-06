@@ -8,9 +8,6 @@
 Development settings.
 """
 
-import discord
-from rich.console import Console
-
 from settings.base import Settings
 
 settings = Settings(
@@ -21,5 +18,4 @@ settings = Settings(
         "filename": "db.sqlite3",
         "create_db": True,
     },
-    tracer=lambda: Console().print_exception(show_locals=True, suppress=[discord], max_frames=1),
 )

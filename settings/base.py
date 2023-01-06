@@ -7,8 +7,6 @@
 """
 The base settings configuration.
 """
-import traceback
-from types import FunctionType
 from typing import Type
 
 import discord
@@ -49,8 +47,6 @@ class Settings(BaseSettings):
         A list of NLTK corpora to download on startup. (See: https://www.nltk.org/book/ch02)
     token : str, optional, default: os.getenv("BOT_TOKEN")
         3515.games' bot token.
-    tracer : FunctionType, optional, default: traceback.print_exception
-        A function that will be called Pycord raises an exception during the execution of an application command.
     suppressed_warnings: list[Warning], optional, default: [RuntimeWarning]
         A list of warnings to suppress. (See: https://docs.python.org/3/library/warnings.html#warning-filter)
     """
@@ -68,5 +64,4 @@ class Settings(BaseSettings):
     disabled_cogs: list[discord.Cog] = []
     nltk_corpora: list[StrictStr] = ["averaged_perceptron_tagger"]
     token: StrictStr = Field(..., env="BOT_TOKEN")
-    tracer: FunctionType = traceback.print_exc
     suppressed_warnings: list[Type[Warning]] = [RuntimeWarning]
