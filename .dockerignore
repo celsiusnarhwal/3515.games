@@ -7,7 +7,6 @@ db.sqlite3
 kurisu
 LICENSE.md
 license-info.md
-.pre-commit-config.yaml
 README.md
 rt_config.py
 tinkering
