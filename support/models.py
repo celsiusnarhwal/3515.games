@@ -424,6 +424,26 @@ class HostedMultiplayerGame:
         return self.voice_channel
 
 
+class BasePlayer:
+    """
+    The base class for objects representing players in a game.
+    """
+
+    def __init__(self, user: discord.Member, *args, **kwargs):
+        self.user = user
+
+    @property
+    def name(self) -> str:
+        return self.user.name
+
+    @property
+    def mention(self) -> str:
+        return self.user.mention
+
+    def __str__(self):
+        return self.name
+
+
 class Color(discord.Color):
     """
     An extension of Pycord's ``discord.Color`` class that implements additional colors not included with the library.
