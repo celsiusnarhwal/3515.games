@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from functools import wraps
 from types import FunctionType
-from typing import Self
+from typing import Self, Type
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -22,11 +22,15 @@ class Torii(Environment):
 
     custom_filters = {}
     custom_globals = {}
+    custom_extensions = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.filters.update(self.custom_filters)
         self.globals.update(self.custom_globals)
+
+        for extension in self.custom_extensions:
+            self.add_extension(extension)
 
     @classmethod
     def _get_env(cls, pointer: Assets) -> Self:
@@ -115,3 +119,17 @@ def register_global(
         return wrapper
 
     return decorator if not _function else decorator(_function)
+
+
+def register_extension(cls: Type) -> Type:
+    """
+    Decorator for registering a class as a Jinja2 template extension with :class:`Torii`.
+
+    Examples
+    --------
+    >>> @register_extension
+    ... class SomeExtension:
+    ...     ...
+    """
+    Torii.custom_extensions.append(cls)
+    return cls
