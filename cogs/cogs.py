@@ -1647,7 +1647,7 @@ class CAHCog(MasterCog):
 
     @host_group.command(
         name="start",
-        description="Start an Cards Against Humanity game. Game Hosts only.",
+        description="Start a Cards Against Humanity game. Game Hosts only.",
     )
     @cah.verify_context(level="thread", verify_host=True)
     async def start_game(self, ctx: discord.ApplicationContext):
