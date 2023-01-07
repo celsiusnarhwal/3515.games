@@ -1616,6 +1616,7 @@ class CAHCog(MasterCog):
     @cah_group.command(
         name="hand", description="See the white cards you're currently holding."
     )
+    @cah.verify_context(level="game")
     async def show_hand(self, ctx: discord.ApplicationContext):
         cah_game = cah.CAHGame.retrieve_game(ctx.channel_id)
         player = cah_game.retrieve_player(ctx.user)
