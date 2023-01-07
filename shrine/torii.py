@@ -20,22 +20,21 @@ class Torii(Environment):
     The base class for 3515.games' Jinja2 environments.
     """
 
-    custom_filters = {}
-    custom_globals = {}
-    tags = []
+    filters_, globals_, extensions_ = {}, {}, []
 
     def __init__(self, *args, **kwargs):
+        kwargs["extensions"] = self.extensions_
         super().__init__(*args, **kwargs)
-        self.filters.update(self.custom_filters)
-        self.globals.update(self.custom_globals)
 
-        for tag in self.tags:
-            self.add_extension(tag)
+        self.filters.update(self.filters_)
+        self.globals.update(self.globals_)
 
     @classmethod
     def _get_env(cls, pointer: Assets) -> Self:
         return cls(
-            loader=FileSystemLoader(pointer / "templates"), trim_blocks=True, lstrip_blocks=True
+            loader=FileSystemLoader(pointer / "templates"),
+            trim_blocks=True,
+            lstrip_blocks=True,
         )
 
     @classmethod
@@ -79,7 +78,7 @@ def register_tag(cls: Type) -> Type:
     ... class SomeTag:
     ...     ...
     """
-    Torii.tags.append(cls)
+    Torii.extensions_.append(cls)
     return cls
 
 
@@ -93,7 +92,7 @@ def register_filter(func: FunctionType) -> FunctionType:
     ... def some_function():
     ...     ...
     """
-    Torii.custom_filters[func.__name__] = func
+    Torii.filters_[func.__name__] = func
     return func
 
 
@@ -131,7 +130,7 @@ def register_global(
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
-        Torii.custom_globals[func.__name__] = wrapper() if call else wrapper
+        Torii.globals_[func.__name__] = wrapper() if call else wrapper
         return wrapper
 
     return decorator if not _function else decorator(_function)

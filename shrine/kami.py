@@ -7,6 +7,7 @@
 """
 Jinja2 template filters, globals, and extensions.
 """
+from __future__ import annotations
 
 import inflect as ifl
 
@@ -16,10 +17,10 @@ from jinja2_simple_tags import StandaloneTag
 import pendulum
 
 
-@torii.register_extension
+@torii.register_tag
 class Now(StandaloneTag):
     """
-    A Jinja2 extension that returns the current time.
+    A Jinja2 tag that returns the current time.
     """
 
     tags = {"now"}
@@ -55,7 +56,33 @@ def deline(content: str) -> str:
     -----
     This filter intends to mitigate the effects of Discord's treatment of carriage returns as newlines.
     """
-    return content.replace("\n", " ")
+    return content.replace("\n", " ") + "\n"
+
+
+@torii.register_filter
+def posessive(string: str) -> str:
+    """
+    Append a string with a posessive ending. Strings ending in "s" will be appended with a sole apostrophe; other
+    strings will be appended with both an apostrophe and an "s".
+
+    Parameters
+    ----------
+    string : str
+        The string.
+
+    Returns
+    -------
+    str
+        The modified string.
+
+    Examples
+    --------
+    >>> posessive("Zander")
+    "Zander's"
+    >>> posessive("Celsius")
+    "Celsius'"
+    """
+    return string + "'" if string.endswith("s") else string + "'s"
 
 
 @torii.register_global(call=True)
