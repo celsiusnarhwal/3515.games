@@ -22,19 +22,21 @@ class Torii(Environment):
 
     custom_filters = {}
     custom_globals = {}
-    custom_extensions = []
+    tags = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.filters.update(self.custom_filters)
         self.globals.update(self.custom_globals)
 
-        for extension in self.custom_extensions:
-            self.add_extension(extension)
+        for tag in self.tags:
+            self.add_extension(tag)
 
     @classmethod
     def _get_env(cls, pointer: Assets) -> Self:
-        return cls(loader=FileSystemLoader(pointer / "templates"))
+        return cls(
+            loader=FileSystemLoader(pointer / "templates"), trim_blocks=True, lstrip_blocks=True
+        )
 
     @classmethod
     def about(cls):
@@ -65,6 +67,20 @@ class Torii(Environment):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
+
+
+def register_tag(cls: Type) -> Type:
+    """
+    Decorator for registering a class as a Jinja2 template tag with :class:`Torii`.
+
+    Examples
+    --------
+    >>> @register_tag
+    ... class SomeTag:
+    ...     ...
+    """
+    Torii.tags.append(cls)
+    return cls
 
 
 def register_filter(func: FunctionType) -> FunctionType:
@@ -119,17 +135,3 @@ def register_global(
         return wrapper
 
     return decorator if not _function else decorator(_function)
-
-
-def register_extension(cls: Type) -> Type:
-    """
-    Decorator for registering a class as a Jinja2 template extension with :class:`Torii`.
-
-    Examples
-    --------
-    >>> @register_extension
-    ... class SomeExtension:
-    ...     ...
-    """
-    Torii.custom_extensions.append(cls)
-    return cls
