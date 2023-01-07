@@ -25,6 +25,7 @@ import gitignorefile as gitignore
 import inflect as ifl
 import pyperclip
 import semver
+import tomlkit as toml
 import typer
 import wonderwords
 from InquirerPy.base import Choice
@@ -32,9 +33,9 @@ from path import Path
 from rich import print
 from rich.progress import track
 
-import shrine
 import kurisu.settings
 import prompts
+import shrine
 import support
 from kurisu.docs import get_docs_for_click
 from settings import settings
@@ -44,7 +45,7 @@ inflect = ifl.engine()
 here = Path(__file__).parent
 root = here.parent
 
-app = typer.Typer(pretty_exceptions_show_locals=False)
+app = typer.Typer()
 app.add_typer(kurisu.settings.app, name="settings")
 
 
@@ -258,6 +259,8 @@ def licenses(
         ).stdout
     )
 
+    documents = sorted(documents, key=lambda d: d["Name"].casefold())
+
     fallbacks = {
         "Apache Software License": "https://opensource.org/licenses/Apache-2.0",
         "Apache License 2.0": "https://opensource.org/licenses/Apache-2.0",
@@ -269,13 +272,19 @@ def licenses(
     }
 
     license_file = (
-        "# Software Licenses\n\nThis page documents the licenses for the open source software used by 3515.games. "
-        "The contents of this page are generated automatically and are not checked for accuracy, completeness, or "
-        "consistency.\n\n<hr></hr>\n\n"
+        "# Acknowledgements\n\n"
+        "Questions or concerns regarding errors or inconsistencies in this automatically-generated "
+        "document should be sent to hello@celsiusnarhwal.dev.<hr></hr>\n\n"
     )
 
+    dependencies = [
+        dep["name"]
+        for dep in toml.load((root / "poetry.lock").open())["package"]
+        if dep["category"] == "main"
+    ]
+
     for doc in documents:
-        if doc["Name"] != "3515-games":
+        if doc["Name"].casefold() in dependencies:
             license_file += f"## {doc['Name']}\n### {doc['License']}\n\n"
 
             if doc["LicenseText"] != "UNKNOWN":
@@ -330,9 +339,7 @@ def release(
     github = support.bot_repo()
 
     last_version = semver.parse_version_info(github.get_latest_release().tag_name)
-    new_version = semver.parse_version_info(
-        support.pyproject()["tool"]["poetry"]["version"]
-    )
+    new_version = semver.parse_version_info(support.pyproject()["version"])
 
     if new_version <= last_version:
         print(
