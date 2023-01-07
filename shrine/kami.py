@@ -5,12 +5,35 @@
 ########################################################################################################################
 
 """
-Jinja2 template filters and globals.
+Jinja2 template filters, globals, and extensions.
 """
 
 import inflect as ifl
 
 from shrine import torii
+
+from jinja2_simple_tags import StandaloneTag
+import pendulum
+
+
+@torii.register_extension
+class Now(StandaloneTag):
+    """
+    A Jinja2 extension that returns the current time.
+    """
+
+    tags = {"now"}
+
+    def render(self, format_string: str = "MMMM D, YYYY hh:mm A") -> str:
+        """
+        Return the current time.
+
+        Parameters
+        ----------
+        format_string : str
+            The format string to use for the time.
+        """
+        return pendulum.now().format(format_string)
 
 
 @torii.register_filter
