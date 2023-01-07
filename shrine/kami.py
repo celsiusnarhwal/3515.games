@@ -10,11 +10,10 @@ Jinja2 template filters, globals, and extensions.
 from __future__ import annotations
 
 import inflect as ifl
+import pendulum
+from jinja2_simple_tags import StandaloneTag
 
 from shrine import torii
-
-from jinja2_simple_tags import StandaloneTag
-import pendulum
 
 
 @torii.register_tag
