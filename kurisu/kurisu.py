@@ -292,7 +292,6 @@ def licenses(
                 license_file += f"{doc['LicenseText']}\n\n".replace("#", "").replace(
                     "=", ""
                 )
-                license_file = re.sub(r"-{3,}", "\n\g<0>", license_file)
             else:
                 for fallback in fallbacks:
                     if fallback in doc["License"]:
@@ -300,6 +299,8 @@ def licenses(
                             f"{doc['Name']} is licensed under the "
                             f"[{doc['License']}]({fallbacks[fallback]}).\n\n"
                         )
+
+    license_file = re.sub(r"-{3,}", "\n\g<0>", license_file)
 
     if not (output or copy):
         print(license_file)
