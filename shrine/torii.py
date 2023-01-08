@@ -75,7 +75,7 @@ def register_tag(cls: Type) -> Type:
     Examples
     --------
     >>> @register_tag
-    ... class SomeTag:
+    ... class SomeClass:
     ...     ...
     """
     Torii.extensions_.append(cls)
@@ -107,16 +107,13 @@ def register_global(
     call : bool, optional, default: False
         Whether to call the function and register the result as a global.
 
-    Notes
-    -----
-    The ``_function`` parameter allows the decorator to be called without parentheses, as with :func:`register_filter`.
-    This means that the following uses of this decorator are all valid:
-
+    Examples
+    --------
     >>> @register_global
     ... def some_function():
     ...     ...
 
-    >>> @register_global()
+    >>> @register_global()  # equivalent to the previous example
     ... def some_function():
     ...     ...
 
