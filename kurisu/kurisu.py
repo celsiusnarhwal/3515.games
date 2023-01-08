@@ -12,6 +12,7 @@ import importlib
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import urllib.parse
@@ -285,12 +286,13 @@ def licenses(
 
     for doc in documents:
         if doc["Name"].casefold() in dependencies:
-            license_file += f"## {doc['Name']}\n### {doc['License']}\n\n"
+            license_file += f"## {doc['Name']}\n\n"
 
             if doc["LicenseText"] != "UNKNOWN":
                 license_file += f"{doc['LicenseText']}\n\n".replace("#", "").replace(
                     "=", ""
                 )
+                license_file = re.sub(r"-{3,}", "\n\g<0>", license_file)
             else:
                 for fallback in fallbacks:
                     if fallback in doc["License"]:
