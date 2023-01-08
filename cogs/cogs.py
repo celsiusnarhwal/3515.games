@@ -39,7 +39,7 @@ class GeneriCog(MasterCog):
 
     @slash_command(description="Allow me to reintroduce myself.")
     async def about(self, ctx: discord.ApplicationContext):
-        await about.AboutView(ctx=ctx).show_about()
+        await about.AboutView(ctx=ctx).present()
 
     @slash_command(
         description="See which games I have the necessary permissions to play."
