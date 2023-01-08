@@ -142,31 +142,6 @@ def get_thread_url(thread: discord.Thread) -> str:
     return f"https://discord.com/channels/{thread.guild.id}/{thread.id}"
 
 
-def posessive(string: str) -> str:
-    """
-    Append a string with a posessive ending. Strings ending in "s" will be appended with a sole apostrophe; other
-    strings will be appended with both an apostrophe and an "s".
-
-    Parameters
-    ----------
-    string : str
-        The string.
-
-    Returns
-    -------
-    str
-        The modified string.
-
-    Examples
-    --------
-    >>> posessive("Zander")
-    "Zander's"
-    >>> posessive("Celsius")
-    "Celsius'"
-    """
-    return string + "'" if string.endswith("s") else string + "'s"
-
-
 def split_list(seq: list, size: int) -> list:
     """
     Splits a list into smaller lists of the specified size.
@@ -181,7 +156,7 @@ def pyproject() -> TOMLDocument:
     """
     Return a dictionary-like object representing 3515.games pyproject.toml file.
     """
-    return toml.load(open("pyproject.toml"))
+    return toml.load(open("pyproject.toml"))["tool"]["poetry"]
 
 
 def github():
