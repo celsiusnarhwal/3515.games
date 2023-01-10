@@ -20,7 +20,9 @@ class Torii(Environment):
     The base class for 3515.games' Jinja2 environments.
     """
 
-    filters_, globals_, extensions_ = {}, {}, []
+    filters_ = {}
+    globals_ = {}
+    extensions_ = []
 
     def __init__(self, *args, **kwargs):
         kwargs["extensions"] = self.extensions_
