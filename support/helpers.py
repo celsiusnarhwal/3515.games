@@ -114,6 +114,17 @@ def invoked_in_text_channel():
 def pseudocommand():
     """
     A decorator that creates a pseudocommand.
+
+    Examples
+    --------
+    >>> import support
+    ... @support.pseudocommand()
+    ... async def command(ctx):
+    ...     ...
+
+    See Also
+    --------
+    :class:`support.models.PseudoCommand`
     """
     return application_command(cls=support.Pseudocommand)
 

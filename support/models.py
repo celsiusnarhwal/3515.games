@@ -674,8 +674,7 @@ class Pseudocommand(discord.commands.SlashCommand):
     commands, but they're registered exclusively in a private server created for this purpose.
 
     Unlike regular commands, pseudocommands are intended to be called from elsewhere within the code rather than
-    on invocation from an end user. Though this is possible with regular commands via
-    :meth:`discord.ext.commands.Command.__call__``, calling a pseudocommand preserves its checks.
+    on invocation from an end user. Unlike regular commands, pseudocommands preserve their checks when called.
     """
 
     def __init__(self, *args, **kwargs):
