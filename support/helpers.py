@@ -12,6 +12,7 @@ import alianator
 import discord
 import tomlkit as toml
 from discord import ButtonStyle
+from discord.commands import application_command
 from discord.ext import pages, commands
 from github import Github as GitHub
 from tomlkit import TOMLDocument
@@ -110,11 +111,18 @@ def invoked_in_text_channel():
     return commands.check(predicate)
 
 
+def pseudocommand():
+    """
+    A decorator that creates a pseudocommand.
+    """
+    return application_command(cls=support.Pseudocommand)
+
+
 # miscellaneous
 
 
 def pagimoji(
-    button_style: ButtonStyle = ButtonStyle.secondary,
+        button_style: ButtonStyle = ButtonStyle.secondary,
 ) -> list[pages.PaginatorButton]:
     """
     Returns a list of emoji buttons for use with :class:`discord.ext.pages.Paginator`
@@ -133,18 +141,9 @@ def pagimoji(
     ]
 
 
-def get_thread_url(thread: discord.Thread) -> str:
-    """
-    Returns the URL of a thread.
-
-    :param thread: The thread to get the URL of.
-    """
-    return f"https://discord.com/channels/{thread.guild.id}/{thread.id}"
-
-
 def split_list(seq: list, size: int) -> list:
     """
-    Splits a list into smaller lists of the specified size.
+    Split a list into smaller lists of the specified size.
 
     :param seq: The list to split.
     :param size: The size of each sublist.

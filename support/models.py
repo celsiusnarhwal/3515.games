@@ -661,3 +661,29 @@ class GamePermissions(discord.Permissions):
 
     def __iter__(self):
         return self.__class__.__base__.__iter__(self.__class__.__base__(self.value))
+
+
+class Pseudocommand(discord.commands.SlashCommand):
+    """
+    A pseudocommand.
+
+    Notes
+    -----
+    Pseudocommands are corountines that are treated like commands at the code level but are not actually accessible
+    to end users. The use of the prefix "pseudo-" is somewhat misleading as pseudocommands are actual registered
+    commands, but they're registered exclusively in a private server created for this purpose.
+
+    Unlike regular commands, pseudocommands are intended to be called from elsewhere within the code rather than
+    on invocation from an end user. Though this is possible with regular commands via
+    :meth:`discord.ext.commands.Command.__call__``, calling a pseudocommand preserves its checks.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.guild_ids = [1063187852021747723]
+
+    async def __call__(self, *args, **kwargs):
+        ctx = kwargs.get("ctx") or args[0]
+
+        if await self.can_run(ctx):
+            return await super().__call__(*args, **kwargs)
