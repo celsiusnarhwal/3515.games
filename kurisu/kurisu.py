@@ -314,7 +314,7 @@ def licenses(
             print("[bold green]License documentation copied to clipboard[/]")
 
 
-@app.command(name="app")
+@app.command(name="portal")
 def portal():
     """
     Open 3515.games.dev on the Discord Developer Portal.
