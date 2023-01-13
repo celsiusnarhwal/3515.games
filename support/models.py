@@ -648,11 +648,11 @@ class GamePermissions(discord.Permissions):
         permissions = cls.none()
 
         permsets = [
-            p[1]
-            for p in inspect.getmembers(cls, inspect.ismethod)
-            if not any(hasattr(parent, p[0]) for parent in cls.mro()[1:])
-            and p[1].__name__ != "everything"
-        ]
+    permset
+    for name, permset in inspect.getmembers(cls, inspect.ismethod)
+    if not any(hasattr(parent, name) for parent in cls.mro()[1:])
+    and name != "everything"
+]
 
         for permset in permsets:
             permissions += permset()
@@ -660,6 +660,7 @@ class GamePermissions(discord.Permissions):
         return permissions
 
     def __iter__(self):
+        # god bless python
         return self.__class__.__base__.__iter__(self.__class__.__base__(self.value))
 
 
