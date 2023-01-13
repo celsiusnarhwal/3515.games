@@ -648,11 +648,11 @@ class GamePermissions(discord.Permissions):
         permissions = cls.none()
 
         permsets = [
-    permset
-    for name, permset in inspect.getmembers(cls, inspect.ismethod)
-    if not any(hasattr(parent, name) for parent in cls.mro()[1:])
-    and name != "everything"
-]
+            permset
+            for name, permset in inspect.getmembers(cls, inspect.ismethod)
+            if not any(hasattr(parent, name) for parent in cls.mro()[1:])
+            and name != "everything"
+        ]
 
         for permset in permsets:
             permissions += permset()
