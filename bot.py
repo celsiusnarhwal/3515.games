@@ -9,6 +9,7 @@ The bot definition and event overrides.
 """
 
 import sys
+from abc import ABC
 
 import alianator
 import discord
@@ -17,7 +18,18 @@ from click import secho as print
 import support
 from settings import settings
 
-bot = discord.Bot(
+
+class Bot(discord.Bot, ABC):
+    @property
+    def pending_application_commands(self):
+        return [
+            cmd
+            for cmd in super().pending_application_commands
+            if not isinstance(cmd, support.Pseudocommand)
+        ]
+
+
+bot = Bot(
     intents=settings.intents,
     debug_guilds=settings.debug_guilds,
     owner_id=settings.owner_id,

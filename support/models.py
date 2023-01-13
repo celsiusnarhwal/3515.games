@@ -670,16 +670,11 @@ class Pseudocommand(discord.commands.SlashCommand):
     Notes
     -----
     Pseudocommands are corountines that are treated like commands at the code level but are not actually accessible
-    to end users. The use of the prefix "pseudo-" is somewhat misleading as pseudocommands are actual registered
-    commands, but they're registered exclusively in a private server created for this purpose.
+    to end users. 3515.games uses a custom subclass of :class:`discord.bot.Bot` that blocks the registration
+    of pseudocommands with the Discord API.
 
-    Unlike regular commands, pseudocommands are intended to be called from elsewhere within the code rather than
-    on invocation from an end user. Unlike regular commands, pseudocommands preserve their checks when called.
+    Unlike regular commands, pseudocommands can be called directly without losing their checks.
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.guild_ids = [1063187852021747723]
 
     async def __call__(self, *args, **kwargs):
         ctx = kwargs.get("ctx") or args[0]
