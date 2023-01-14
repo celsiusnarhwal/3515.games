@@ -1,5 +1,7 @@
 # 3515.games
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 This is the source code of 3515.games, a bot that lets you enjoy real-time social games with your friends on Discord.
 
 ## License
