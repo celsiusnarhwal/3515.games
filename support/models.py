@@ -501,9 +501,6 @@ class GamePermissions(discord.Permissions):
     Implements permission set constants for 3515.games.
     """
 
-    # the integers used to instantiate the Permissions objects are obtained from Discord's bot permissions calculator:
-    # https://discord.com/developers
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.update(read_messages=True, send_messages=True)
@@ -650,8 +647,9 @@ class GamePermissions(discord.Permissions):
         permsets = [
             permset
             for name, permset in inspect.getmembers(cls, inspect.ismethod)
-            if not any(hasattr(parent, name) for parent in cls.mro()[1:])
-            and name != "everything"
+            if name in cls.__dict__
+            and name
+            != "everything"  # everybody gangsta till the https://youtu.be/CVCTz3Xc__s
         ]
 
         for permset in permsets:
