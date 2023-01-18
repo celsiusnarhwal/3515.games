@@ -675,8 +675,6 @@ class Pseudocommand(discord.commands.SlashCommand):
     Unlike regular commands, pseudocommands can be called directly without losing their checks.
     """
 
-    async def __call__(self, *args, **kwargs):
-        ctx = kwargs.get("ctx") or args[0]
-
+    async def __call__(self, ctx, *args, **kwargs):
         if await self.can_run(ctx):
             return await super().__call__(*args, **kwargs)
