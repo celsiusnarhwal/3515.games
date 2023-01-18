@@ -133,7 +133,7 @@ def pseudocommand():
 
 
 def pagimoji(
-        button_style: ButtonStyle = ButtonStyle.secondary,
+    button_style: ButtonStyle = ButtonStyle.secondary,
 ) -> list[pages.PaginatorButton]:
     """
     Returns a list of emoji buttons for use with :class:`discord.ext.pages.Paginator`
