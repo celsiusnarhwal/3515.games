@@ -5,8 +5,9 @@
 ########################################################################################################################
 
 """
-Jinja2 template filters, globals, and extensions.
+Jinja template filters, globals, and extensions.
 """
+
 from __future__ import annotations
 
 import inflect as ifl
@@ -19,7 +20,7 @@ from shrine import torii
 @torii.register_tag
 class Now(StandaloneTag):
     """
-    A Jinja2 tag that returns the current time.
+    A Jinja tag that returns the current time.
     """
 
     tags = {"now"}

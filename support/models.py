@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+from abc import ABC, abstractmethod
 from typing import Self
 
 import discord
@@ -462,7 +463,43 @@ class Color(discord.Color):
         return cls(0x000000)
 
 
-class Assets(Path):
+class Pointer(ABC):
+    """
+    Abstract base class for "pointer" classes like :class:`Assets` and :class:`shrine.torii.Torii`.
+    """
+
+    @classmethod
+    @abstractmethod
+    def about(cls):
+        ...
+
+    @classmethod
+    @abstractmethod
+    def rps(cls):
+        ...
+
+    @classmethod
+    @abstractmethod
+    def uno(cls):
+        ...
+
+    @classmethod
+    @abstractmethod
+    def chess(cls):
+        ...
+
+    @classmethod
+    @abstractmethod
+    def cah(cls):
+        ...
+
+    @classmethod
+    @abstractmethod
+    def kurisu(cls):
+        ...
+
+
+class Assets(Path, Pointer):
     """
     Implements context managers that point to asset directories for 3515.games.
     """

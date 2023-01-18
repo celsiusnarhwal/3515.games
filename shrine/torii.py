@@ -4,6 +4,10 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
+"""
+The :class:`Torii` class and related functions.
+"""
+
 from __future__ import annotations
 
 from functools import wraps
@@ -12,12 +16,12 @@ from typing import Self, Type
 
 from jinja2 import Environment, FileSystemLoader
 
-from support import Assets
+from support import Assets, Pointer
 
 
-class Torii(Environment):
+class Torii(Environment, Pointer):
     """
-    The base class for 3515.games' Jinja2 environments.
+    The base class for 3515.games' Jinja environments.
     """
 
     filters_ = {}
@@ -25,8 +29,7 @@ class Torii(Environment):
     extensions_ = []
 
     def __init__(self, *args, **kwargs):
-        kwargs["extensions"] = self.extensions_
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, extensions=self.extensions_)
 
         self.filters.update(self.filters_)
         self.globals.update(self.globals_)
@@ -72,7 +75,7 @@ class Torii(Environment):
 
 def register_tag(cls: Type) -> Type:
     """
-    Decorator for registering a class as a Jinja2 template tag with :class:`Torii`.
+    Decorator for registering a class as a Jinja template tag with :class:`Torii`.
 
     Examples
     --------
@@ -86,7 +89,7 @@ def register_tag(cls: Type) -> Type:
 
 def register_filter(func: FunctionType) -> FunctionType:
     """
-    Decorator for registering a function as a Jinja2 template filter with :class:`Torii`.
+    Decorator for registering a function as a Jinja template filter with :class:`Torii`.
 
     Examples
     --------
@@ -99,10 +102,10 @@ def register_filter(func: FunctionType) -> FunctionType:
 
 
 def register_global(
-    _function: FunctionType = None, *, call: bool = False
+    function: FunctionType = None, *, call: bool = False
 ) -> FunctionType:
     """
-    Decorator for registering a function as a Jinja2 template global with :class:`Torii`.
+    Decorator for registering a function as a Jinja template global with :class:`Torii`.
 
     Parameters
     ----------
@@ -132,4 +135,4 @@ def register_global(
         Torii.globals_[func.__name__] = wrapper() if call else wrapper
         return wrapper
 
-    return decorator if not _function else decorator(_function)
+    return decorator(function) if function else decorator

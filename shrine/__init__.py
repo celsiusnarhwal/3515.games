@@ -5,7 +5,7 @@
 ########################################################################################################################
 
 """
-Special classes and functions for Jinja2.
+Special classes and functions for Jinja. https://jinja.palletsprojects.com
 """
 
 import shrine.kami
