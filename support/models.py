@@ -677,4 +677,4 @@ class Pseudocommand(discord.commands.SlashCommand):
 
     async def __call__(self, ctx, *args, **kwargs):
         if await self.can_run(ctx):
-            return await super().__call__(*args, **kwargs)
+            return await super().__call__(ctx, *args, **kwargs)
