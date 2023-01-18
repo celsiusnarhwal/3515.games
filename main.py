@@ -7,7 +7,6 @@
 """
 The program entrypoint.
 """
-import inspect
 import logging
 import warnings
 
@@ -16,7 +15,7 @@ from click import secho as print
 
 import uptime
 from bot import bot
-from cogs import cogs
+from cogs import all_cogs
 from database.models import db
 from settings import settings
 
@@ -46,12 +45,6 @@ def configure_cogs():
     """
     Initializes cogs.
     """
-    all_cogs = set(
-        cog
-        for _, cog in inspect.getmembers(cogs)
-        if inspect.isclass(cog) and issubclass(cog, cogs.MasterCog)
-    )
-
     for cog in all_cogs.difference(settings.disabled_cogs):
         bot.add_cog(cog(bot))
 

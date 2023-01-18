@@ -1939,8 +1939,8 @@ class CAHCog(MasterCog):
                 await cah_game.force_close(reason="channel_deletion")
 
 
-all_cogs = [
+all_cogs = {
     cog
     for _, cog in inspect.getmembers(sys.modules[__name__], inspect.isclass)
     if issubclass(cog, MasterCog)
-]
+}
