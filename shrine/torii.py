@@ -35,7 +35,7 @@ class Torii(Environment, Pointer):
         self.globals.update(self.globals_)
 
     @classmethod
-    def _get_env(cls, pointer: Assets) -> Self:
+    def _get(cls, pointer: Assets) -> Self:
         return cls(
             loader=FileSystemLoader(pointer / "templates"),
             trim_blocks=True,
@@ -44,27 +44,27 @@ class Torii(Environment, Pointer):
 
     @classmethod
     def about(cls):
-        return cls._get_env(Assets.about())
+        return cls._get(Assets.about())
 
     @classmethod
     def rps(cls):
-        return cls._get_env(Assets.rps())
+        return cls._get(Assets.rps())
 
     @classmethod
     def uno(cls):
-        return cls._get_env(Assets.uno())
+        return cls._get(Assets.uno())
 
     @classmethod
     def chess(cls):
-        return cls._get_env(Assets.chess())
+        return cls._get(Assets.chess())
 
     @classmethod
     def cah(cls):
-        return cls._get_env(Assets.cah())
+        return cls._get(Assets.cah())
 
     @classmethod
     def kurisu(cls):
-        return cls._get_env(Assets.kurisu())
+        return cls._get(Assets.kurisu())
 
     def __enter__(self):
         return self

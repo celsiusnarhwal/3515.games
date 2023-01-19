@@ -470,6 +470,11 @@ class Pointer(ABC):
 
     @classmethod
     @abstractmethod
+    def _get(cls, *args, **kwargs):
+        ...
+
+    @classmethod
+    @abstractmethod
     def about(cls):
         ...
 
@@ -505,28 +510,28 @@ class Assets(Path, Pointer):
     """
 
     @classmethod
-    def _get_pointer(cls, module) -> Self:
+    def _get(cls, module) -> Self:
         return cls.joinpath("cogs", module, "assets")
 
     @classmethod
     def about(cls):
-        return cls._get_pointer("about")
+        return cls._get("about")
 
     @classmethod
     def rps(cls):
-        return cls._get_pointer("rps")
+        return cls._get("rps")
 
     @classmethod
     def uno(cls):
-        return cls._get_pointer("uno")
+        return cls._get("uno")
 
     @classmethod
     def chess(cls):
-        return cls._get_pointer("chess")
+        return cls._get("chess")
 
     @classmethod
     def cah(cls):
-        return cls._get_pointer("cah")
+        return cls._get("cah")
 
     @classmethod
     def kurisu(cls):
