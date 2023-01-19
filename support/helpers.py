@@ -23,27 +23,37 @@ import support
 # decorators
 
 
-def is_celsius_narhwal(user: discord.User = None):
+def slash_command(**attrs):
     """
-    A function that checks if a given user is 3515.games' owner, celsiusnarhwal#3515.
+    Equivalent to :meth:`discord.slash_command` with the exception that commands created with this decorator
+    are always guild-only.
 
-    If the ``user`` parameter is not provided, this function will act as a command decorator and check against
-    the invocation context.
+    All arguments accepted by :meth:`discord.slash_command` are accepted by this decorator.
+
+    Notes
+    -----
+    All of 3515.games' commands are guild-only. Using this decorator is preferred to explicitly passing
+    `guild_only=True` to every invocation of :meth:`discord.commands.slash_command`.
     """
+    return discord.slash_command(guild_only=True, **attrs)
 
-    async def predicate(ctx: discord.ApplicationContext):
-        if ctx.bot.is_owner(ctx.user):
-            return True
-        else:
-            msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
-            embed = discord.Embed(
-                title="You can't do that.", description=msg, color=support.Color.red()
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
 
-            return False
+def pseudocommand():
+    """
+    A decorator that creates a pseudocommand.
 
-    return user.id == 170966436125212673 if user else commands.check(predicate)
+    Examples
+    --------
+    >>> import support
+    ... @support.pseudocommand()
+    ... async def command(ctx):
+    ...     ...
+
+    See Also
+    --------
+    :class:`support.models.PseudoCommand`
+    """
+    return application_command(cls=support.Pseudocommand)
 
 
 def bot_has_permissions(expected_permissions: discord.Permissions):
@@ -111,22 +121,27 @@ def invoked_in_text_channel():
     return commands.check(predicate)
 
 
-def pseudocommand():
+def is_celsius_narhwal(user: discord.User = None):
     """
-    A decorator that creates a pseudocommand.
+    A function that checks if a given user is 3515.games' owner, celsiusnarhwal#3515.
 
-    Examples
-    --------
-    >>> import support
-    ... @support.pseudocommand()
-    ... async def command(ctx):
-    ...     ...
-
-    See Also
-    --------
-    :class:`support.models.PseudoCommand`
+    If the ``user`` parameter is not provided, this function will act as a command decorator and check against
+    the invocation context.
     """
-    return application_command(cls=support.Pseudocommand)
+
+    async def predicate(ctx: discord.ApplicationContext):
+        if ctx.bot.is_owner(ctx.user):
+            return True
+        else:
+            msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
+            embed = discord.Embed(
+                title="You can't do that.", description=msg, color=support.Color.red()
+            )
+            await ctx.respond(embed=embed, ephemeral=True)
+
+            return False
+
+    return user.id == 170966436125212673 if user else commands.check(predicate)
 
 
 # miscellaneous

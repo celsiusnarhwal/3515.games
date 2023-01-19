@@ -441,6 +441,10 @@ class BasePlayer:
     def mention(self) -> str:
         return self.user.mention
 
+    @property
+    def id(self) -> int:
+        return self.user.id
+
     def __str__(self):
         return self.name
 
@@ -461,6 +465,14 @@ class Color(discord.Color):
     @classmethod
     def black(cls):
         return cls(0x000000)
+
+    @classmethod
+    def caution(cls):
+        return cls.orange()
+
+    @classmethod
+    def error(cls):
+        return cls.red()
 
 
 class Pointer(ABC):
@@ -702,6 +714,21 @@ class GamePermissions(discord.Permissions):
     def __iter__(self):
         # god bless python
         return self.__class__.__base__.__iter__(self.__class__.__base__(self.value))
+
+
+class SlashCommandGroup(discord.SlashCommandGroup):
+    """
+    Equivalent to :class:`discord.SlashCommandGroup` with the exception that commands created by instances of this class
+    are always guild-only.
+
+    Notes
+    -----
+    All of 3515.games' comnmands are guild-only. Using this subclass is preferred to explicitly passing
+    `guild_only=True` to every instantiation of :class:`discord.SlashCommandGroup`.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(guild_only=True, *args, **kwargs)
 
 
 class Pseudocommand(discord.commands.SlashCommand):
