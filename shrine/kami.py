@@ -31,7 +31,7 @@ class Now(StandaloneTag):
 
         Parameters
         ----------
-        format_string : str
+        format_string : str, optional, default: "MMMM D, YYYY hh:mm A"
             The format string to use for the time.
         """
         return pendulum.now().format(format_string)
