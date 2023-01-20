@@ -16,7 +16,6 @@ import re
 import subprocess
 import sys
 import urllib.parse
-from datetime import datetime
 from difflib import SequenceMatcher
 from enum import Enum
 
@@ -93,7 +92,7 @@ def copyright(
 
     with shrine.Torii.kurisu() as torii:
         template = torii.get_template("copyright.jinja")
-        notice = template.render(year=datetime.now().year).strip("\n") + "\n\n"
+        notice = template.render().strip("\n") + "\n\n"
 
         for file in [f for f in root.walkfiles("*.py") if not is_ignored(f)]:
             ratio = SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio()
