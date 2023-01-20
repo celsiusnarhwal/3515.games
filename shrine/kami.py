@@ -56,7 +56,7 @@ def deline(content: str) -> str:
     -----
     This filter intends to mitigate the effects of Discord's treatment of carriage returns as newlines.
     """
-    return content.replace("\n", " ") + "\n"
+    return content.replace("\n", " ")
 
 
 @torii.register_filter
