@@ -5,7 +5,7 @@
 ########################################################################################################################
 
 """
-The :class:`Torii` class and related functions.
+:class:`Torii` and company.
 """
 
 from __future__ import annotations
@@ -14,14 +14,14 @@ from functools import wraps
 from types import FunctionType
 from typing import Self, Type
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template
 
 from support import Assets, Pointer
 
 
 class Torii(Environment, Pointer):
     """
-    The base class for 3515.games' Jinja environments.
+    Base class for Jinja environments.
     """
 
     filters_ = {}
@@ -36,11 +36,7 @@ class Torii(Environment, Pointer):
 
     @classmethod
     def _get(cls, pointer: Assets) -> Self:
-        return cls(
-            loader=FileSystemLoader(pointer / "templates"),
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
+        return cls(loader=FileSystemLoader(pointer / "templates"))
 
     @classmethod
     def about(cls):
@@ -66,11 +62,39 @@ class Torii(Environment, Pointer):
     def kurisu(cls):
         return cls._get(Assets.kurisu())
 
+    def get_template(self, name: str, *args, **kwargs) -> Shintai:
+        template = super().get_template(name, *args, **kwargs)
+        template.__class__ = Shintai
+        return template
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
+
+
+class Shintai(Template):
+    """
+    Base class for Jinja templates.
+    """
+
+    def slender(self, *args, **kwargs):
+        """
+        Render the template with blocks trimmed and stripped of leading whitespace.
+
+        *args
+            Positional arguments to :meth:`jinja2.Template.render`.
+        **kwargs
+            Keyword arguments to :meth:`jinja2.Template.render`.
+
+        Returns
+        -------
+        str
+            The rendered template.
+        """
+        self.environment.trim_blocks = self.environment.lstrip_blocks = True
+        return self.render(*args, **kwargs)
 
 
 def register_tag(cls: Type) -> Type:
