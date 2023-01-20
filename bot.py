@@ -66,9 +66,8 @@ async def on_application_command_error(
     for the suppression of :class:`discord.CheckFailure` exceptions, as it is generally not useful to know that one
     has been raised. In development, it also allows for the propagation of exception tracebacks to Rich.[1]_
 
-    This event is *not* dispatched for errors that occur outside of an application command's execution. Pycord
-    does not currently provide a way to indiscriminately propagate all exceptions that occur during the bot event
-    loop. However, this *should* catch the majority of exceptions raised during 3515.games' execution.
+    Since the overwhelming majority of the bot's operations are catalyzed by application commands, this should
+    be dispatched for most runtime exceptions.
 
     References
     ----------
