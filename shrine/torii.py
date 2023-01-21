@@ -79,6 +79,24 @@ class Shintai(Template):
     Base class for Jinja templates.
     """
 
+    def render(self, *args, **kwargs) -> str:
+        """
+        Equivalent to :meth:`jinja2.Template.render`, but strips the rendered template of trailing newlines.
+
+        Parameters
+        ----------
+        *args
+            Positional arguments to :meth:`jinja2.Template.render`.
+        *kwargs
+            Keyword arguments to :meth:`jinja2.Template.render`.
+
+        Returns
+        -------
+        str
+            The rendered template.
+        """
+        return super().render(*args, **kwargs).strip("\n")
+
     def slender(self, *args, **kwargs):
         """
         Render the template with blocks trimmed and stripped of leading whitespace.
