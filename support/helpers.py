@@ -85,7 +85,7 @@ def bot_has_permissions(expected_permissions: discord.Permissions):
             embed = discord.Embed(
                 title="I need more power!",
                 description=message,
-                color=support.Color.red(),
+                color=support.Color.error(),
             )
 
             await ctx.respond(embed=embed, ephemeral=True)
@@ -112,7 +112,7 @@ def invoked_in_text_channel():
             embed = discord.Embed(
                 title="You can't do that in a thread.",
                 description=message,
-                color=support.Color.red(),
+                color=support.Color.error(),
             )
 
             await ctx.respond(embed=embed, ephemeral=True)
@@ -135,7 +135,7 @@ def is_celsius_narhwal(user: discord.User = None):
         else:
             msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
             embed = discord.Embed(
-                title="You can't do that.", description=msg, color=support.Color.red()
+                title="You can't do that.", description=msg, color=support.Color.error()
             )
             await ctx.respond(embed=embed, ephemeral=True)
 
