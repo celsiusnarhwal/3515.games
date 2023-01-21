@@ -124,7 +124,7 @@ class HostedMultiplayerGame:
                 embed = discord.Embed(
                     title="You're already hosting a game.",
                     description=message,
-                    color=Color.red(),
+                    color=Color.error(),
                 )
                 await ctx.respond(
                     embed=embed,
@@ -151,7 +151,7 @@ class HostedMultiplayerGame:
             title="The Game Host has changed!",
             description=f"{old_host.mention} has transferred host powers to {new_host.mention}. "
             f"{new_host.mention} is now the Game Host.",
-            color=support.Color.orange(),
+            color=support.Color.caution(),
         )
 
         await self.thread.send(content="@everyone", embed=embed)
@@ -189,7 +189,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title=f"The Game Host has ended this {self.name} game.",
                 description=thread_msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -210,7 +210,7 @@ class HostedMultiplayerGame:
             embed = discord.Embed(
                 title=f"Your {self.name} game was automatically closed.",
                 description=msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -227,7 +227,7 @@ class HostedMultiplayerGame:
             embed = discord.Embed(
                 title="Your {self.name} game was automatically closed.",
                 description=msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -246,7 +246,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title=f"This {self.name} game has been automatically closed.",
                 description=thread_msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -257,7 +257,7 @@ class HostedMultiplayerGame:
             host_embed = discord.Embed(
                 title=f"Your {self.name} game was automatically closed.",
                 description=host_msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -282,7 +282,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title=f"This {self.name} game has been automatically closed.",
                 description=thread_msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -293,7 +293,7 @@ class HostedMultiplayerGame:
             host_embed = discord.Embed(
                 title=f"Your {self.name} game was automatically closed.",
                 description=host_msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -314,7 +314,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title=f"This {self.name} game has been automatically closed.",
                 description=thread_msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -322,7 +322,7 @@ class HostedMultiplayerGame:
             host_embed = discord.Embed(
                 title=f"Your {self.name} game was automatically closed.",
                 description=host_msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -344,7 +344,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title="This {self.name} game has been automatically closed.",
                 description=thread_msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -355,7 +355,7 @@ class HostedMultiplayerGame:
             host_embed = discord.Embed(
                 title="Your {self.name} game was automatically closed.",
                 description=host_msg,
-                color=Color.red(),
+                color=Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -415,7 +415,7 @@ class HostedMultiplayerGame:
         embed = discord.Embed(
             title="Nothing to see (or say) here.",
             description="You should head to the game thread instead.",
-            color=support.Color.red(),
+            color=support.Color.error(),
         )
 
         await self.voice_channel.send(
@@ -728,7 +728,7 @@ class SlashCommandGroup(discord.SlashCommandGroup):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(guild_only=True, *args, **kwargs)
+        super().__init__(*args, **kwargs, guild_only=True)
 
 
 class Pseudocommand(discord.commands.SlashCommand):
