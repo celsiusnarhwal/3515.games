@@ -7,7 +7,7 @@
 """
 The base settings configuration.
 """
-import typing as T
+import typing as t
 
 import discord
 from pydantic import BaseSettings, Field, StrictInt, StrictStr
@@ -64,4 +64,4 @@ class Settings(BaseSettings):
     disabled_cogs: list[discord.Cog] = []
     nltk_corpora: list[StrictStr] = ["averaged_perceptron_tagger"]
     token: StrictStr = Field(..., env="BOT_TOKEN")
-    suppressed_warnings: list[T.Type[Warning]] = [RuntimeWarning]
+    suppressed_warnings: list[t.Type[Warning]] = [RuntimeWarning]

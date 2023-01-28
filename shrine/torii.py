@@ -10,9 +10,10 @@
 
 from __future__ import annotations
 
+import typing as t
 from functools import wraps
 from types import FunctionType
-from typing import Self, Type
+from typing import Self
 
 from jinja2 import Environment, FileSystemLoader, Template
 
@@ -115,7 +116,7 @@ class Shintai(Template):
         return self.render(*args, **kwargs)
 
 
-def register_tag(cls: Type) -> Type:
+def register_tag(cls: t.Type) -> t.Type:
     """
     Decorator for registering a class as a Jinja template tag with :class:`Torii`.
 
