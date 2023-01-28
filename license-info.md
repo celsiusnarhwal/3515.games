@@ -23,7 +23,7 @@ need to ensure you are complying with the AGPL if you do so.
 If you share 3515.games with anyone, you must also share the source code with them and do so under the terms of the
 AGPL. If you modify the source code and self-host it, you have to share your modified version, too — again,
 under the terms of the AGPL. If you include 3515.games' source code in a larger program and share that program,
-you have to share the *entire* program's source code under the terms of the AGPL.[^1]
+you have to share the _entire_ program's source code under the terms of the AGPL.[^1]
 
 ### Credit Where Credit Is Due
 
@@ -46,19 +46,20 @@ Here are some examples of how the AGPL affects your use of 3515.games.
 
 ### Thing you can do without worrying about the AGPL
 
-* Invite 3515.games to your Discord server
-* Play with 3515.games
-* Look at 3515.games' source code
-* Open [issues](https://github.com/celsiusnarhwal/3515.games/issues) (bug reports, feature requests, etc.)
-* Download and tinker with 3515.games source code (as long as you're not sharing it with others!)
+- Invite 3515.games to your Discord server
+- Play with 3515.games
+- Look at 3515.games' source code
+- Open [issues](https://github.com/celsiusnarhwal/3515.games/issues) (bug reports, feature requests, etc.)
+- Download and tinker with 3515.games source code (as long as you're not sharing it with others!)
 
 ### Things that will require you to worry about the AGPL
 
-* Self-hosting 3515.games
-* Redistributing 3515.games' source code
-* Modifiying 3515.games' source code and redistributing your modified version
+- Self-hosting 3515.games
+- Redistributing 3515.games' source code
+- Modifiying 3515.games' source code and redistributing your modified version
 
 If you have any questions, shoot me an email at [hello@celsiusnarhwal.dev](mailto:hello@celsiusnarhwal.dev).
 
-[^1]: With one exception: if the larger program is licensed under version 3 of the GNU General Public License (GPL),
+[^1]:
+With one exception: if the larger program is licensed under version 3 of the GNU General Public License (GPL),
 the larger program can remain licensed under the GPL, but everything from 3515.games must be licensed under the AGPL.

@@ -8,13 +8,8 @@ their cards, the round ends and that player is awarded points based on the cards
 {{ rules|deline }}
 
 {% filter deline %}
-You can view the cards you currently hold at any time with `/uno hand`. When it's your turn, you can play a card with
-`/uno play` or draw one with `/uno draw`.
-{% endfilter %}
-
-{% filter deline %}
-You can view a range of information about this UNO game with `/uno status`, including the current turn order and
-score leaderboard.
+When it's your turn, make your move with `/uno play`. You can check out cool info and stats about this game at any
+time with `/uno status`.
 {% endfilter %}
 
 {% filter deline %}
