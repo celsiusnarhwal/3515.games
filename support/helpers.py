@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import os
+import random
 
 import alianator
 import discord
@@ -14,7 +15,7 @@ import tomlkit as toml
 from discord import ButtonStyle
 from discord.commands import application_command
 from discord.ext import pages, commands
-from github import Github as GitHub
+from github import Github as GitHub, AuthenticatedUser, Repository
 from tomlkit import TOMLDocument
 
 import support
@@ -177,6 +178,23 @@ def split_list(seq: list, size: int) -> list:
     return [seq[i : i + size] for i in range(0, len(seq), size)]
 
 
+def fuzz(num: int | float) -> float:
+    """
+    Fuzz a number to a value slightly higher or lower than its original.
+
+    Parameters
+    ----------
+    num : int | float
+        The number to fuzz.
+
+    Returns
+    -------
+    float
+        The fuzzed number.
+    """
+    return num + (num * 0.1 * (0.5 - random.random()))
+
+
 def pyproject() -> TOMLDocument:
     """
     Return a dictionary-like object representing 3515.games pyproject.toml file.
@@ -184,10 +202,10 @@ def pyproject() -> TOMLDocument:
     return toml.load(open("pyproject.toml"))["tool"]["poetry"]
 
 
-def github():
+def github() -> AuthenticatedUser:
     gh = GitHub(os.getenv("GITHUB_TOKEN"))
     return gh.get_user("celsiusnarhwal")
 
 
-def bot_repo():
+def bot_repo() -> Repository:
     return github().get_repo("3515.games")

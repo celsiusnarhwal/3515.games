@@ -14,10 +14,13 @@ import support.views
 from cogs import uno
 
 
-def verify_context(level: str, verify_host: bool = False):
+def verify_context(
+    level: str, *, verify_host: bool = False, is_pseudocommand: bool = False
+):
     """
-    A decorator which implements a context verification system for UNO games. This system has four levels. In
-    order, they are:
+    A decorator which implements a context verification system for UNO games.
+
+    This system has four levels. In order, they are:
 
     - "thread" (verifies that the context is an UNO game thread)
     - "player" (verifies that the invoker is a player in the UNO game)
@@ -31,12 +34,23 @@ def verify_context(level: str, verify_host: bool = False):
     If the ``verify_host`` flag is set to True, the decorator will also check that the invoking user is the Game Host;
     this, however, is independent of the four verificiation levels described above.
 
-    :param level: The verification level.
-    :param verify_host: Whether or not to verify that the invoking user is the Game Host.
+    Parameters
+    ----------
+    level : str
+        The verification level.
+    verify_host : bool
+        Whether or not to verify that the invoking user is the Game Host.
+    is_pseudocommand : bool
+        Whether or not the decorated command is a pseudocommand.
     """
 
     async def predicate(ctx: discord.ApplicationContext):
-        command_name = f"`/{ctx.command.qualified_name}`"
+        command_name = ctx.command.qualified_name
+
+        if is_pseudocommand:
+            command_name += f" > {ctx.selected_options[0]['value']}"
+
+        command_name = f"`/{command_name}`"
 
         async def is_uno_thread():
             if uno.UnoGame.retrieve_game(ctx.channel_id):
@@ -49,7 +63,7 @@ def verify_context(level: str, verify_host: bool = False):
                 embed = discord.Embed(
                     title="You can't do that here.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -69,7 +83,7 @@ def verify_context(level: str, verify_host: bool = False):
                 embed = discord.Embed(
                     title="You're not playing in this game.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -88,7 +102,7 @@ def verify_context(level: str, verify_host: bool = False):
                 embed = discord.Embed(
                     title="This game hasn't started yet.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -104,7 +118,7 @@ def verify_context(level: str, verify_host: bool = False):
                 embed = discord.Embed(
                     title="It's not your turn.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -122,11 +136,11 @@ def verify_context(level: str, verify_host: bool = False):
                 embed = discord.Embed(
                     title="You're not the Game Host.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
-                return False
+            return False
 
         checks = {
             "thread": is_uno_thread(),

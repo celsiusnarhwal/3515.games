@@ -12,13 +12,14 @@ import sys
 
 import discord
 import inflect as ifl
-from discord.commands import Option, SlashCommandGroup, slash_command
+from discord.commands import Option
 from discord.ext import commands
 from llist import dllistnode
 
 import shrine
 import support
 from cogs import about, rps, uno, chess, cah
+from support import SlashCommandGroup, slash_command
 
 inflect = ifl.engine()
 
@@ -316,7 +317,7 @@ class UnoCog(MasterCog):
             msg = template.render(players=players, points=points, timeout=timeout)
 
         embed = discord.Embed(
-            title="Creating an UNO Game", description=msg, color=support.Color.orange()
+            title="Creating an UNO Game", description=msg, color=support.Color.caution()
         )
 
         # confirm game creation with user
@@ -366,9 +367,9 @@ class UnoCog(MasterCog):
             cancellation_embed = discord.Embed(
                 title="Game Creation Canceled",
                 description="You canceled the creation of this UNO game. "
-                f"You can create a new game with "
-                f"`/{ctx.command.qualified_name}`.",
-                color=support.Color.red(),
+                            f"You can create a new game with "
+                            f"`/{ctx.command.qualified_name}`.",
+                color=support.Color.error(),
             )
 
             await ctx.interaction.edit_original_response(
@@ -377,8 +378,24 @@ class UnoCog(MasterCog):
 
     # player commands
 
-    @uno_group.command(name="join", description="Join an UNO game.")
+    @uno_group.command(name="ciao", description="Join or leave an UNO game.")
     @uno.verify_context(level="thread")
+    async def ciao(
+            self,
+            ctx: discord.ApplicationContext,
+            action: discord.Option(
+                str, "What would you like to do?", choices=["Join Game", "Leave Game"]
+            ),
+    ):
+        options = {
+            "Join Game": self.join_game,
+            "Leave Game": self.leave_game,
+        }
+
+        await options[action](ctx)
+
+    @support.pseudocommand()
+    @uno.verify_context(level="thread", is_pseudocommand=True)
     async def join_game(self, ctx: discord.ApplicationContext):
         """
         Join the invoker to an UNO game.
@@ -399,7 +416,7 @@ class UnoCog(MasterCog):
             embed = discord.Embed(
                 title="You're already in this game.",
                 description=msg,
-                color=support.Color.red(),
+                color=support.Color.error(),
             )
             await ctx.respond(embed=embed, ephemeral=True)
 
@@ -409,7 +426,7 @@ class UnoCog(MasterCog):
             embed = discord.Embed(
                 title="This game has already started.",
                 description=msg,
-                color=support.Color.red(),
+                color=support.Color.error(),
             )
             await ctx.respond(embed=embed, ephemeral=True)
 
@@ -417,7 +434,7 @@ class UnoCog(MasterCog):
         elif not len(uno_game.players) <= uno_game.settings.max_players:
             msg = "You won't be able to join unless someone leaves or is removed by the Game Host."
             embed = discord.Embed(
-                title="This game is full.", description=msg, color=support.Color.red()
+                title="This game is full.", description=msg, color=support.Color.error()
             )
             await ctx.respond(embed=embed, ephemeral=True)
 
@@ -425,8 +442,8 @@ class UnoCog(MasterCog):
         else:
             await uno_game.add_player(ctx, ctx.user)
 
-    @uno_group.command(name="leave", description="Leave an UNO game.")
-    @uno.verify_context(level="player")
+    @support.pseudocommand()
+    @uno.verify_context(level="player", is_pseudocommand=True)
     async def leave_game(self, ctx: discord.ApplicationContext):
         """
         Leave an UNO game on behalf of the invoking player.
@@ -461,7 +478,7 @@ class UnoCog(MasterCog):
             embed = discord.Embed(
                 title="Leave this UNO game?",
                 description=msg,
-                color=support.Color.orange(),
+                color=support.Color.caution(),
             )
 
             view = support.ConfirmationView(ctx=ctx)
@@ -480,25 +497,56 @@ class UnoCog(MasterCog):
                 )
 
     @uno_group.command(
-        name="hand", description="See the UNO cards you're currently holding."
+        name="play",
+        description='Play a card, draw a card, view your hand, make a callout, or say "UNO!".',
     )
-    @uno.verify_context(level="game")
+    @uno.verify_context(level="player")
+    async def play(
+            self,
+            ctx: discord.ApplicationContext,
+            action: discord.Option(
+                str,
+                "What do you want to do?",
+                choices=[
+                    "Play Card",
+                    "Draw Card",
+                    "View Hand",
+                    "Make Callout",
+                    'Say "UNO!"',
+                ],
+            ),
+    ):
+        options = {
+            "Play Card": self.play_card,
+            "Draw Card": self.draw_card,
+            "View Hand": self.show_hand,
+            "Make Callout": self.callout,
+            'Say "UNO!"': self.say_uno,
+        }
+
+        await options[action](ctx)
+
+    # pseudocommand of play()
+    @support.pseudocommand()
+    @uno.verify_context(level="game", is_pseudocommand=True)
     async def show_hand(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
 
         await player.show_hand(ctx)
 
-    @uno_group.command(name="play", description="Play one of your UNO cards.")
-    @uno.verify_context(level="turn")
+    # pseudocommand of play()
+    @support.pseudocommand()
+    @uno.verify_context(level="turn", is_pseudocommand=True)
     async def play_card(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
 
         await player.select_card(ctx)
 
-    @uno_group.command(name="draw", description="Draw an UNO card.")
-    @uno.verify_context(level="turn")
+    # pseudocommand of play()
+    @support.pseudocommand()
+    @uno.verify_context(level="turn", is_pseudocommand=True)
     async def draw_card(self, ctx: discord.ApplicationContext):
 
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
@@ -506,10 +554,9 @@ class UnoCog(MasterCog):
 
         await player.draw_card(ctx)
 
-    @uno_group.command(
-        name="uno", description="Say 'UNO!' when you have one card left."
-    )
-    @uno.verify_context(level="game")
+    # pseudocommand of play()
+    @support.pseudocommand()
+    @uno.verify_context(level="game", is_pseudocommand=True)
     async def say_uno(self, ctx: discord.ApplicationContext):
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
         player = uno_game.retrieve_player(ctx.user)
@@ -519,7 +566,7 @@ class UnoCog(MasterCog):
             embed = discord.Embed(
                 title="Get rid of those cards first.",
                 description=msg,
-                color=support.Color.red(),
+                color=support.Color.error(),
             )
 
             await ctx.respond(embed=embed, ephemeral=True)
@@ -531,7 +578,7 @@ class UnoCog(MasterCog):
             embed = discord.Embed(
                 title="You did that already.",
                 description=msg,
-                color=support.Color.red(),
+                color=support.Color.error(),
             )
 
             await ctx.respond(embed=embed, ephemeral=True)
@@ -543,7 +590,7 @@ class UnoCog(MasterCog):
                 "Say UNO?"
             )
             embed = discord.Embed(
-                title="Say UNO?", description=msg, color=support.Color.orange()
+                title="Say UNO?", description=msg, color=support.Color.caution()
             )
 
             view = support.ConfirmationView(ctx=ctx)
@@ -565,39 +612,17 @@ class UnoCog(MasterCog):
                     view=None,
                 )
 
-    @uno_group.command(
-        name="callout", description="Call out a player for failing to say 'UNO!'."
-    )
-    @uno.verify_context(level="turn")
+    # pseudocommand of play()
+    @support.pseudocommand()
+    @uno.verify_context(level="turn", is_pseudocommand=True)
     async def callout(
-        self,
-        ctx: discord.ApplicationContext,
-        receiving_player: Option(
-            discord.User, "Mention a player to call out.", name="player"
-        ),
+            self,
+            ctx: discord.ApplicationContext,
     ):
+        game: uno.UnoGame = uno.UnoGame.retrieve_game(ctx.channel_id)
+        player: uno.UnoPlayer = game.retrieve_player(ctx.user)
 
-        uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        player: uno.UnoPlayer = uno_game.retrieve_player(ctx.user)
-        recipient: uno.UnoPlayer = uno_game.retrieve_player(receiving_player)
-
-        if not recipient:
-            embed = discord.Embed(
-                title="That's not a player.",
-                description="You can only call out users who are also players in this UNO game.",
-                color=support.Color.red(),
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-        elif player == recipient:
-            embed = discord.Embed(
-                title="Come on, man.",
-                description="This should really go without saying, but you can't call out "
-                "yourself. Choose another player to call out.",
-                color=support.Color.red(),
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-        else:
-            await player.callout(ctx=ctx, recipient=recipient)
+        await player.callout(ctx)
 
     @uno_group.command(name="status", description="Open the UNO Status Center.")
     @uno.verify_context(level="thread")
@@ -607,9 +632,31 @@ class UnoCog(MasterCog):
         view = uno.UnoStatusCenterView(ctx=ctx, game=uno_game)
         await view.open_status_center()
 
-    # game host commands
-    @host_group.command(name="start", description="Start an UNO game. Game Hosts only.")
+    @uno_group.command(
+        name="manage", description="Manage an UNO game. Game Hosts only."
+    )
     @uno.verify_context(level="thread", verify_host=True)
+    async def manage(
+            self,
+            ctx: discord.ApplicationContext,
+            action: Option(
+                str,
+                "What do you want to do?",
+                choices=["Start Game", "End Game", "Kick Player", "Transfer Host Powers"],
+            ),
+    ):
+        options = {
+            "Start Game": self.start_game,
+            "End Game": self.abort_game,
+            "Kick Player": self.kick_player,
+            "Transfer Host Powers": self.transfer_host,
+        }
+
+        await options[action](ctx)
+
+    # game host commands
+    @support.pseudocommand()
+    @uno.verify_context(level="thread", verify_host=True, is_pseudocommand=True)
     async def start_game(self, ctx: discord.ApplicationContext):
         """
         Start an UNO game.
@@ -631,7 +678,7 @@ class UnoCog(MasterCog):
             embed = discord.Embed(
                 title="This game has already started.",
                 description="You can't start a game that's already in progress, silly!",
-                color=support.Color.red(),
+                color=support.Color.error(),
             )
 
             await ctx.respond(embed=embed, ephemeral=True)
@@ -641,9 +688,9 @@ class UnoCog(MasterCog):
             embed = discord.Embed(
                 title="You need more players.",
                 description=f"You can't start this game until at least "
-                f"{inflect.number_to_words(uno_game.min_players)} players, including "
-                "yourself, have joined.",
-                color=support.Color.red(),
+                            f"{inflect.number_to_words(uno_game.min_players)} players, including "
+                            "yourself, have joined.",
+                color=support.Color.error(),
             )
             await ctx.respond(embed=embed, ephemeral=True)
 
@@ -652,7 +699,7 @@ class UnoCog(MasterCog):
             embed = discord.Embed(
                 title="Start this UNO game?",
                 description="Once the game has begun, no new players will be able to join.",
-                color=support.Color.orange(),
+                color=support.Color.caution(),
             )
 
             view = support.ConfirmationView(ctx=ctx)
@@ -674,8 +721,8 @@ class UnoCog(MasterCog):
                     view=None,
                 )
 
-    @host_group.command(name="abort", description="Abort an UNO game. Game Hosts only.")
-    @uno.verify_context(level="thread", verify_host=True)
+    @support.pseudocommand()
+    @uno.verify_context(level="thread", verify_host=True, is_pseudocommand=True)
     async def abort_game(self, ctx: discord.ApplicationContext):
         """
         Terminate an UNO game.
@@ -700,7 +747,7 @@ class UnoCog(MasterCog):
         embed = discord.Embed(
             title="Abort this UNO game?",
             description=message,
-            color=support.Color.orange(),
+            color=support.Color.caution(),
         )
 
         view = support.ConfirmationView(ctx=ctx)
@@ -718,14 +765,11 @@ class UnoCog(MasterCog):
                 content="Okay! The game is still on.", embeds=[], view=None
             )
 
-    @host_group.command(
-        name="kick", description="Kick a player from an UNO game. Game Hosts only."
-    )
-    @uno.verify_context(level="thread", verify_host=True)
+    @support.pseudocommand()
+    @uno.verify_context(level="thread", verify_host=True, is_pseudocommand=True)
     async def kick_player(
-        self,
-        ctx: discord.ApplicationContext,
-        player: Option(discord.User, "Mention a player to kick."),
+            self,
+            ctx: discord.ApplicationContext,
     ):
         """
         Kick a player from an UNO game.
@@ -734,8 +778,6 @@ class UnoCog(MasterCog):
         ----------
         ctx : discord.ApplicationContext
             The invocation context.
-        player : discord.User
-            The player to kick.
 
         Notes
         -----
@@ -744,139 +786,31 @@ class UnoCog(MasterCog):
         removing players who have been deemed inactive.
         """
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
-        player_node: dllistnode = uno_game.retrieve_player(player, return_node=True)
+        player = await uno.UnoKickPlayerView(ctx=ctx).present()
+        player_node: dllistnode = uno_game.retrieve_player(
+            player.user, return_node=True
+        )
 
-        if not player_node:
-            embed = discord.Embed(
-                title="That's not a player.",
-                description="You can't kick someone who isn't a player in this game.",
-                color=support.Color.red(),
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-        elif player == ctx.user:
-            embed = discord.Embed(
-                title="Um, that's you.",
-                description="You can't kick yourself. If you want out, use `/uno leave` "
-                "(consider transferring your host powers to someone else first, "
-                "though).",
-                color=support.Color.red(),
-            )
-            await ctx.respond(embed=embed, ephemeral=True)
-        else:
-            msg = (
-                f"{player.mention} will be able to rejoin the game if it hasn't already started. "
-                f"\n"
-                f"Kick {player.mention}?"
-            )
+        await uno_game.kick_player(player_node)
 
-            embed = discord.Embed(
-                title=f"Kick {player.name}?",
-                description=msg,
-                color=support.Color.orange(),
-            )
-
-            view = support.ConfirmationView(ctx=ctx)
-            confirmation = await view.request_confirmation(
-                prompt_embeds=[embed], ephemeral=True
-            )
-
-            if confirmation:
-                await ctx.interaction.edit_original_response(
-                    content=f"Kicking {player.name}...", embeds=[], view=None
-                )
-                await uno_game.kick_player(player_node)
-            else:
-                await ctx.interaction.edit_original_response(
-                    content=f"Okay! {player.mention} remains in the game.",
-                    embeds=[],
-                    view=None,
-                )
-
-    @host_group.command(
-        name="transfer",
-        description="Transfer your Game Host powers to another player. Game Hosts only.",
-    )
-    @uno.verify_context(level="thread", verify_host=True)
+    @support.pseudocommand()
+    @uno.verify_context(level="thread", verify_host=True, is_pseudocommand=True)
     async def transfer_host(
-        self,
-        ctx: discord.ApplicationContext,
-        player: Option(
-            discord.User, "Mention the player you want to transfer host " "powers to."
-        ),
+            self,
+            ctx: discord.ApplicationContext,
     ):
+        """
+        Transfer host powers to another player.
 
+        Parameters
+        ----------
+        ctx : discord.ApplicationContext
+            The invocation context.
+        """
         uno_game = uno.UnoGame.retrieve_game(ctx.channel_id)
+        player = await uno.UnoTransferHostView(ctx=ctx).present()
 
-        # user cannot transfer host powers to themselves
-        if player.id == ctx.user.id:
-            msg = "Choose another player to transfer host powers to."
-            embed = discord.Embed(
-                title="You can't transfer host powers to yourself.",
-                description=msg,
-                color=support.Color.red(),
-            )
-
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        # user cannot transfer host powers to non-players
-        elif not uno_game.retrieve_player(player):
-            msg = "The new Game Host must be a player in this UNO game."
-            embed = discord.Embed(
-                title="That person's not a player.",
-                description=msg,
-                color=support.Color.red(),
-            )
-
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        # user cannot transfer host powers to players already hosting another game in the same server
-        elif uno.UnoGame.find_hosted_games(player, ctx.guild_id):
-            msg = "You can't transfer host powers to someone who's already hosting an UNO game in this server."
-            embed = discord.Embed(
-                title="That player's already hosting a game.",
-                description=msg,
-                color=support.Color.red(),
-            )
-
-            await ctx.respond(embed=embed, ephemeral=True)
-
-        # if none of the above conditions are met, the user is asked to confirm the transfer
-        else:
-            msg = (
-                f"{player.mention} will become the Game Host, effective immediately, and all associated powers "
-                f"will become exclusively theirs to use. Conversely, you will lose your status as Game Host "
-                f"and will no longer be able to use any of the powers that come with the title.\n"
-                f"\n"
-                f"You will remain a player in this UNO game until it ends or you choose to leave.\n"
-                f"\n"
-                f"This action cannot be undone.\n"
-                f"\n"
-                f"Do you want to make {player.name} the Game Host?"
-            )
-
-            embed = discord.Embed(
-                title=f"Make {player.name} the Game Host?",
-                description=msg,
-                color=support.Color.orange(),
-            )
-
-            view = support.ConfirmationView(ctx=ctx)
-            confirmation = await view.request_confirmation(
-                prompt_embeds=[embed], ephemeral=True
-            )
-
-            if confirmation:
-                await ctx.interaction.edit_original_response(
-                    content=f"Transferring host powers to {player.mention}...",
-                    embeds=[],
-                    view=None,
-                )
-                await uno_game.transfer_host(player)
-
-            else:
-                await ctx.interaction.edit_original_response(
-                    content="Ok! You're still the Game Host.", embeds=[], view=None
-                )
+        await uno_game.transfer_host(player.user)
 
     @commands.Cog.listener()
     async def on_thread_member_remove(self, thread_member: discord.ThreadMember):

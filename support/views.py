@@ -9,16 +9,15 @@ from __future__ import annotations
 import sys
 
 import discord
+from abc import ABC, abstractmethod
 import discord.ui
 from discord import Interaction, ButtonStyle
 from discord.ui import Button, button as discord_button, Item
 
 
-class EnhancedView(discord.ui.View):
+class View(discord.ui.View):
     """
-    A custom ``View`` class that extends Pycord's ``discord.ui.View`` class and that all of 3515.games' views inherit
-    from. In addition to everything provided by ``discord.ui.View``, ``EnhancedView`` provides several useful built-in
-    instance attributes which are elaborated on in the documentation for its constructor.
+    Base class for 3515.games' views.
     """
 
     def __init__(
@@ -33,7 +32,7 @@ class EnhancedView(discord.ui.View):
         :param target_user: A discord.User object. Useful to pass in if the view should restrict interactions to a
             particular user. Optional; defaults to None.
         """
-        super(EnhancedView, self).__init__()
+        super(View, self).__init__()
         self.ctx: discord.ApplicationContext = ctx
         self.target_user: discord.User = target_user
         self.timeout = None
@@ -42,17 +41,16 @@ class EnhancedView(discord.ui.View):
     def on_error(self, error: Exception, item: Item, interaction: Interaction) -> None:
         sys.excepthook(type(error), error, error.__traceback__)
 
-    def disable_children(self):
-        for child in self.children:
-            child.disabled = True
-
     async def full_stop(self):
+        """
+        Make the view stop listening for interactions and disable all of its components.
+        """
         self.stop()
-        self.disable_children()
+        self.disable_all_items()
         await self.ctx.interaction.edit_original_response(view=self)
 
 
-class ConfirmationView(EnhancedView):
+class ConfirmationView(View):
     """
     Provides a user interface for a user to confirm or cancel an action.
     """
@@ -183,61 +181,48 @@ class GameChallengeResponseView(ConfirmationView):
         return self.success
 
 
-# note: currently unused
-class UserSelectionView(EnhancedView):
+class UserSelectionView(View, ABC):
     """
     Provides an interface for selecting users from a dropdown menu.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__()
-        self.timeout = None
-        self.users = []
-
-    @discord.ui.user_select(placeholder="Select a user", max_values=25)
-    async def user_select(self, select: discord.ui.Select, interaction: Interaction):
-        self.users = select.values
-
-        if self.users:
-            self.stop()
-
-    async def present(
+    def __init__(
         self,
-        prompt_text=None,
-        prompt_embeds: list[discord.Embed] = None,
-        ephemeral=False,
-        edit=False,
+        min_users: int = 1,
+        max_users: int = 25,
+        placeholder: str = "Select a user",
+        *args,
+        **kwargs,
     ):
-        """
-        Sends a user selection prompt.
+        super().__init__(*args, **kwargs)
 
-        Parameters
-        ----------
-        prompt_text : str, optional, default: None
-            The text the prompt should contain.
-        prompt_embeds : list[discord.Embed], optional, default: None
-            A list of embeds the prompt should contain.
-        ephemeral : bool, optional, default: False
-            Whether the prompt should be sent as an ephemeral message.
-        edit : bool, optional, default: False
-            Whether the prompt should edit an existing interaction response or create a new one.
-        """
-        if edit:
-            await self.ctx.interaction.edit_original_response(
-                content=prompt_text, embeds=prompt_embeds, view=self
-            )
-        else:
-            await self.ctx.respond(
-                content=prompt_text,
-                embeds=prompt_embeds,
-                view=self,
-                ephemeral=ephemeral,
-            )
-        await self.wait()
-        return self.users
+        self.min_users = min_users
+        self.max_users = max_users
+        self.placeholder = placeholder
+
+        self.timeout = None
+        self.selected_users = []
+
+        select = discord.ui.Select(
+            select_type=discord.ComponentType.user_select,
+            min_values=self.min_users,
+            max_values=self.max_users,
+            placeholder=self.placeholder,
+        )
+
+        select.callback = self.callback
+
+        self.add_item(select)
+
+    async def callback(self, interaction: Interaction):
+        pass
+
+    @abstractmethod
+    async def present(self, *args, **kwargs):
+        ...
 
 
-class GameThreadURLView(EnhancedView):
+class GameThreadURLView(View):
     """
     Provides a URL button that points to a newly-created game thread.
     """
@@ -247,7 +232,7 @@ class GameThreadURLView(EnhancedView):
         self.add_item(Button(label="Go to game thread", url=thread.jump_url))
 
 
-class GameVoiceURLView(EnhancedView):
+class GameVoiceURLView(View):
     """
     Provides a URL button that points to a game's associated voice channel.
     """

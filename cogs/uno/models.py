@@ -9,80 +9,109 @@ from __future__ import annotations
 import asyncio
 import random
 import string
+import typing as t
 import uuid
 from enum import Enum, EnumMeta
-from typing import Union
 
 import discord
 import inflect as ifl
 import tomlkit as toml
 from discord.ext import pages as discord_pages
-from llist import dllistnode, dllist as DoublyLinkedList
+from llist import dllistnode, dllist
 from pydantic import BaseSettings
 from sortedcontainers import SortedKeyList
 
 import shrine
 import support
 from cogs import uno
-from support import HostedMultiplayerGame, posessive
+from shrine.kami import posessive
+from support import HostedMultiplayerGame, BasePlayer
 
 inflect = ifl.engine()
 
 
 class UnoGame(HostedMultiplayerGame):
     """
-    Represents an UNO game.
+    An UNO game.
+
+    Parameters
+    ----------
+    settings : UnoGameSettings
+        The game's settings.
+    guild : discord.Guild
+        The server (a.k.a. "guild") in which the game is taking place.
+    thread : discord.Thread
+        The game's associated thread.
+    host : discord.Member
+        The user who is the Game Host.
     """
 
     name = "UNO"
 
     def __init__(self, settings: UnoGameSettings, *args, **kwargs):
-        """
-        The constructor for ``UnoGame``.
-
-        :param guild: The server (a.k.a. "guild") in which the game is taking place.
-        :param thread: The game's associated thread.
-        :param host: The user who is the Game Host.
-        :param settings: The UnoGameSettings object representing the game's settings.
-        """
 
         super().__init__(*args, **kwargs)
 
         self.settings: UnoGameSettings = settings
 
-        self.players = DoublyLinkedList()
+        self.players = dllist()
         self.is_joinable: bool = True
         self.current_round: int = 0
         self.current_player = dllistnode()
         self.skip_next_player = False
         self.reverse_turn_order = False
         self.turn_uuid = None
-        self.last_move = None
         self.card_in_play: UnoCard = None
-        self.color_in_play: str = ""
-        self.suit_in_play: str = ""
         self.turn_record = []
-        self.status = UnoStatusCenter(game=self)
+        self.processor = UnoEventProcessor(self)
+        self.status = UnoStatusTracker(self)
 
         self.__all_games__[self.thread.id] = self
 
+    @property
+    def last_move_str(self):
+        """
+        A string describing the last card played. In the case of a Wild card, this also describes the color in play.
+        """
+        if self.card_in_play:
+            last_move = f"The last card played was a **{self.card_in_play}**."
+
+            if self.card_in_play.color is UnoCardColor.WILD:
+                last_move += (
+                    f" The color in play is **{self.card_in_play.transformation}**."
+                )
+
+            return last_move
+        else:
+            return ""
+
     async def game_timer(self):
         """
-        Imposes a 12-hour time limit within which an UNO game must be completed.
+        Imposes an eight-hour time limit within which an UNO game must be completed.
         """
-        await asyncio.sleep(43200)
+        await asyncio.sleep(60**2 * 8)
 
         if self.retrieve_game(self.thread.id):
             await self.force_close(reason="time_limit")
 
-    def retrieve_player(self, user, return_node=False) -> Union[UnoPlayer, dllistnode]:
+    def retrieve_player(
+        self, user: discord.Member, *, return_node=False
+    ) -> UnoPlayer | dllistnode:
         """
-        Retrieves a player from ``UnoGame().players`` given that player's user object.
+        Retrieve a player from the game given their corresponding :class:`discord.Member` object.
 
-        :param user: The object corresponding to the player. This can be a discord.User, discord.Member, or
-        discord.ThreadMember object.
-        :param return_node: If True, the player's dllistnode will be returned instead of their UnoPlayer object.
-        :return: An UnoPlayer object.
+        Parameters
+        ----------
+        user : discord.Member
+
+        return_node : bool
+            Whether to return the player's :class:`llist.dllistnode` object rather than their :class:`UnoPlayer` object.
+
+        Returns
+        -------
+        UnoPlayer | llist.dllistnode
+            The player's :class:`UnoPlayer` object, or their :class:`llist.dllistnode`
+            object if ``return_node`` is True.
         """
 
         if return_node:
@@ -163,17 +192,21 @@ class UnoGame(HostedMultiplayerGame):
 
         await asyncio.sleep(3)
 
-        await self.start_new_round()
+        await self.start_round()
 
     async def add_player(
-        self, ctx: discord.ApplicationContext, user: discord.User, is_host=False
+        self, ctx: discord.ApplicationContext, user: discord.User, *, is_host=False
     ):
         """
-        Adds a player to a not-yet-started UNO game.
+        Add a player to the game.
 
-        :param ctx: An ApplicationContext object.
-        :param user: The discord.User object corresponding to the player.
-        :param is_host: Flags whether the player being added is also the Game Host. Defaults to False.
+        Parameters
+        ----------
+        ctx : discord.ApplicationContext
+        user : discord.Member
+            The user object of the player being added.
+        is_host : bool
+            Whether the player being added is the Game Host.
         """
         if user not in await self.thread.fetch_members():
             await self.thread.add_user(user)
@@ -196,8 +229,8 @@ class UnoGame(HostedMultiplayerGame):
 
         if not is_host:
             msg = (
-                f"If you didn't mean to join, you can leave the game with `/uno leave`. You can leave at any time, "
-                f"but if the game has already started, you won't be able to rejoin.\n"
+                f"If you didn't mean to join, you can leave the game with `/uno ciao > Leave Game`. You can leave "
+                f"at any time, but if the game has already started, you won't be able to rejoin.\n"
                 f"\n"
                 f"Be advised that the Game Host, {self.host.mention}, can kick you at any time, "
                 f"and if you go AFK mid-game, I'll have you automatically removed for inactivity. Please remember "
@@ -216,9 +249,12 @@ class UnoGame(HostedMultiplayerGame):
 
     async def remove_player(self, player_node: dllistnode):
         """
-        Removes a player from an UNO game.
+        Remove a player from the game.
 
-        :param player_node: The dllistnode object corresponding to the player to be removed.
+        Parameters
+        ----------
+        player_node : dllistnode
+            The node of the player to remove.
         """
 
         player: UnoPlayer = player_node.value
@@ -226,7 +262,7 @@ class UnoGame(HostedMultiplayerGame):
         embed = discord.Embed(
             title="A player has left the game.",
             description=f"{player.user.mention} has left the game.",
-            color=support.Color.red(),
+            color=support.Color.error(),
         )
 
         await self.thread.send(embed=embed)
@@ -249,14 +285,24 @@ class UnoGame(HostedMultiplayerGame):
             await self.voice_channel.set_permissions(target=player.user, overwrite=None)
 
     async def walk_players(
-        self, player_node: dllistnode, steps: int, use_value=False
-    ) -> dllistnode or UnoPlayer:
+        self, player_node: dllistnode, steps: int, *, use_value=False
+    ) -> dllistnode | UnoPlayer:
         """
         Circularly traverse the list of a game's players.
 
-        :param player_node: The node to start traversing from.
-        :param steps: The number of steps to traverse.
-        :param use_value: If True, return the value of the node (i.e. the UnoPlayer object) instead of the node itself.
+        Parameters
+        ----------
+        player_node : dllistnode
+            The node of the player to start traversing from.
+        steps : int
+            The number of steps to traverse.
+        use_value : bool
+            Whether to return the node or its value.
+
+        Returns
+        -------
+        dllistnode | UnoPlayer
+            The node or value of the player at the end of the traversal.
         """
         for step in range(steps):
             if self.reverse_turn_order:
@@ -270,30 +316,26 @@ class UnoGame(HostedMultiplayerGame):
         else:
             return player_node
 
-    async def start_new_round(self):
+    async def start_round(self):
         """
-        Starts a new round of an UNO game.
+        Start a new round of an UNO game.
         """
         self.current_round += 1
         self.reverse_turn_order = False
-        self.color_in_play = ""
-        self.suit_in_play = ""
-        self.last_move = ""
+        self.card_in_play = None
         self.status.previous_turn_record.clear()
 
         for player in self.players.itervalues():
-            # each player is dealt seven cards at the start of a round
-            player.hand.clear()
-            player.hand_value = 0
-            await player.add_cards(7, dealing=True)
+            player.hand.clear()  # clear that motherfucker out
+            await player.add_cards(7)
 
         msg = f"Round {self.current_round} has begun!"
         if self.current_round == 1:
-            msg += " Seven cards have been dealt to each player. Check them out with `/uno hand`."
+            msg += " Seven cards have been dealt to each player. Check them out with `/uno play > View Hand`."
         else:
             msg += (
                 " Any cards you had at the end of the previous round have been taken, and seven new cards have "
-                "been dealt to each player. Check them out with `/uno hand`."
+                "been dealt to each player. Check them out with `/uno play > View Hand`."
             )
 
         embed = discord.Embed(
@@ -305,16 +347,22 @@ class UnoGame(HostedMultiplayerGame):
         await self.thread.send(embed=embed)
         await self.start_next_turn()
 
-    async def end_current_round(self, round_winner: UnoPlayer):
+    async def end_round(self, round_winner: UnoPlayer):
         """
-        Ends the current round of an UNO game.
+        End the current round of an UNO game.
+
+        Parameters
+        ----------
+        round_winner : UnoPlayer
+            The winner of the round.
         """
         self.current_player = None
 
         # the number of points awarded to a round's winner is based on the point values of all cards held
-        # by the other players at the end of a round
-        awarded_points = sum(
-            [player.hand_value for player in self.players.itervalues()]
+        # by the other players at the end of the round. the winner of a round will always be awarded at least
+        # one point, even if the cumulative value of every other player's hand is zero.
+        awarded_points = (
+            sum([player.hand_value for player in self.players.itervalues()]) or 1
         )
 
         round_winner.points += awarded_points
@@ -331,12 +379,8 @@ class UnoGame(HostedMultiplayerGame):
             f"**{winner_rank} place**"
         )
 
-        if round_winner.points < self.settings.points_to_win:
-            point_gap = self.settings.points_to_win - round_winner.points
-            msg += (
-                f"—{self.settings.points_to_win - round_winner.points} point{'s' if point_gap > 1 else ''} "
-                f"away from winning the game"
-            )
+        if (point_gap := self.settings.points_to_win - round_winner.points) > 0:
+            msg += f"—{inflect.no('point', point_gap)} away from winning the game"
 
         msg += ". To view the full leaderboard, use `/uno status`."
 
@@ -346,13 +390,15 @@ class UnoGame(HostedMultiplayerGame):
             color=support.Color.mint(),
         )
 
+        embed.set_thumbnail(url=round_winner.user.display_avatar.url)
+
         await self.thread.send(content="@everyone", embed=embed)
 
         if round_winner.points >= self.settings.points_to_win:
             await self.end_game(game_winner=round_winner)
         else:
             await asyncio.sleep(5)
-            await self.start_new_round()
+            await self.start_round()
 
     async def start_next_turn(self):
         """
@@ -371,7 +417,8 @@ class UnoGame(HostedMultiplayerGame):
 
         embed = discord.Embed(
             title="New Turn",
-            description=f"It's {posessive(self.current_player.value.user.name)} turn.",
+            description=f"It's {posessive(self.current_player.value.user.name)} turn. "
+            f"Make your move with `/uno play`.",
             color=support.Color.white(),
         )
 
@@ -383,9 +430,9 @@ class UnoGame(HostedMultiplayerGame):
         )
         await self.turn_timer()
 
-    async def end_current_turn(self):
+    async def end_turn(self):
         """
-        Ends the current player's turn.
+        End the current player's turn.
         """
         if self.turn_record:
             await self.thread.send(embeds=self.turn_record)
@@ -398,28 +445,23 @@ class UnoGame(HostedMultiplayerGame):
         )
 
         if round_winner:
-            await self.end_current_round(round_winner=round_winner)
+            await self.end_round(round_winner=round_winner)
         else:
             await self.start_next_turn()
 
     async def end_game(self, game_winner: UnoPlayer):
         """
-        Ends the game. This is only called when a player meets the win condition, and should not be confused
+        End the game. This is only called when a player meets the win condition, and should not be confused
         with force closing the game.
         """
         self.__all_games__.pop(self.thread.id)
 
-        msg = (
-            f"Congratulations, {game_winner.user.mention}! You won UNO!\n"
-            f"\n"
-            f"{game_winner.user.name} won the game with a total of **{game_winner.points} points**. To see "
-            f"the final leaderboard for this game, use the button below.\n"
-            f"\n"
-            f"This thread will be automatically deleted in 60 seconds. Thanks for playing!"
-        )
+        with shrine.Torii.uno() as torii:
+            template = torii.get_template("game-over.md")
+            msg = template.render(winner=game_winner)
 
         embed = discord.Embed(
-            title=f"UNO: Game Over! {game_winner.user.name} Wins!",
+            title=f"Game Over! {game_winner.name} Wins!",
             description=msg,
             color=support.Color.mint(),
         )
@@ -440,8 +482,7 @@ class UnoGame(HostedMultiplayerGame):
         # before the timer is set, the turn's unique identifier is recorded
         turn_uuid = self.turn_uuid
 
-        # the game waits to give the player time to move
-        await asyncio.sleep(self.settings.timeout)
+        await asyncio.sleep(support.fuzz(self.settings.timeout))
 
         # if, after the timer is up, the uuid of the current turn is still the same as the one recorded
         # by the timer, the player times out
@@ -464,7 +505,7 @@ class UnoGame(HostedMultiplayerGame):
                 embed = discord.Embed(
                     title=f"{player.user.name} timed out.",
                     description=f"{player.user.name} was removed from the game for inactivity.",
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await self.thread.send(embed=embed)
 
@@ -472,7 +513,7 @@ class UnoGame(HostedMultiplayerGame):
                     title=f"You timed out of {posessive(self.host.name)} UNO game.",
                     description=f"You were removed from {self.host.name}'s UNO game in "
                     f"{self.guild.name} for inactivity.",
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await player.user.send(embed=embed)
 
@@ -480,47 +521,48 @@ class UnoGame(HostedMultiplayerGame):
 
             # if neither of the above conditions are met, the player is forced to draw a card and forfeit their turn
             else:
-                processor = UnoEventProcessor(self)
-                await processor.turn_timeout_event(player=player)
+                await self.processor.turn_timeout_event(player=player)
                 await player.end_turn()
 
     def is_card_playable(self, card: UnoCard):
         """
-        Given an :class:`UnoCard`, this method determines whether it can be played on the current turn.
+        Determine whether an :class:`UnoCard` can be played on the current turn.
         """
-        # a card is playable if it matches the color of the last card played...
         return (
-            card.color.casefold() == self.color_in_play.casefold()
-            # ...or the suit of the same.
-            or card.suit.casefold() == self.suit_in_play.casefold()
-            # wild cards are always playable
+            self.card_in_play is None
+            or card.versus_color is self.card_in_play.versus_color
+            or card.versus_suit is self.card_in_play.versus_suit
             or card.color is UnoCardColor.WILD
-            # if there's no color in play (e.g. at the start of a round), all cards are playable
-            or not self.color_in_play
         )
 
     async def transfer_host(self, new_host: discord.User):
         old_host = self.host
         await super().transfer_host(new_host)
 
-        await self.voice_channel.set_permissions(
-            target=old_host, overwrite=self.retrieve_player(old_host).voice_overwrites()
-        )
+        if self.voice_channel:
+            await self.voice_channel.set_permissions(
+                target=old_host,
+                overwrite=self.retrieve_player(old_host).voice_overwrites(),
+            )
 
-        await self.voice_channel.set_permissions(
-            target=new_host, overwrite=self.retrieve_player(new_host).voice_overwrites()
-        )
+            await self.voice_channel.set_permissions(
+                target=new_host,
+                overwrite=self.retrieve_player(new_host).voice_overwrites(),
+            )
 
     async def kick_player(self, player_node: dllistnode):
         """
         Kicks a player from the game.
 
-        :param player_node: The node of the player to kick.
+        Parameters
+        ----------
+        player_node: dllistnode
+            The node of the player to kick.
         """
         embed = discord.Embed(
             title="Player Kicked",
             description=f"{player_node.value.user.mention} has been kicked from the game.",
-            color=support.Color.red(),
+            color=support.Color.error(),
         )
 
         await self.thread.send(embed=embed)
@@ -529,7 +571,7 @@ class UnoGame(HostedMultiplayerGame):
         embed = discord.Embed(
             title=f"You were kicked from {posessive(self.host.name)} UNO game.",
             description=f"You were kicked from {self.host.name}'s UNO game in {self.guild.name}.",
-            color=support.Color.red(),
+            color=support.Color.error(),
         )
 
         embed.timestamp = discord.utils.utcnow()
@@ -539,7 +581,16 @@ class UnoGame(HostedMultiplayerGame):
 
 class UnoGameSettings(BaseSettings):
     """
-    Represents the settings for an UNO game.
+    The settings for an :class:`UnoGame`.
+
+    Parameters
+    ----------
+    max_players: int
+        The maximum number of players allowed to join the game.
+    points_to_win: int
+        The number of points required to win the game.
+    timeout: int
+        The number of seconds players must finish their turns in before being penalized.
     """
 
     max_players: int
@@ -570,49 +621,49 @@ class UnoGameSettings(BaseSettings):
         return "\n\n".join([players_str, points_str, timeout_str])
 
 
-class UnoPlayer:
+class UnoPlayer(BasePlayer):
     """
-    Represents a player in an UNO game.
+    A player in an UNO game.
+
+    Parameters
+    ----------
+    user: :class:`discord.Member`
+        The associated Discord user.
+    game: :class:`UnoGame`
+        The associated game.
+
+    Attributes
+    ----------
+    points: :class:`int`
+        The number of points the player has.
+    hand : :class:`SortedKeyList[UnoCard]`
+        The cards in the player's posession.
+    can_say_uno: :class:`bool`
+        Whether the player can say "UNO!".
+    has_said_uno: :class:`bool`
+        Whether the player has said "UNO!" in the time since their hand was most recently reduced to one card.
+    terminable_views : :class:`list[support.View]`
+        A list of :class:`uno.views.UnoTerminableView` instances that the player has created.
+    timeout_counter: :class:`int`
+        The number of consecutive turns on which the player has timed out.
     """
 
     def __init__(self, user: discord.Member, game: UnoGame):
-        """
-        The constructor for ``UnoPlayer``.
-
-        :param user: The discord.User object corresponding to the player.
-        :param game: The UnoGame object representing the game the player is part of.
-
-        Other attributes:
-        - ``points``: The number of points the player has.
-        - ``hand``: A list of cards in the player's hand. This is sorted by card color (R, G, B, Y, W) and then by
-        suit (0-9, Draw Two, Skip, Reverse).
-        - ``can_say_uno``: Whether or not the player can say UNO.
-        - ``has_said_uno``: Whether or not the player has said UNO.
-        - ``terminable_views``: A list of :class:``discord.ui.View`` objects that must be automatically stopped when
-        the player's turn ends.
-        - ``timeout_counter``: The number of consecutive times the player has timed out.
-        - ``num_cards_played``: The total number of cards the player has played.
-        - ``num_cards_drawn``: The total number of cards the player has drawn.
-        """
-        self.user = user
+        super().__init__(user)
         self.game = game
 
         self.points: int = 0
-        self.hand = SortedKeyList(
-            key=lambda card: [
-                (string.digits + "rbgyw" + string.printable).index(char)
-                for char in str(card).casefold()
-            ]
+        self.hand: SortedKeyList[UnoCard] = SortedKeyList(
+            key=lambda card: card.sortcode
         )
-        self.hand_value: int = 0
         self.can_say_uno = False
         self.has_said_uno = False
-        self.terminable_views: list[support.EnhancedView] = []
+        self.terminable_views: list[support.View] = []
         self.timeout_counter: int = 0
 
         # for uno status center
         self.num_cards_played = 0
-        self.num_cards_drawn = 0
+        self._num_cards_drawn = 0
 
     async def show_hand(self, ctx: discord.ApplicationContext):
         """
@@ -625,14 +676,16 @@ class UnoPlayer:
             discord.Embed(
                 title="Your Hand",
                 description=f"Here are all the cards you're currently holding:\n\n"
-                f"{chr(10).join([f'- {str(card)} {card.emoji()}' for card in page])}",
+                f"{chr(10).join([f'- {str(card)} {card.emoji}' for card in page])}",
                 color=support.Color.mint(),
             )
             for page in split_cards
         ]
 
         for embed in pages:
-            embed.set_footer(text=discord.utils.remove_markdown(self.game.last_move))
+            embed.set_footer(
+                text=discord.utils.remove_markdown(self.game.last_move_str)
+            )
 
         paginator = discord_pages.Paginator(
             pages=pages,
@@ -657,21 +710,15 @@ class UnoPlayer:
             # inform the player about saying 'UNO!' if playing the card will leave them with only one card in their hand
             if len(self.hand) == 2:
                 msg = (
-                    f"If you play this card, you'll only have one card left.\n"
-                    f"\n"
-                    f"When you have only one card left, you must use `/uno uno` to say 'UNO!' and alert the other "
-                    f"players of this fact. If another player believes you have only one card left and haven't "
-                    f"said 'UNO!', they can use `/uno callout` and force you to draw two cards as punishment.\n"
-                    f"\n"
-                    f"You can use `/uno uno` at any time, provided you only have one card and haven't been "
-                    f"called out.\n"
-                    f"\n"
-                    f"Proceed with playing this card?"
+                    'After playing this card, you"re required to say "UNO!" `(/uno play > "Say UNO!")` or risk '
+                    "being called out by other players.\n"
+                    "\n"
+                    "Play this card?"
                 )
                 embed = discord.Embed(
                     title="One Card Remaining",
                     description=msg,
-                    color=support.Color.orange(),
+                    color=support.Color.caution(),
                 )
 
                 view = uno.UnoTerminableConfView(ctx=ctx)
@@ -680,7 +727,7 @@ class UnoPlayer:
                 )
 
                 if confirmation:
-                    if not selected_card.color.casefold() == "wild":
+                    if selected_card.color is not UnoCardColor.WILD:
                         await ctx.interaction.edit_original_response(
                             content="Good luck! 🤞🏾", embeds=[], view=None
                         )
@@ -695,11 +742,11 @@ class UnoPlayer:
 
             # present color selection view if the player selects a wild card, provided it isn't the last card in
             # their hand
-            if selected_card.color.casefold() == "wild" and len(self.hand) > 1:
-                view = uno.WildColorSelectView(ctx=ctx, player=self)
-                color_was_changed: bool = await view.choose_color()
+            if selected_card.color is UnoCardColor.WILD and len(self.hand) > 1:
+                view = uno.WildColorSelectView(ctx=ctx, player=self, card=selected_card)
+                selected_card = await view.choose_color()
 
-                if color_was_changed:
+                if selected_card.transformation:
                     # only play the card if the player selected a color
                     await self.play_card(selected_card)
             else:
@@ -707,32 +754,24 @@ class UnoPlayer:
 
     async def play_card(self, card: UnoCard, with_draw: bool = False):
         """
-        Plays UNO cards.
+        Play an UNO card.
 
-        :param card: The card to play.
-        :param with_draw: Whether or not the card with automatically played after being drawn.
+        Parameters
+        ----------
+        card: :class:`UnoCard`
+            The card to play.
+        with_draw: :class:`bool`
+            Whether the card is being played automatically after being drawn.
         """
         await self.reset_timeouts()
 
-        # remove the card from the player's hand and update their hand value accordingly
+        # remove the card from the player's hand
         self.hand.remove(card)
-        await self.update_hand_value(card, use_subtraction=True)
         self.num_cards_played += 1
 
-        processor = UnoEventProcessor(self.game)
-        await processor.card_played_event(player=self, card=card, with_draw=with_draw)
-
-        if card.color.casefold() == UnoCardColor.WILD:
-            await processor.wild_event(player=self)
-
-        if card.suit.casefold() == "draw two":
-            await processor.draw_two_event()
-        elif card.suit.casefold() == "draw four":
-            await processor.draw_four_event()
-        elif card.suit.casefold() == "skip":
-            await processor.skip_event()
-        elif card.suit.casefold() == "reverse":
-            await processor.reverse_event()
+        await self.game.processor.card_played_event(
+            player=self, card=card, with_draw=with_draw
+        )
 
         await self.end_turn()
 
@@ -740,7 +779,9 @@ class UnoPlayer:
         """
         Draws an UNO card.
 
-        :param ctx: A discord.ApplicationContext object.
+        Parameters
+        ----------
+        ctx: :class:`discord.ApplicationContext`
         """
 
         view = uno.UnoDrawCardView(ctx=ctx)
@@ -749,22 +790,22 @@ class UnoPlayer:
         if view.success:
             await self.reset_timeouts()
 
-            drawn_card = await self.add_cards(1, return_added_cards=True)
+            drawn_card = await self.add_cards(1)
 
             card = drawn_card[0]
 
             if (
                 view.autoplay
                 and self.game.is_card_playable(card)
-                and card.color.casefold() != "wild"
+                and card.color is not UnoCardColor.WILD
             ):
                 # play the card if it can be played on the current turn and isn't a wild or wild draw four
                 embed = discord.Embed(
                     title="Card Drawn and Played",
                     description=f"You drew and played a **{str(card)}**.",
-                    color=card.embed_color(),
+                    color=card.embed_color,
                 )
-                embed.set_thumbnail(url=card.emoji().url)
+                embed.set_thumbnail(url=card.emoji.url)
 
                 await ctx.interaction.edit_original_response(embeds=[embed], view=None)
 
@@ -772,8 +813,8 @@ class UnoPlayer:
                     embed = discord.Embed(
                         title="One Card Remaining",
                         description="You'll need to say 'UNO!' or risk being called out by "
-                        "another player.",
-                        color=support.Color.orange(),
+                        "other players.",
+                        color=support.Color.caution(),
                     )
 
                     await ctx.interaction.followup.send(embed=embed, ephemeral=True)
@@ -783,14 +824,13 @@ class UnoPlayer:
                 embed = discord.Embed(
                     title="Card Drawn",
                     description=f"You drew a **{str(card)}**.",
-                    color=card.embed_color(),
+                    color=card.embed_color,
                 )
-                embed.set_thumbnail(url=card.emoji().url)
+                embed.set_thumbnail(url=card.emoji.url)
 
                 await ctx.interaction.edit_original_response(embeds=[embed], view=None)
 
-                processor = UnoEventProcessor(self.game)
-                await processor.card_drawn_event(player=self)
+                await self.game.processor.card_drawn_event(player=self)
 
                 await self.end_turn()
         elif view.success is False:
@@ -801,112 +841,63 @@ class UnoPlayer:
 
     async def say_uno(self):
         """
-        Says 'UNO!' on behalf of the invoking player.
+        Say 'UNO!'.
         """
-        processor = UnoEventProcessor(self.game)
-        await processor.say_uno_event(player=self)
+        await self.game.processor.say_uno_event(player=self)
 
-    async def callout(self, ctx: discord.ApplicationContext, recipient: uno.UnoPlayer):
+    async def callout(self, ctx: discord.ApplicationContext):
         """
-        Calls out a player for having one remaining card and failing to say 'UNO!'.
+        Call out a player for having one remaining card and failing to say 'UNO!'.
 
-        :param ctx: A discord.ApplicationContext object.
-        :param recipient: The player being called out.
+        Parameters
+        ----------
+        ctx: :class:`discord.ApplicationContext`
         """
-        msg = (
-            f"If you think {recipient.user.name} has one card left and hasn't said 'UNO!', you can call them "
-            f"out.\n"
-            f"\n"
-            f"If the callout **succeeds** (meaning {recipient.user.name} actually has one card left and hasn't "
-            f"said 'UNO!'), {recipient.user.name} will draw two cards.\n"
-            f"\n"
-            f"If the callout **fails** (meaning {recipient.user.name} has said 'UNO!' or has more than "
-            f"one card), you will draw a card and **your turn will end**.\n"
-            f"\n"
-            f"Call out {recipient.user.name}?"
-        )
+        target = await uno.UnoCalloutView(ctx=ctx).present()
 
-        embed = discord.Embed(
-            title=f"Call out {recipient.user.name}?",
-            description=msg,
-            color=support.Color.orange(),
-        )
-
-        view = uno.UnoTerminableConfView(ctx=ctx)
-        confirmation = await view.request_confirmation(
-            prompt_embeds=[embed], ephemeral=True
-        )
-
-        if confirmation:
-            processor = UnoEventProcessor(self.game)
-
-            if recipient.can_say_uno and not recipient.has_said_uno:
-                embed = discord.Embed(
-                    title="The callout was successful!",
-                    description=f"{recipient.user.name} will draw two cards.",
-                    color=support.Color.green(),
-                )
-
-                await ctx.interaction.edit_original_response(embeds=[embed], view=None)
-                await processor.callout_event(
-                    challenger=self, recipient=recipient, callout_success=True
-                )
-            else:
-                embed = discord.Embed(
-                    title="The callout failed.",
-                    description="You'll draw a card, and your turn will end.",
-                    color=support.Color.brand_red(),
-                )
-
-                await ctx.interaction.edit_original_response(embeds=[embed], view=None)
-                await processor.callout_event(
-                    challenger=self, recipient=recipient, callout_success=False
-                )
-                await self.end_turn()
-        else:
-            await ctx.interaction.edit_original_response(
-                content="Okay! Make your move whenever you're ready.",
-                embeds=[],
-                view=None,
+        if target.can_say_uno and not target.has_said_uno:
+            embed = discord.Embed(
+                title="The callout succeeds!",
+                description=f"{target.user.name} draws two cards.",
+                color=support.Color.green(),
             )
 
-    async def add_cards(self, num_cards, dealing=False, return_added_cards=False):
-        """
-        Adds cards to the player's hand. This method is the only means by which cards are added to a player's hand,
-        whether by dealing or drawing.
+            await ctx.interaction.edit_original_response(embeds=[embed], view=None)
+            await self.game.processor.callout_event(
+                challenger=self, target=target, callout_success=True
+            )
+        else:
+            embed = discord.Embed(
+                title="The callout fails.",
+                description="You draw a card and forfeit your turn.",
+                color=support.Color.brand_red(),
+            )
 
-        :param num_cards: The number of cards to add.
-        :param dealing: Indiciates whether the cards are being added by dealing.
-        :param return_added_cards: If True, this method will return a list of the cards that were added.
+            await ctx.interaction.edit_original_response(embeds=[embed], view=None)
+            await self.game.processor.callout_event(
+                challenger=self, target=target, callout_success=False
+            )
+            await self.end_turn()
+
+    async def add_cards(self, num_cards):
+        """
+        Add cards to the player's hand.
+
+        Parameters
+        ----------
+        num_cards: :class:`int`
+            The number of cards to add.
         """
         new_cards = UnoCard.generate_cards(num_cards)
 
-        for card in new_cards:
-            await self.update_hand_value(card)
-
-        if not dealing:
-            self.num_cards_drawn += num_cards
+        self.num_cards_drawn += num_cards
 
         self.hand.update(new_cards)
 
         self.can_say_uno = False
         self.has_said_uno = False
 
-        if return_added_cards:
-            return new_cards
-
-    async def update_hand_value(self, card: UnoCard, use_subtraction=False):
-        """
-        Updates the point value of a player's hand whenever a card is added to or removed from it.
-
-        :param card: The card with which to update the player's hand value.
-        :param use_subtraction: If True, the point value of the card is subtracted from the player's hand value
-        instead of added to it.
-        """
-        if use_subtraction:
-            self.hand_value -= card.point_value()
-        else:
-            self.hand_value += card.point_value()
+        return new_cards
 
     def voice_overwrites(self) -> discord.Permissions:
         """
@@ -948,76 +939,151 @@ class UnoPlayer:
         if len(self.hand) == 1 and not self.has_said_uno:
             self.can_say_uno = True
 
-        await self.game.end_current_turn()
+        await self.game.end_turn()
 
         self.terminable_views.clear()
+
+    @property
+    def hand_value(self):
+        """
+        The collective value of all cards in the player's hand.
+
+        See Also
+        --------
+        :attr:`UnoCard.point_value`
+        """
+        return sum(card.point_value for card in self.hand)
+
+    @property
+    def num_cards_drawn(self):
+        """
+        The total number of cards the player has drawn.
+
+        Notes
+        -----
+        This is defined as a property rather than a normal instance attribute so that its value can be
+        dynamically altered to exclude the seven cards dealt to each player at the start of a round.
+        """
+        # where d1 includes dealt cards and d2 does not:
+        # d2 = d1 - (7 * round_number) OR d2 = 0, whichever is higher
+        return max(self._num_cards_drawn - (7 * self.game.current_round), 0)
+
+    @num_cards_drawn.setter
+    def num_cards_drawn(self, value):
+        self._num_cards_drawn += value
 
     def __str__(self):
         return self.user.name
 
 
-class _UnoCardEnum(Enum):
-    # title() and casefold() are temporary backwards compatibility patches and should eventually be removed.
-    def title(self):
-        return str(self).title()
+# apparently, you're not supposed to try this at home
+class _UnoCardAttrMeta(EnumMeta):
+    """
+    Metaclass for :class:`_UnoCardAttr`.
+    """
 
-    def casefold(self):
+    def iterd(cls):
+        """
+        Iterate over all non-special attributes.
+
+        Notes
+        -----
+        Equivalent to :meth:`__iter__`, which simply returns this method's result.
+        """
+        for attr in super().__iter__():
+            if attr not in cls._special:
+                yield attr
+
+    def iters(cls):
+        """
+        Iterate over all special attributes.
+        """
+        for attr in super().__iter__():
+            if attr in cls._special:
+                yield attr
+
+    def itera(cls):
+        """
+        Iterate over all attributes.
+        """
+        return super().__iter__()
+
+    def index(cls, value):
+        """
+        Get the index of the given attribute within its enumeration.
+
+        Parameters
+        ----------
+        value : _UnoCardAttr
+            The attribute to get the index of.
+
+        Returns
+        -------
+        int
+            The index of the attribute.
+        """
+        return list(cls.itera()).index(value)
+
+    @property
+    def _special(cls):
+        return UnoCardColor.WILD, UnoCardSuit.DRAW_FOUR, UnoCardSuit.NONE
+
+    def __iter__(self):
+        return self.iterd()
+
+
+class _UnoCardAttr(Enum, metaclass=_UnoCardAttrMeta):
+    """
+    Base enumeration for :class:`UnoCardColor` and :class:`UnoCardSuit`.
+    """
+
+    def casefold(self):  # temporary backwards-compatibility patch; remove eventually
         return str(self).casefold()
 
+    @property
     def emoji_key(self):
         return self.name.lower()
 
+    @property
+    def sortcode(self):
+        return self.__class__.index(self)
+
     def __str__(self):
-        return str(self.value)
+        return str(self.value).title()
 
 
-class _UnoCardColorMeta(EnumMeta):
-    def __iter__(self):
-        for color in super().__iter__():
-            if color is not UnoCardColor.WILD:
-                yield color
-
-
-class _UnoCardSuitMeta(EnumMeta):
-    def __iter__(self):
-        for suit in super().__iter__():
-            if suit not in [UnoCardSuit.DRAW_FOUR, UnoCardSuit.NONE]:
-                yield suit
-
-
-class UnoCardColor(_UnoCardEnum, metaclass=_UnoCardColorMeta):
+class UnoCardColor(_UnoCardAttr):
     """
     Enumerates UNO card colors.
-
-    Notes
-    -----
-    - WILD is excluded from this enumeration's iterator.
     """
 
+    # Default
     RED = "red"
     BLUE = "blue"
     GREEN = "green"
     YELLOW = "yellow"
+
+    # Special
     WILD = "wild"
 
 
-class UnoCardSuit(_UnoCardEnum, metaclass=_UnoCardSuitMeta):
+class UnoCardSuit(_UnoCardAttr):
     """
     Enumerates UNO card suits.
-
-    Notes
-    -----
-    - DRAW_FOUR and NONE are excluded from this enumeration's iterator as they can only appear on cards of
-      color :class:`UnoCardColor.WILD`. The former is reserved for the Wild Draw Four card (which is the only card of
-      that suit) and the latter for the suitless Wild card.
     """
 
-    ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE = list(string.digits)
+    # Default
+    ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE = string.digits
     REVERSE = "reverse"
     SKIP = "skip"
-    DRAW_TWO = "draw two"
-    DRAW_FOUR = "draw four"
+    DRAW_TWO = "+2"
+
+    # Special
     NONE = None
+    DRAW_FOUR = "+4"
+
+    def __bool__(self):
+        return self is not self.NONE
 
 
 class UnoCard:
@@ -1030,27 +1096,19 @@ class UnoCard:
         The color of the card.
     suit: :class:`UnoCardSuit`
         The suit of the card.
-
-    Attributes
-    ----------
-    uuid: :class:`uuid.UUID`
-        The card's randomly-generated unique identifier.
-
-    Notes
-    -----
-    - Use :meth:`UnoCard.generate_cards` rather than instantiating this class directly.
     """
 
     def __init__(self, color: UnoCardColor, suit: UnoCardSuit = UnoCardSuit.NONE):
-        self.color = color
-        self.suit = suit
+        self._color = color
+        self._suit = suit
 
-        self.uuid = uuid.uuid4()
+        self._transformation = None
+        self._uuid = uuid.uuid4().hex
 
     @classmethod
     def generate_cards(cls, num_cards) -> list[UnoCard]:
         """
-        Gemerate UNO cards.
+        Generate UNO cards of random canonical color-suit combinations.
 
         Parameters
         ----------
@@ -1064,30 +1122,88 @@ class UnoCard:
 
         Notes
         -----
-        - This algorithm has an equal chance of generating any one of the 54 distinct UNO cards in a standard deck.
-          This does not emulate the probability of drawing cards in the canonical implementation of UNO, in which
-          cards appear with varying frequencies.
+        This algorithm has an equal chance of generating any one of the 54 distinct UNO cards in a standard deck.
+        This does not emulate the probability of drawing cards in the canonical implementation of UNO, in which
+        cards appear with varying frequencies.
         """
-        cards = [cls(color, suit) for color in UnoCardColor for suit in UnoCardSuit]
-        cards.extend(
-            [cls(UnoCardColor.WILD), cls(UnoCardColor.WILD, UnoCardSuit.DRAW_FOUR)]
-        )
+        cards = [
+            *[(color, suit) for color in UnoCardColor for suit in UnoCardSuit],
+            *[
+                (color, suit)
+                for color in UnoCardColor.iters()
+                for suit in UnoCardSuit.iters()
+            ],
+        ]
 
-        return random.choices(cards, k=num_cards)
+        return [cls(*card) for card in random.choices(cards, k=num_cards)]
 
+    @property
+    def color(self) -> UnoCardColor:
+        """
+        The color of the card.
+        """
+        return self._color
+
+    @property
+    def suit(self) -> UnoCardSuit:
+        """
+        The suit of the card.
+        """
+        return self._suit
+
+    @property
+    def versus_color(self) -> UnoCardColor:
+        """
+        The color to be used when checking if this card is playable against another.
+        """
+        return self.transformation or self.color
+
+    @property
+    def versus_suit(self) -> UnoCardSuit:
+        """
+        The suit to be used when checking if this card is playable against another.
+
+        Notes
+        -----
+        This property is equivalent to :attr:`UnoCard.suit` and exists only for consistency with
+        :attr:`UnoCard.versus_color`.
+        """
+        return self.suit
+
+    @property
+    def transformation(self) -> UnoCardColor | None:
+        """
+        The color the card was changed to. Only applicable to Wild cards.
+
+        Returns
+        -------
+        :class:`UnoCardColor` | None
+            If this is a Wild card, returns the card's new color if it has been set. Otherwise, returns None.
+        """
+        return self._transformation
+
+    @transformation.setter
+    def transformation(self, value: UnoCardColor):
+        if self.color is not UnoCardColor.WILD:
+            raise ValueError("transformation can only be set on Wild cards")
+
+        self._transformation = value
+
+    @property
     def emoji(self) -> discord.PartialEmoji:
         """
-        Get the card's corresponding Discord emoji.
+        The card's corresponding Discord emoji.
         """
         with support.Assets.uno():
             card_emoji = toml.load(open("uno_card_emotes.toml"))
             return discord.PartialEmoji.from_str(
-                card_emoji[self.color.emoji_key()][self.suit.emoji_key()]
+                card_emoji[self.color.emoji_key][self.suit.emoji_key]
             )
 
+    @property
     def point_value(self) -> int:
         """
-        Get the point value of an UNO card.
+        The card's point value.
         """
 
         # wild and wild draw four cards are worth 50 points
@@ -1102,31 +1218,94 @@ class UnoCard:
         else:
             return int(self.suit.value)
 
-    def embed_color(self):
+    @property
+    def embed_color(self) -> support.Color:
         """
-        Get the embed color associated with the card.
+        The card's corresponding embed color.
         """
 
         embed_colors = {
-            "red": support.Color.brand_red(),
-            "blue": support.Color.blue(),
-            "green": support.Color.green(),
-            "yellow": support.Color.yellow(),
-            "wild": support.Color.black(),
+            UnoCardColor.RED: support.Color.brand_red(),
+            UnoCardColor.BLUE: support.Color.blue(),
+            UnoCardColor.GREEN: support.Color.green(),
+            UnoCardColor.YELLOW: support.Color.yellow(),
+            UnoCardColor.WILD: support.Color.black(),
         }
 
-        return embed_colors[self.color.casefold()]
+        return embed_colors[self.color]
+
+    @property
+    def transformation_embed_color(self) -> support.Color:
+        """
+        The embed color corresponding to the card's transformation. Only applicable to Wild cards.
+        """
+        if self.color is not UnoCardColor.WILD:
+            raise ValueError(
+                "transformation_embed_color may only be accessed on Wild cards"
+            )
+
+        if not self.transformation:
+            raise ValueError(
+                "transformation must be set before transformation_embed_color can be accessed"
+            )
+
+        embed_colors = {
+            UnoCardColor.RED: support.Color.brand_red(),
+            UnoCardColor.BLUE: support.Color.blue(),
+            UnoCardColor.GREEN: support.Color.green(),
+            UnoCardColor.YELLOW: support.Color.yellow(),
+        }
+
+        return embed_colors[self.transformation]
+
+    @property
+    def sortcode(self) -> int:
+        """
+        An integer to be used as a key when sorting this card among others.
+
+        Extended Summary
+        ----------------
+        An integer to be used as a key to enforce the sorting of :class:`UnoCard` objects by color in order of:
+            RED, BLUE, GREEN, YELLOW, WILD
+        and then by suit in order of:
+            ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, REVERSE, SKIP, DRAW_TWO, NONE, DRAW_FOUR
+        where each color and suit corresponds to a member of :class:`UnoCardColor` and :class:`UnoCardSuit`,
+        respectively.
+
+        Notes
+        -----
+        - This sorting mechanism divides cards of each color into 100-point intervals, with each suit occupying one
+          point within its color space.
+
+        - Using this property as a sort key is preferred over implementing comparison operators on :class:`UnoCard`
+          to avoid ambiguity over what "less than", "greater than", and "equal to" mean with respect to objects
+          of the class.
+
+        Returns
+        -------
+        :class:`int`
+            The card's sort code.
+        """
+        return self.color.sortcode * 100 + self.suit.sortcode
+
+    @property
+    def uuid(self) -> str:
+        """
+        The card's hexademical UUID.
+        """
+        return self._uuid
 
     def __str__(self):
-        if self.suit:
-            return f"{self.color.title()} {self.suit.title()}"
-        else:
-            return self.color.title()
+        return f"{self.color} {self.suit}" if self.suit else str(self.color)
 
 
 class UnoEventProcessor:
     """
     Processes game events.
+
+    Parameters
+    ----------
+    game: :class:`UnoGame`
     """
 
     def __init__(self, game: UnoGame):
@@ -1138,49 +1317,53 @@ class UnoEventProcessor:
         """
         The handler for the event of playing a card.
 
-        :param player: The player who played the card.
-        :param card: The card that was played.
-        :param with_draw: Whether or not the card was automatically played after being drawn.
+        Parameters
+        ----------
+        player: :class:`UnoPlayer`
+            The player who played the card.
+        card: :class:`UnoCard`
+            The card that was played.
+        with_draw: :class:`bool`
+            Whether the card was played in conjunction with a draw.
         """
-        if card.color.casefold() != "wild":
-            self.game.color_in_play = card.color
-
-        self.game.suit_in_play = card.suit
+        self.game.card_in_play = card
 
         embed = discord.Embed(
             title=f"Card {'Drawn and ' if with_draw else ''}Played",
             description=f"**{player.user.name}** {'draws and' if with_draw else ''} "
             f"plays a **{str(card)}**.",
-            color=card.embed_color(),
+            color=card.embed_color,
         )
 
-        embed.set_thumbnail(url=card.emoji().url)
+        embed.set_thumbnail(url=card.emoji.url)
         embed.set_footer(
             icon_url=player.user.display_avatar.url,
             text=f"{player.user} • UNO with {self.game.host.name}! • Round {self.game.current_round}",
         )
 
-        self.game.last_move = "The last card played was a "
-
-        if card.color.casefold() == "wild":
-            if card.suit.casefold() == "draw four":
-                self.game.last_move += "**Wild Draw Four**. "
-            else:
-                self.game.last_move += f"**Wild**. "
-
-            self.game.last_move += (
-                f"The current color in play is **{self.game.color_in_play.title()}**."
-            )
-        else:
-            self.game.last_move += f"**{card.color.title()} {card.suit.title()}**."
-
         self.game.turn_record.append(embed)
+
+        if card.color is UnoCardColor.WILD:
+            await self.wild_event(player=player)
+
+        match card.suit:
+            case UnoCardSuit.DRAW_TWO:
+                await self.draw_two_event()
+            case UnoCardSuit.DRAW_FOUR:
+                await self.draw_four_event()
+            case UnoCardSuit.SKIP:
+                await self.skip_event()
+            case UnoCardSuit.REVERSE:
+                await self.reverse_event()
 
     async def card_drawn_event(self, player: UnoPlayer):
         """
         The handler for the event of drawing a card.
 
-        :param player: The player who drew the card.
+        Parameters
+        ----------
+        player: :class:`UnoPlayer`
+            The player who drew the card.
         """
         embed = discord.Embed(
             title="Card Drawn",
@@ -1198,7 +1381,7 @@ class UnoEventProcessor:
 
     async def draw_two_event(self):
         """
-        The handler for the event of a Draw Two card being played.
+        The handler for the event of a +2 card being played.
         """
         self.game.skip_next_player = True
 
@@ -1216,8 +1399,7 @@ class UnoEventProcessor:
 
     async def draw_four_event(self):
         """
-        The handler for the event of a Draw Four card being played. The only card with this suit is the Wild Draw Four
-        card, so a ``wild_event()`` will always accompany this event.
+        The handler for the event of a +4 card being played.
         """
         self.game.skip_next_player = True
 
@@ -1268,13 +1450,24 @@ class UnoEventProcessor:
         """
         The handler for the event of a Wild card being played.
 
-        :param player: The player who played the Wild card.
+        Parameters
+        ----------
+        player: :class:`UnoPlayer`
+            The player who played the Wild card.
         """
 
+        card = self.game.card_in_play
+
+        color_emoji = {
+            UnoCardColor.RED: "🔴",
+            UnoCardColor.BLUE: "🔵",
+            UnoCardColor.GREEN: "🟢",
+            UnoCardColor.YELLOW: "🟡",
+        }
         self.game.turn_record[-1].add_field(
             name="🎲 A Wild card appears!",
             value=f"**{player.user.name}** changes the color in play to "
-            f"**{self.game.color_in_play.title()}**.",
+            f"**{color_emoji[card.transformation]} {card.transformation}**.",
             inline=False,
         )
 
@@ -1282,7 +1475,10 @@ class UnoEventProcessor:
         """
         The handler for the event of a a player saying 'UNO!'.
 
-        :param player: The player saying 'UNO!'.
+        Parameters
+        ----------
+        player: :class:`UnoPlayer`
+            The player who said 'UNO!'.
         """
         player.can_say_uno = False
         player.has_said_uno = True
@@ -1290,7 +1486,7 @@ class UnoEventProcessor:
         embed = discord.Embed(
             title=f"{player.user.name} says UNO!",
             description=f"**{player.user.mention}** has one card left.",
-            color=support.Color.orange(),
+            color=support.Color.caution(),
         )
 
         await self.game.thread.send(content="@everyone", embed=embed)
@@ -1306,59 +1502,63 @@ class UnoEventProcessor:
         embed = discord.Embed(
             title=f"{player.user.name} timed out.",
             description=f"{player.user.mention} took too long to move and was forced to draw a card.",
-            color=support.Color.red(),
+            color=support.Color.error(),
         )
 
         self.game.turn_record.append(embed)
 
     async def callout_event(
-        self, challenger: UnoPlayer, recipient: UnoPlayer, callout_success: bool
+        self, challenger: UnoPlayer, target: UnoPlayer, callout_success: bool
     ):
         """
         The handler for the event of a player calling out another player.
 
-        :param challenger: The player issuing the callout.
-        :param recipient: The player receiving the callout.
-        :param callout_success: Whether or not the callout was successful.
+        Parameters
+        ----------
+        challenger: :class:`UnoPlayer`
+            The player making the callout.
+        target: :class:`UnoPlayer`
+            The player being called out.
+        callout_success: :class:`bool`
+            Whether or not the callout was successful.
         """
+
         msg = (
-            f"{challenger.user.name} calls out {recipient.user.name} for having one card left and failing to say "
+            f"{challenger} calls out {target} for having one card left and failing to say "
             f"'UNO!'."
         )
 
+        embed = discord.Embed(
+            title=f"📢 {challenger.user.name} calls out {target}!",
+            description=msg,
+            color=support.Color.nitro_pink(),
+        )
+
         if callout_success:
-            await recipient.add_cards(2)
+            await target.add_cards(2)
 
-            msg += (
-                f"\n\n**The callout succeeds!** {recipient.user.name} draws two cards.\n"
+            field = (
+                f"\n\n**The callout succeeds!** {target} draws two cards.\n"
                 f"\n"
-                f"It's still {challenger.user.mention}'s turn."
+                f"It's still {challenger.mention}'s turn."
             )
 
-            embed = discord.Embed(
-                title=f"📢 {challenger.user.name} calls out {recipient.user.name}!",
-                description=msg,
-                color=support.Color.nitro_pink(),
-            )
+            embed.add_field(name="The callout succeeds!", value=field)
 
             await self.game.thread.send(embed=embed)
         else:
             await challenger.add_cards(1)
 
-            msg += f"\n\n**The callout fails!** {challenger.user.name} draws a card and forfeits their turn."
+            field = f"\n\n**The callout fails!** {challenger} draws a card and forfeits their turn."
 
-            embed = discord.Embed(
-                title=f"📢 {challenger.user.name} calls out {recipient.user.name}!",
-                description=msg,
-                color=support.Color.nitro_pink(),
-            )
+            embed.add_field(name="The callout fails!", value=field)
 
             self.game.turn_record.append(embed)
 
 
-class UnoStatusCenter:
+class UnoStatusTracker:
     """
-    The backend of the UNO Status Center. (The frontend is :class:`uno.views.UnoStatusCenterView`.)
+    Tracks game statistics.
     """
 
     def __init__(self, game: UnoGame):
@@ -1375,27 +1575,26 @@ class UnoStatusCenter:
         """
         return str(self.game.settings)
 
-    def get_player_list(self) -> list[UnoPlayer]:
+    def get_player_list(self) -> t.Iterator[UnoPlayer]:
         """
-        Returns a list of all players in the game. The first player will always be the game host,
-        followed by the rest of the players in non-reversed turn order.
+        Returns an iterator over of all players in the game.
         """
-        return reversed(
-            SortedKeyList(
-                self.game.players.itervalues(), key=lambda p: p.user == self.game.host
-            )
-        )
+        return self.game.players.itervalues()
 
-    def get_turn_order(self):
+    async def get_turn_order(self) -> list[UnoPlayer]:
         """
-        Returns a list of all players in the game in turn order. The output of this method is affected
-        by whether the turn order is reversed or not. The turn order is randomized at the start of each game,
-        and is not necessarily the same as the order in which players joined the game.
+        Return an iterator players in the game in turn order.
+
+        Notes
+        -----
+        This method's output is affected by whether the turn order is currently reversed.
         """
-        if self.game.reverse_turn_order:
-            return reversed([*self.game.players.itervalues()])
-        else:
-            return self.game.players.itervalues()
+        turn_order = [self.game.current_player]
+
+        for _ in range(len(self.game.players) - 1):
+            turn_order.append(await self.game.walk_players(turn_order[-1], 1))
+
+        return [player.value for player in turn_order]
 
     def get_last_turn(self) -> list[discord.Embed]:
         """
@@ -1405,7 +1604,11 @@ class UnoStatusCenter:
 
     def get_leaderboard(self) -> list[list[UnoPlayer]]:
         """
-        Returns a list of all players in the game, sorted in descending order by score. To be more precise,
+        Returns a list of all players in the game, sorted in descending order by score.
+
+        Notes
+        -----
+        To be more precise,
         this method returns a list of lists of :class:`UnoPlayer` objects - players who have the same score
         are grouped together in the same sub-list.
         """
@@ -1416,36 +1619,36 @@ class UnoStatusCenter:
         leaderboard = []
         determinant = 0
         for player in point_order:
-            if not leaderboard:
+            if not leaderboard or player.points < determinant:
                 determinant = player.points
                 leaderboard.append([player])
-            elif player.points == determinant:
+            else:
                 leaderboard[-1].append(player)
-            elif player.points < determinant:
-                determinant = player.points
-                leaderboard.append([player])
 
         return leaderboard
 
-    def get_player_ranking(self, player, with_string=False) -> str:
+    def get_player_ranking(self, player, *, with_desc=False) -> str:
         """
-        Returns a string representation of the player's ranking in the game. (e.g. "1st", "2nd", "3rd", etc.).
+        Returns a string representation of the player's ranking in the game.
 
-        :param player: The player whose ranking to return.
-        :param with_string: If True, the method will return the full ranking string in the
-        format "Xth of Y (tied with Z others)".
+        Parameters
+        ----------
+        player: :class:`UnoPlayer`
+            The player whose ranking is to be returned.
+        with_desc: :class:`bool`
+            If True, this function returns an extended description of the player's ranking.
         """
         leaderboard_group = discord.utils.find(
             lambda group: player in group, self.get_leaderboard()
         )
         ranking = inflect.ordinal(self.get_leaderboard().index(leaderboard_group) + 1)
 
-        if with_string:
+        if with_desc:
             ranking += f" of {len(self.game.players)}"
             ties = len(leaderboard_group) - 1
 
-            if ties > 0:
-                ranking += f" (tied with {ties} {inflect.plural('other', ties)})"
+            if ties:
+                ranking += f" (tied with {inflect.no('other', ties)})"
 
         return ranking
 
@@ -1454,7 +1657,7 @@ class UnoStatusCenter:
         Returns a dictionary of statistics for the given player.
         """
         return {
-            "Rank": self.get_player_ranking(player, with_string=True),
+            "Rank": self.get_player_ranking(player, with_desc=True),
             "Points": player.points,
             "Cards Held": len(player.hand),
             "Hand Value": player.hand_value,
