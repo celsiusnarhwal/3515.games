@@ -2,6 +2,7 @@
 Dockerfile
 dockerfile.sh
 db.sqlite3
+.envrc
 .git
 .gitignore
 kurisu
