@@ -43,7 +43,7 @@ typer = { extras = ["all"], version = "^0.7.0" }
 kurisu = "kurisu.kurisu:app"
 
 [tool.poe.tasks]
-format = { shell = "black . && prettier --write --ignore-unknown ." }
+format = "pre-commit run black prettier --all-files"
 
 [build-system]
 requires = ["poetry-core"]
