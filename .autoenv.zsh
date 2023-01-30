@@ -1,2 +1,0 @@
-export DOPPLER_ENV=1
-export RICH_TRACEBACKS=1

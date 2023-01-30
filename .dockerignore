@@ -1,8 +1,8 @@
 3515.games.log
-.autoenv.zsh
 Dockerfile
 dockerfile.sh
 db.sqlite3
+.envrc
 .git
 .gitignore
 kurisu
