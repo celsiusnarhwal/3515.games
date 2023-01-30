@@ -23,6 +23,7 @@ import discord
 import git as pygit
 import gitignorefile as gitignore
 import inflect as ifl
+import pendulum
 import pyperclip
 import semver
 import tomlkit as toml
@@ -441,7 +442,9 @@ def release(
     print(f"[bold green]Released 3515.games {new_version}[/]")
 
 
-@app.callback()
+@app.callback(
+    epilog=f"Kurisu © {pendulum.now().year} celsius narhwal. Licensed under the same terms as 3515.games."
+)
 def main():
     """
     Kurisu is 3515.games' development command-line interface.
