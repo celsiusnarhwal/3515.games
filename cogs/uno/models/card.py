@@ -11,7 +11,6 @@ import string
 import uuid
 from enum import Enum, EnumMeta
 
-import attrs.setters
 import discord
 import tomlkit as toml
 from attrs import define
@@ -157,8 +156,8 @@ class UnoCard:
 
     transformation: UnoCardColor = Fields.attr(
         default=None,
-        on_setattr=attrs.setters.validate,
-        validator=attrs.validators.optional(
+        on_setattr=Fields.setters.validate,
+        validator=Fields.validators.optional(
             Fields.validators.instance_of(UnoCardColor)
         ),
     )
