@@ -13,9 +13,10 @@ from sortedcontainers import SortedKeyList
 from cogs import uno
 from cogs.uno.models import inflect
 from keyboard import *
+from support import Fields
 
 
-@define(slots=False)
+@define
 class UnoStatusTracker:
     """
     Tracks game statistics.
@@ -23,11 +24,10 @@ class UnoStatusTracker:
 
     game: uno.UnoGame
 
-    def __attrs_post_init__(self):
-        self.num_turns = 0
-        self.total_cards_played = 0
-        self.total_cards_drawn = 0
-        self.previous_turn_record = []
+    num_turns: int = Fields.attr(default=0)
+    total_cards_played: int = Fields.attr(default=0)
+    total_cards_drawn: int = Fields.attr(default=0)
+    previous_turn_record: list[discord.Embed] = Fields.attr(factory=list)
 
     def get_game_settings(self) -> str:
         """
