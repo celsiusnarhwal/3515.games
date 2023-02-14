@@ -62,7 +62,7 @@ class Fields(validate_arguments(attrs.field).model):
 
 class Color(discord.Color):
     """
-    An extension of Pycord's ``discord.Color`` class that implements additional colors not included with the library.
+    An extension of :class:`discord.Color` with some additional colors.
     """
 
     @classmethod
