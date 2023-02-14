@@ -35,9 +35,9 @@ from rich import print
 from rich.progress import track
 
 import kurisu.settings
-import prompts
 import shrine
 import support
+from kurisu import prompts
 from kurisu.docs import get_docs_for_click
 from settings import settings
 

@@ -7,12 +7,12 @@
 import json
 import subprocess
 
+import prompts
 import typer
 from path import Path
 from rich import print
 
 import shrine
-import prompts
 import support
 
 here = Path(__file__).parent
