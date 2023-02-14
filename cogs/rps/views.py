@@ -7,16 +7,17 @@
 from __future__ import annotations
 
 import discord
-from discord import Interaction, ButtonStyle
+from discord import ButtonStyle, Interaction
 from discord.ext import pages as discord_pages
-from discord.ui import Button, button as discord_button
+from discord.ui import Button
+from discord.ui import button as discord_button
 
 import support
 from cogs.rps import rps
-from support.views import EnhancedView
+from support.views import View
 
 
-class RPSChooseMoveView(EnhancedView):
+class RPSChooseMoveView(View):
     """
     Provides the user interface for players in a Rock-Paper-Scissors match to choose their moves. This view only
     accepts interactions from the users playing in the match and will persist until either both players have chosen
@@ -146,7 +147,7 @@ class RPSChooseMoveView(EnhancedView):
         return self.success
 
 
-class RPSMatchEndView(EnhancedView):
+class RPSMatchEndView(View):
     """
     Provides a user interface for viewing the final results and complete record of a Rock-Paper-Scissors match.
     """

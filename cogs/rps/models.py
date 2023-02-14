@@ -13,6 +13,7 @@ import discord
 
 import support
 from cogs import rps
+from support import BasePlayer
 
 
 class RPSGame:
@@ -208,7 +209,7 @@ class RPSGame:
         ).show_match_results(players=self.players, winner=winner)
 
 
-class RPSPlayer:
+class RPSPlayer(BasePlayer):
     """
     Represents a player in a Rock-Paper-Scissors match.
     """
@@ -218,7 +219,7 @@ class RPSPlayer:
         The constructor for `RPSPlayer`.
         :param user: The user to construct a player from.
         """
-        self.user = user
+        super().__init__(user)
         self.selected_move = None
         self.score = 0
 

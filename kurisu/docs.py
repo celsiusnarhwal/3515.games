@@ -6,10 +6,10 @@
 
 # Adapted from https://github.com/tiangolo/typer-cli/pull/67#issuecomment-1271983950
 
-from typing import cast
-
 import typer.core
 from click import Command, Group
+
+from keyboard import *
 
 
 def get_docs_for_click(

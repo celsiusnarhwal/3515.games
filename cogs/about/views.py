@@ -11,52 +11,51 @@ import platform
 import time
 
 import discord
-import tomlkit as toml
-from discord import Interaction, ButtonStyle
-from discord.ui import Button, button as discord_button
+from discord import ButtonStyle, Interaction
+from discord.ui import Button
+from discord.ui import button as discord_button
 
 import support
 import uptime
-from support.views import EnhancedView
+from support.views import View
 
 
-class AboutView(EnhancedView):
+class AboutView(View):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.add_item(
-            Button(label="3515.games", emoji="🌐", url="https://3515.games", row=0)
+            Button(label="www.3515.games", emoji="🌐", url="https://3515.games", row=0)
         )
         self.add_item(
             Button(
-                label="Add me to your server!",
-                emoji="👋🏾",
-                url="https://invite.3515.games",
-                row=1,
-            )
-        )
-        self.add_item(
-            Button(
-                label="Support my development!",
-                emoji="🔨",
-                url="https://3515.games/donate",
-                row=1,
-            )
-        )
-        self.add_item(
-            Button(
-                label="Legal Information",
+                label="Terms",
                 emoji="🏛",
-                url="https://3515.games/legal",
-                row=2,
+                url="https://3515.games/legal/terms",
+                row=1,
+            )
+        )
+        self.add_item(
+            Button(
+                label="Privacy",
+                emoji="🔒",
+                url="https://3515.games/legal/privacy",
+                row=1,
+            )
+        )
+        self.add_item(
+            Button(
+                label="Acknowledgements",
+                url="https://3515.games/legal/acknowledgements",
+                row=1,
             )
         )
 
     @discord_button(label="Credits", emoji="🎬", style=ButtonStyle.gray)
     async def credits(self, button: Button, interaction: Interaction):
-        class CreditsView(EnhancedView):
+        class CreditsView(View):
             @discord_button(label="Back", style=ButtonStyle.red)
             async def back(self, button: Button, interaction: Interaction):
-                await AboutView(ctx=self.ctx).show_about(interaction)
+                await AboutView(ctx=self.ctx).present(interaction)
 
         with support.Assets.about():
             credits_text = open(os.path.join("pages", "credits.md")).read()
@@ -76,7 +75,7 @@ class AboutView(EnhancedView):
 
     @discord_button(label="Technical Data", emoji="💻", style=ButtonStyle.gray)
     async def technical(self, button: Button, interaction: Interaction):
-        class TechnicalView(EnhancedView):
+        class TechnicalView(View):
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
                 self.add_item(
@@ -89,10 +88,10 @@ class AboutView(EnhancedView):
 
             @discord_button(label="Back", style=ButtonStyle.red)
             async def back(self, button: Button, interaction: Interaction):
-                await AboutView(ctx=self.ctx).show_about(interaction)
+                await AboutView(ctx=self.ctx).present(interaction)
 
         statistics = {
-            "Bot Version": toml.load("pyproject.toml")["tool"]["poetry"]["version"],
+            "Bot Version": support.pyproject()["version"],
             "Python Version": platform.python_version(),
             "Pycord Version": discord.__version__,
             "Uptime": uptime.get_uptime(),
@@ -128,40 +127,7 @@ class AboutView(EnhancedView):
         )
         await original_message.edit(embed=embed)
 
-    # @discord_button(label="Add me to your server!", style=ButtonStyle.gray, row=2)
-    # async def invite(self, button: Button, interaction: Interaction):
-    #     class InviteView(EnhancedView):
-    #         def __init__(self, **kwargs):
-    #             super().__init__(**kwargs)
-    #
-    #             oauth_url = "https://discordapp.com/oauth2/authorize?"
-    #             params = {
-    #                 "client_id": self.ctx.bot.user.id,
-    #                 "scope": "bot",
-    #                 "permissions": support.GamePermissions.everything().value,
-    #             }
-    #
-    #             self.add_item(Button(label="Invite Me", emoji="🔗", url=oauth_url + urllib.parse.urlencode(params)))
-    #
-    #         @discord_button(label="Back", style=ButtonStyle.red)
-    #         async def back(self, button: Button, interaction: Interaction):
-    #             await AboutView(ctx=self.ctx).show_about(interaction)
-    #
-    #     msg = "Wanna add me to your server? I'm flattered. 😊\n" \
-    #           "\n" \
-    #           "To invite me, use the button below or visit [3515.games/invite](https://3515.games/invite) " \
-    #           "in your browser. (Note that everyone in the server you invite me to will become subject to " \
-    #           "my [Privacy Policy](https://3515.games/privacy).)"
-    #
-    #     embed = discord.Embed(title="Invite Me", description=msg, color=support.Color.mint())
-    #
-    #     original_message = await self.ctx.interaction.original_message()
-    #     embed.set_author(name="About", icon_url=original_message.author.display_avatar.url)
-    #
-    #     await interaction.response.defer()
-    #     await interaction.edit_original_response(embed=embed, attachments=[], view=InviteView(ctx=self.ctx))
-
-    async def show_about(self, interaction: Interaction = None):
+    async def present(self, interaction: Interaction = None):
         with support.Assets.about():
             about_text = open(os.path.join("pages", "main.md")).read()
 

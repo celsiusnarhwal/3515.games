@@ -8,10 +8,10 @@ You're about to create a Cards Against Humanity game. There are a few things you
 
 {% filter deline %}
 **You'll be the Game Host**, which means you get special powers like kicking players from the game or ending it
-prematurely, as well as special responsibilities like starting the game with `/cah host start` when all the other
+prematurely, as well as special responsibilities like starting the game with `/cah manage > Start Game` when all the other
 players are ready. It also means that if you leave the game (or are kicked by me for inactivity), the game will end for
 everyone else. If you feel you're not up to the task, you can delegate your powers to another player
-with `/cah host transfer`.
+with `/cah manage > Transfer Host Powers`.
 {% endfilter %}
 
 {% filter deline %}
@@ -24,10 +24,11 @@ mind.
 Before we start, let's review your game settings.
 {% endfilter %}
 
-**Game Settings**
+\***\*Game Settings\*\***
 **Players**: {{ max_players }}
 **Points to Win**: {{ points }}
 **Timeout**: {{ timeout }} seconds
+**Voting Mode**: {{ voting }}
 
 {% filter deline %}
 Once the game has been created, these settings can't be changed.

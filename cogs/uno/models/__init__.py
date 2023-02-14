@@ -4,6 +4,7 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-from support.helpers import *
-from support.models import *
-from support.views import *
+from cogs.uno.models.card import *
+from cogs.uno.models.game import *
+from cogs.uno.models.player import *
+from cogs.uno.models.status import *

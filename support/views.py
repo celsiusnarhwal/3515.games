@@ -7,12 +7,13 @@
 from __future__ import annotations
 
 import sys
+from abc import ABC, abstractmethod
 
 import discord
-from abc import ABC, abstractmethod
 import discord.ui
-from discord import Interaction, ButtonStyle
-from discord.ui import Button, button as discord_button, Item
+from discord import ButtonStyle, Interaction
+from discord.ui import Button, Item
+from discord.ui import button as discord_button
 
 
 class View(discord.ui.View):
@@ -200,9 +201,7 @@ class UserSelectionView(View, ABC):
         self.max_users = max_users
         self.placeholder = placeholder
 
-        self.timeout = None
-        self.selected_users = []
-
+    def __attrs_post_init__(self):
         select = discord.ui.Select(
             select_type=discord.ComponentType.user_select,
             min_values=self.min_users,

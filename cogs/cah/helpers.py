@@ -6,18 +6,18 @@
 
 from __future__ import annotations
 
-import alianator
 import discord
 from discord.ext import commands
 
 import support
 from cogs import cah
 
-
 # decorators
 
 
-def verify_context(level: str, verify_host: bool = False):
+def verify_context(
+    level: str, *, verify_host: bool = False, is_pseudocommand: bool = False
+):
     """
     A decorator which implements a context verification system for UNO games. This system has four levels. In
     order, they are:
@@ -38,10 +38,15 @@ def verify_context(level: str, verify_host: bool = False):
     :param verify_host: Whether or not to verify that the invoking user is the Game Host.
     """
 
-    async def predicate(ctx: discord.ApplicationContext):
-        command_name = f"`/{ctx.command.qualified_name}`"
+    async def predicate(ctx: discord.ApplicationContext) -> bool:
+        command_name = ctx.command.qualified_name
 
-        async def is_cah_thread():
+        if is_pseudocommand:
+            command_name += f" > {ctx.selected_options[0]['value']}"
+
+        command_name = f"`/{command_name}`"
+
+        async def is_cah_thread() -> bool:
             if not cah.CAHGame.retrieve_game(ctx.channel_id):
                 message = (
                     f"You can only use {command_name} in designated CAH game threads. "
@@ -50,7 +55,7 @@ def verify_context(level: str, verify_host: bool = False):
                 embed = discord.Embed(
                     title="You can't do that here.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -58,7 +63,7 @@ def verify_context(level: str, verify_host: bool = False):
 
             return True
 
-        async def is_player():
+        async def is_player() -> bool:
             game = cah.CAHGame.retrieve_game(ctx.channel_id)
 
             if not any(
@@ -70,7 +75,7 @@ def verify_context(level: str, verify_host: bool = False):
                 embed = discord.Embed(
                     title="You're not playing in this game.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -78,7 +83,7 @@ def verify_context(level: str, verify_host: bool = False):
 
             return True
 
-        async def is_active_game():
+        async def is_active_game() -> bool:
             game = cah.CAHGame.retrieve_game(ctx.channel_id)
 
             if game.is_joinable:
@@ -89,7 +94,7 @@ def verify_context(level: str, verify_host: bool = False):
                 embed = discord.Embed(
                     title="This game hasn't started yet.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -97,17 +102,26 @@ def verify_context(level: str, verify_host: bool = False):
 
             return True
 
-        async def is_player_turn():
-            async def to_play_cards():
-                if player != game.card_czar.value:
-                    if game.is_voting:
-                        message = (
-                            f"You can't use {command_name} until voting has finished."
-                        )
+        async def is_player_turn() -> bool:
+            async def czar_mode() -> bool:
+                if game.is_voting:
+                    if game.card_czar.value != player:
+                        message = "Please wait for the Card Czar to finish."
                         embed = discord.Embed(
-                            title="You can't do that right now.",
+                            title="It's voting time.",
                             description=message,
-                            color=support.Color.red(),
+                            color=support.Color.error(),
+                        )
+                        await ctx.respond(embed=embed, ephemeral=True)
+
+                        return False
+                else:
+                    if game.card_czar.value == player:
+                        message = f"As the Card Czar, you can't use {command_name} until it's voting time."
+                        embed = discord.Embed(
+                            title="Patience, young Padawan.",
+                            description=message,
+                            color=support.Color.error(),
                         )
                         await ctx.respond(embed=embed, ephemeral=True)
 
@@ -117,7 +131,7 @@ def verify_context(level: str, verify_host: bool = False):
                         embed = discord.Embed(
                             title="You've already made your submission.",
                             description=message,
-                            color=support.Color.red(),
+                            color=support.Color.error(),
                         )
                         submission = discord.utils.find(
                             lambda c: c.player == player, game.candidates
@@ -126,65 +140,37 @@ def verify_context(level: str, verify_host: bool = False):
                         await ctx.respond(embed=embed, ephemeral=True)
 
                         return False
-                else:
-                    message = f"You can only use {command_name} when you're not the Card Czar."
-                    embed = discord.Embed(
-                        title="You can't do that right now.",
-                        description=message,
-                        color=support.Color.red(),
-                    )
-                    await ctx.respond(embed=embed, ephemeral=True)
-
-                    return False
 
                 return True
 
-            async def to_czar_vote():
-                if game.card_czar.value == player:
-                    if not game.is_voting:
-                        message = "Wait until it's voting time, then try again."
-                        embed = discord.Embed(
-                            title="You can't do that right now.",
-                            description=message,
-                            color=support.Color.red(),
-                        )
-                        await ctx.respond(embed=embed, ephemeral=True)
-
-                        return False
-                else:
-                    message = (
-                        f"You can only use {command_name} when you're the Card Czar."
-                    )
-                    embed = discord.Embed(
-                        title="You're not the Card Czar.",
-                        description=message,
-                        color=support.Color.red(),
-                    )
-                    await ctx.respond(embed=embed, ephemeral=True)
-
-                    return False
-
-                return True
-
-            async def to_popular_vote():
+            async def popular_vote_mode() -> bool:
                 if game.is_voting:
                     if player.has_voted:
                         message = "Please wait for the other players to finish."
                         embed = discord.Embed(
                             title="You've already cast your vote.",
                             description=message,
-                            color=support.Color.red(),
+                            color=support.Color.error(),
                         )
+                        vote = discord.utils.find(
+                            lambda c: player in c.voters, game.candidates
+                        )
+                        embed.add_field(name="Your Vote", value=vote.text)
                         await ctx.respond(embed=embed, ephemeral=True)
 
                         return False
-                else:
-                    message = "Wait until it's voting time, then try again."
+
+                elif player.has_submitted:
+                    message = "Please wait for the other players to finish."
                     embed = discord.Embed(
-                        title="You can't do that right now.",
+                        title="You've already made your submission.",
                         description=message,
-                        color=support.Color.red(),
+                        color=support.Color.error(),
                     )
+                    submission = discord.utils.find(
+                        lambda c: c.player == player, game.candidates
+                    )
+                    embed.add_field(name="Your Submission", value=submission.text)
                     await ctx.respond(embed=embed, ephemeral=True)
 
                     return False
@@ -194,15 +180,13 @@ def verify_context(level: str, verify_host: bool = False):
             game = cah.CAHGame.retrieve_game(ctx.channel_id)
             player = game.retrieve_player(ctx.user)
 
-            if ctx.command.name == "play":
-                return await to_play_cards()
-            elif ctx.command.name == "vote":
-                if game.settings.use_czar:
-                    return await to_czar_vote()
-                else:
-                    return await to_popular_vote()
+            return (
+                await czar_mode()
+                if game.settings.use_czar
+                else await popular_vote_mode()
+            )
 
-        async def verify_is_host():
+        async def verify_is_host() -> bool:
             game = cah.CAHGame.retrieve_game(ctx.channel_id)
 
             if game.host != ctx.user:
@@ -212,7 +196,7 @@ def verify_context(level: str, verify_host: bool = False):
                 embed = discord.Embed(
                     title="You're not the Game Host.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -242,39 +226,3 @@ def verify_context(level: str, verify_host: bool = False):
         return success
 
     return commands.check(predicate)
-
-
-# miscellaneous
-
-
-async def check_voice_permissions(ctx: discord.ApplicationContext):
-    """
-    Checks that the bot has the necessary permissions to create a voice channel for a CAH game.
-    """
-    if ctx.guild.me.guild_permissions >= support.GamePermissions.cah_voice():
-        return True
-    else:
-        message = (
-            "In order to create a voice channel for your Cards Against Humanity game, I need the following "
-            "permissions __at the server level__:\n\n"
-        )
-
-        message += "\n".join(
-            f"- {p}"
-            for p in alianator.resolve(
-                support.GamePermissions.cah_voice() - ctx.guild.me.guild_permissions
-            )
-        )
-
-        message += (
-            f"\n\n Once I've been given those permissions, try again.\n"
-            f"\n"
-            f"(You can also opt to create a game without a voice channel - just set the `voice` option to "
-            f"`Don't Create` when using `/{ctx.command.qualified_name}`.)"
-        )
-
-        embed = discord.Embed(
-            title="I need more power!", description=message, color=support.Color.red()
-        )
-
-        await ctx.respond(embed=embed, ephemeral=True)

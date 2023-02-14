@@ -7,21 +7,51 @@
 from __future__ import annotations
 
 import asyncio
-import inspect
-from abc import ABC, abstractmethod
-from typing import Self
 
 import discord
 import inflect as ifl
+from attrs import define
 from discord.ext import commands
-from path import Path
 
 import support
+from keyboard import *
+from support.models.utils import Fields
 
 inflect = ifl.engine()
 
 
-class HostedMultiplayerGame:
+@define
+class ThreadedGame:
+    __games__: ClassVar[dict[int, Self]]
+
+    name: ClassVar[str] = ...
+    short_name: ClassVar[str] = name
+
+    guild: discord.Guild = Fields.field(frozen=True)
+    thread: discord.Thread = Fields.field(frozen=True)
+
+    def __attrs_post_init__(self):
+        self.__games__[self.thread.id] = self
+
+    @classmethod
+    def retrieve_game(cls, thread_id) -> Self | None:
+        """
+        Retrieves a game given the unique identifier of its associated game thread.
+
+        :param thread_id: The unique identifier of the game's associated thread.
+        :return: The object associated with the passed-in thread ID if one exists; otherwise None.
+        """
+        return cls.__games__.get(thread_id)
+
+    def kill(self):
+        """
+        Remove the game from :attr:`__games__`.
+        """
+        type(self).__games__.pop(self.thread.id)
+
+
+@define
+class HostedGame(ThreadedGame):
     """
     Consolidates common attributes for hosted multiplayer games. A hosted multiplayer a game is any game that supports
     more than two players where one of those players is deemed the "Game Host".
@@ -45,49 +75,18 @@ class HostedMultiplayerGame:
         The minimum number of players required to play the game.
     lobby_intro_msg: discord.Message
         The introduction message sent to the game thread when the game is created.
-    __all_games__: dict
-        A dictionary that maps game objects to the IDs of the threads in which they are being played.
     """
 
-    name = ""
-    short_name = name
+    min_players: ClassVar[int]
 
-    __all_games__ = dict()
+    host: discord.Member
 
-    def __init__(
-        self,
-        guild: discord.Guild,
-        thread: discord.Thread,
-        host: discord.User,
-        *args,
-        **kwargs,
-    ):
-        self.guild = guild
-        self.thread = thread
-        self.host = host
-
-        self.short_name = self.short_name or self.name
-
-        self.lobby_intro_msg = None
-        self.min_players = 2
-        self.voice_channel: discord.VoiceChannel = None
-
-        self.__all_games__[self.thread.id] = self
+    is_joinable: bool = Fields.attr(default=True)
+    lobby_intro_msg: discord.Message = Fields.attr(default=None)
+    voice_channel: discord.VoiceChannel = Fields.attr(default=None)
 
     @classmethod
-    def retrieve_game(cls, thread_id) -> HostedMultiplayerGame | None:
-        """
-        Retrieves a game given the unique identifier of its associated game thread.
-
-        :param thread_id: The unique identifier of the game's associated thread.
-        :return: The UnoGame object associated with the passed-in thread ID if one exists; otherwise None.
-        """
-        return cls.__all_games__.get(thread_id)
-
-    @classmethod
-    def find_hosted_games(
-        cls, user: discord.User, guild_id: int
-    ) -> HostedMultiplayerGame | None:
+    def find_hosted_games(cls, user: discord.User, guild_id: int) -> Self | None:
         """
         Retrieves games where the Game Host is a particular user and that are taking place in a
         particular server.
@@ -98,7 +97,7 @@ class HostedMultiplayerGame:
         """
         return discord.utils.find(
             lambda g: g.host == user and g.guild.id == guild_id,
-            cls.__all_games__.values(),
+            cls.__games__.values(),
         )
 
     @classmethod
@@ -124,7 +123,7 @@ class HostedMultiplayerGame:
                 embed = discord.Embed(
                     title="You're already hosting a game.",
                     description=message,
-                    color=Color.error(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(
                     embed=embed,
@@ -175,7 +174,7 @@ class HostedMultiplayerGame:
         :param reason: The reason why the game is being closed ("host_abortion, "thread_deletion", "channel_deletion",
         "host_left", "insufficient_players", "inactivity", or "time_limit").
         """
-        self.__all_games__.pop(self.thread.id)
+        self.kill()
 
         async def host_abortion():
             """
@@ -189,7 +188,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title=f"The Game Host has ended this {self.name} game.",
                 description=thread_msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -210,7 +209,7 @@ class HostedMultiplayerGame:
             embed = discord.Embed(
                 title=f"Your {self.name} game was automatically closed.",
                 description=msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -227,7 +226,7 @@ class HostedMultiplayerGame:
             embed = discord.Embed(
                 title="Your {self.name} game was automatically closed.",
                 description=msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -246,7 +245,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title=f"This {self.name} game has been automatically closed.",
                 description=thread_msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -257,7 +256,7 @@ class HostedMultiplayerGame:
             host_embed = discord.Embed(
                 title=f"Your {self.name} game was automatically closed.",
                 description=host_msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -282,7 +281,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title=f"This {self.name} game has been automatically closed.",
                 description=thread_msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -293,17 +292,17 @@ class HostedMultiplayerGame:
             host_embed = discord.Embed(
                 title=f"Your {self.name} game was automatically closed.",
                 description=host_msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
+
+            msg = await self.thread.send(embed=thread_embed)
+            await msg.pin()
+            await self.host.send(embed=host_embed)
 
             await self.thread.edit(
                 name=f"{self.short_name} with {self.host.name} - Game Over!"
             )
-            msg = await self.thread.send(embed=thread_embed)
-            await msg.pin()
-
-            await self.host.send(embed=host_embed)
 
         async def inactivity():
             thread_msg = (
@@ -314,7 +313,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title=f"This {self.name} game has been automatically closed.",
                 description=thread_msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -322,7 +321,7 @@ class HostedMultiplayerGame:
             host_embed = discord.Embed(
                 title=f"Your {self.name} game was automatically closed.",
                 description=host_msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -344,7 +343,7 @@ class HostedMultiplayerGame:
             thread_embed = discord.Embed(
                 title="This {self.name} game has been automatically closed.",
                 description=thread_msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -355,7 +354,7 @@ class HostedMultiplayerGame:
             host_embed = discord.Embed(
                 title="Your {self.name} game was automatically closed.",
                 description=host_msg,
-                color=Color.error(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -419,331 +418,64 @@ class HostedMultiplayerGame:
         )
 
         await self.voice_channel.send(
-            embed=embed, view=support.GameThreadURLView(self.thread)
+            embed=embed, view=support.GameThreadURLView(thread=self.thread)
         )
 
         return self.voice_channel
 
+    @property
+    def has_started(self):
+        """
+        Convenience property to check if the game has started.
 
+        Returns the opposite of :attr:`is_joinable`.
+        """
+        return not self.is_joinable
+
+
+@define
 class BasePlayer:
     """
     The base class for objects representing players in a game.
     """
 
-    def __init__(self, user: discord.Member, *args, **kwargs):
-        self.user = user
+    user: discord.Member = Fields.field(frozen=True)
 
     @property
     def name(self) -> str:
+        """
+        The username of the player's associated user.
+        """
         return self.user.name
 
     @property
+    def id(self) -> int:
+        """
+        The ID of the player's associated user.
+        """
+        return self.user.id
+
+    @property
     def mention(self) -> str:
+        """
+        The mention string of the player's associated user (e.g. <@170966436125212673>).
+        """
         return self.user.mention
 
     @property
-    def id(self) -> int:
-        return self.user.id
+    def avatar(self) -> str:
+        """
+        The URL of the avatar of the player's associated user.
+        """
+        return self.user.avatar.url
+
+    @property
+    def display_avatar(self) -> str:
+        """
+        The URL of the server avatar of the player's associated user. Equivalent to BasePlayer.avatar
+        if no server avatar exists.
+        """
+        return self.user.display_avatar.url
 
     def __str__(self):
         return self.name
-
-
-class Color(discord.Color):
-    """
-    An extension of Pycord's ``discord.Color`` class that implements additional colors not included with the library.
-    """
-
-    @classmethod
-    def mint(cls):
-        return cls(0x03CB98)
-
-    @classmethod
-    def white(cls):
-        return cls(0xFFFFFF)
-
-    @classmethod
-    def black(cls):
-        return cls(0x000000)
-
-    @classmethod
-    def caution(cls):
-        return cls.orange()
-
-    @classmethod
-    def error(cls):
-        return cls.red()
-
-
-class Pointer(ABC):
-    """
-    Abstract base class for "pointer" classes like :class:`Assets` and :class:`shrine.torii.Torii`.
-    """
-
-    @classmethod
-    @abstractmethod
-    def _get(cls, *args, **kwargs):
-        ...
-
-    @classmethod
-    @abstractmethod
-    def about(cls):
-        ...
-
-    @classmethod
-    @abstractmethod
-    def rps(cls):
-        ...
-
-    @classmethod
-    @abstractmethod
-    def uno(cls):
-        ...
-
-    @classmethod
-    @abstractmethod
-    def chess(cls):
-        ...
-
-    @classmethod
-    @abstractmethod
-    def cah(cls):
-        ...
-
-    @classmethod
-    @abstractmethod
-    def kurisu(cls):
-        ...
-
-
-class Assets(Path, Pointer):
-    """
-    Implements context managers that point to asset directories for 3515.games.
-    """
-
-    @classmethod
-    def _get(cls, module) -> Self:
-        return cls.joinpath("cogs", module, "assets")
-
-    @classmethod
-    def about(cls):
-        return cls._get("about")
-
-    @classmethod
-    def rps(cls):
-        return cls._get("rps")
-
-    @classmethod
-    def uno(cls):
-        return cls._get("uno")
-
-    @classmethod
-    def chess(cls):
-        return cls._get("chess")
-
-    @classmethod
-    def cah(cls):
-        return cls._get("cah")
-
-    @classmethod
-    def kurisu(cls):
-        return cls("kurisu/assets")
-
-
-class GamePermissions(discord.Permissions):
-    """
-    Implements permission set constants for 3515.games.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.update(read_messages=True, send_messages=True)
-
-    @classmethod
-    def universal(cls):
-        """
-        The set of permissions universally required by all of 3515.games' functionality.
-
-        Returns a :class:`GamePermissions` object with the following permissions:
-
-        - Read Messages/View Channels
-        - Send Messages
-        """
-        return cls(3072)
-
-    @classmethod
-    def rps(cls):
-        """
-        The set of permissions required for Rock-Paper-Scissors.
-
-        Returns a :class:`GamePermissions` object with the following permissions:
-
-        - Read Messages/View Channels
-        - Send Messages
-        - Embed Links
-        - Attach Files
-        """
-        return cls(49152)
-
-    @classmethod
-    def uno(cls):
-        """
-        The set of permissions required for UNO games.
-
-        Returns a :class:`GamePermissions` object with the permissions:
-
-        - Read Messages/View Channels
-        - Send Messages
-        - Create Public Threads
-        - Send Messages in Threads
-        - Manage Messages
-        - Manage Threads
-        - Embed Links
-        - Attach Files
-        - Mention @everyone, @here, and All Roles
-        - Use External Emojis
-        """
-        return cls.universal() + cls(326417965056)
-
-    @classmethod
-    def chess(cls):
-        """
-        The set of permissions required for chess.
-
-        Returns a :class:`GamePermissions` object with the following
-        permissions:
-
-        - Read Messages/View Channels
-        - Send Messages
-        - Create Public Threads
-        - Send Messages in Threads
-        - Manage Messages
-        - Manage Threads
-        - Embed Links
-        - Attach Files
-        - Use External Emojis
-        """
-        return cls.universal() + cls(326417833984)
-
-    @classmethod
-    def cah(cls):
-        """
-        The set of permissions required for public CAH games. This is currently equivalent to
-        ``GamePermissions.uno()``.
-
-        Returns a :class:`GamePermissions` object with the following permissions:
-
-        - Read Messages/View Channels
-        - Send Messages
-        - Create Public Threads
-        - Send Messages in Threads
-        - Manage Messages
-        - Manage Threads
-        - Embed Links
-        - Attach Files
-        - Mention @everyone, @here, and All Roles
-        - Use External Emojis
-        """
-        return cls.uno()
-
-    @classmethod
-    def cah_voice(cls):
-        """
-        The set of permissions required for CAH games whose hosts choose to equip them with private,
-        bot-controlled, voice channels. These permissions are required *in addition* to ``GamePermissions.cah()``,
-        even though ``GamePermissions.cah()`` is not a subset of these permissions.
-
-        Returns a :class:`GamePermissions` object with ``GamePermissions.universal()`` and the following
-        permissions:
-
-        - Manage Channels
-        - Read Message History
-        - Connect
-        - Speak
-        - Mute Members
-        - Deafen Members
-        - Move Members
-        - Use Voice Activity
-        - Priority Speaker
-        """
-        return cls.voice() + cls.read_message_history + cls.manage_channels - cls.stream
-
-    @classmethod
-    def vc(cls):
-        """
-        The set of permissions required to create voice channels for supported games.
-
-        Returns a :class:`GamePermissions` object with the following permissions:
-
-        - Read Messages/View Channels
-        - Send Messages
-        - Manage Channels
-        - Read Message History
-        - Connect
-        - Speak
-        - Mute Members
-        - Deafen Members
-        - Move Members
-        - Use Voice Activity
-        - Priority Speaker
-
-        """
-        return cls.voice() + cls.read_message_history + cls.manage_channels - cls.stream
-
-    @classmethod
-    def everything(cls):
-        """
-        Returns a :class:`GamePermissions` object with the combined set of all other predefined permission sets in the
-        class.
-        """
-        permissions = cls.none()
-
-        permsets = [
-            permset
-            for name, permset in inspect.getmembers(cls, inspect.ismethod)
-            if name in cls.__dict__
-            and name
-            != "everything"  # everybody gangsta till the https://youtu.be/CVCTz3Xc__s
-        ]
-
-        for permset in permsets:
-            permissions += permset()
-
-        return permissions
-
-    def __iter__(self):
-        # god bless python
-        return self.__class__.__base__.__iter__(self.__class__.__base__(self.value))
-
-
-class SlashCommandGroup(discord.SlashCommandGroup):
-    """
-    Equivalent to :class:`discord.SlashCommandGroup` with the exception that commands created by instances of this class
-    are always guild-only.
-
-    Notes
-    -----
-    All of 3515.games' comnmands are guild-only. Using this subclass is preferred to explicitly passing
-    `guild_only=True` to every instantiation of :class:`discord.SlashCommandGroup`.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, guild_only=True)
-
-
-class Pseudocommand(discord.commands.SlashCommand):
-    """
-    A pseudocommand.
-
-    Notes
-    -----
-    Pseudocommands are corountines that are treated like commands at the code level but are not actually accessible
-    to end users. 3515.games uses a custom subclass of :class:`discord.bot.Bot` that blocks the registration
-    of pseudocommands with the Discord API.
-
-    Unlike regular commands, pseudocommands can be called directly without losing their checks.
-    """
-
-    async def __call__(self, ctx, *args, **kwargs):
-        if await self.can_run(ctx):
-            return await super().__call__(ctx, *args, **kwargs)

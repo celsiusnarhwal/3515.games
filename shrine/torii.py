@@ -10,28 +10,25 @@
 
 from __future__ import annotations
 
-import typing as t
 from functools import wraps
-from types import FunctionType
-from typing import Self
 
 from jinja2 import Environment, FileSystemLoader, Template
 
-from support import Assets, Pointer
+from keyboard import *
+from support import Assets
 
 
-class Torii(Environment, Pointer):
+class Torii(Environment):
     """
     Base class for Jinja environments.
     """
 
-    filters_ = {}
-    globals_ = {}
-    extensions_ = []
+    filters_: ClassVar[dict[str, Callable]] = {}
+    globals_: ClassVar[dict[str, Any]] = {}
+    extensions_: ClassVar[list[type]] = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, extensions=self.extensions_)
-
         self.filters.update(self.filters_)
         self.globals.update(self.globals_)
 
@@ -116,7 +113,7 @@ class Shintai(Template):
         return self.render(*args, **kwargs)
 
 
-def register_tag(cls: t.Type) -> t.Type:
+def register_tag(cls: type) -> type:
     """
     Decorator for registering a class as a Jinja template tag with :class:`Torii`.
 
@@ -130,7 +127,7 @@ def register_tag(cls: t.Type) -> t.Type:
     return cls
 
 
-def register_filter(func: FunctionType) -> FunctionType:
+def register_filter(func: Callable) -> Callable:
     """
     Decorator for registering a function as a Jinja template filter with :class:`Torii`.
 
@@ -144,9 +141,7 @@ def register_filter(func: FunctionType) -> FunctionType:
     return func
 
 
-def register_global(
-    function: FunctionType = None, *, call: bool = False
-) -> FunctionType:
+def register_global(function: Callable = None, *, call: bool = False) -> Callable:
     """
     Decorator for registering a function as a Jinja template global with :class:`Torii`.
 
@@ -170,7 +165,7 @@ def register_global(
     ...     ...
     """
 
-    def decorator(func: FunctionType) -> FunctionType:
+    def decorator(func: function) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)

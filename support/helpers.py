@@ -14,12 +14,13 @@ import discord
 import tomlkit as toml
 from discord import ButtonStyle
 from discord.commands import application_command
-from discord.ext import pages, commands
-from github import Github as GitHub, AuthenticatedUser, Repository
+from discord.ext import commands, pages
+from github import AuthenticatedUser
+from github import Github as GitHub
+from github import Repository
 from tomlkit import TOMLDocument
 
 import support
-
 
 # decorators
 
@@ -168,7 +169,7 @@ def pagimoji(
     ]
 
 
-def split_list(seq: list, size: int) -> list:
+def split_list(seq: list, size: int) -> list[list]:
     """
     Split a list into smaller lists of the specified size.
 

@@ -4,6 +4,6 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-from support.helpers import *
-from support.models import *
-from support.views import *
+from cogs.cah.models.cards import *
+from cogs.cah.models.game import *
+from cogs.cah.models.player import *

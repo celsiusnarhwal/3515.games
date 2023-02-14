@@ -8,13 +8,15 @@ from __future__ import annotations
 
 import discord
 import inflect as ifl
-from discord import Interaction, ButtonStyle
-from discord.ui import Button, Select, button as discord_button
+from discord import ButtonStyle, Interaction
+from discord.ui import Button, Select
+from discord.ui import button as discord_button
 from llist import dllist
 
+import cogs.uno.models.game
 import support
 from cogs import uno
-from support.views import View, ConfirmationView
+from support.views import ConfirmationView, View
 
 inflect = ifl.engine()
 
@@ -27,7 +29,9 @@ class UnoTerminableView(View):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.game: uno.UnoGame = uno.UnoGame.retrieve_game(self.ctx.channel_id)
+        self.game: cogs.uno.models.game.UnoGame = (
+            cogs.uno.models.game.UnoGame.retrieve_game(self.ctx.channel_id)
+        )
         self.player: uno.UnoPlayer = self.game.retrieve_player(self.ctx.user)
         self.turn_uuid: str = self.game.turn_uuid
 
@@ -172,9 +176,7 @@ class UnoCardSelectView(UnoTerminableView):
         A callback for a button that switches the menu to show all cards in the player's hand.
         """
         self.paginator = self.UnoCardSelectPaginator(
-            pages=dllist(
-                [self.cards[i : i + 23] for i in range(0, len(self.cards), 23)]
-            )
+            pages=dllist(support.split_list(self.cards, 23))
         )
 
         msg = (
@@ -443,7 +445,7 @@ class UnoStatusCenterView(View):
     The UNO Status Center.
     """
 
-    def __init__(self, game: uno.UnoGame, **kwargs):
+    def __init__(self, game: cogs.uno.models.game.UnoGame, **kwargs):
         super().__init__(**kwargs)
         self.game = game
         self.status = game.status
@@ -703,7 +705,7 @@ class UnoCalloutView(support.UserSelectionView, UnoTerminableView):
             lambda item: isinstance(item, Select), self.children
         )
 
-        uno_game = uno.UnoGame.retrieve_game(self.ctx.channel_id)
+        uno_game = cogs.uno.models.game.UnoGame.retrieve_game(self.ctx.channel_id)
         challenger: uno.UnoPlayer = uno_game.retrieve_player(self.ctx.user)
         target: uno.UnoPlayer = uno_game.retrieve_player(select.values[0])
 
@@ -764,7 +766,7 @@ class UnoKickPlayerView(support.UserSelectionView):
 
         super().__init__(*args, **kwargs)
 
-        self.game = uno.UnoGame.retrieve_game(self.ctx.channel_id)
+        self.game = cogs.uno.models.game.UnoGame.retrieve_game(self.ctx.channel_id)
         self.selected_player: uno.UnoPlayer = None
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -835,7 +837,7 @@ class UnoTransferHostView(support.UserSelectionView):
 
         super().__init__(*args, **kwargs)
 
-        self.game = uno.UnoGame.retrieve_game(self.ctx.channel_id)
+        self.game = cogs.uno.models.game.UnoGame.retrieve_game(self.ctx.channel_id)
         self.selected_player: uno.UnoPlayer = None
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -891,7 +893,7 @@ class UnoGameEndView(View):
     so this view will be the only way to see the leaderboard.
     """
 
-    def __init__(self, game: uno.UnoGame, **kwargs):
+    def __init__(self, game: cogs.uno.models.game.UnoGame, **kwargs):
         super().__init__(**kwargs)
         self.game = game
 

@@ -9,17 +9,19 @@ from __future__ import annotations
 import aiohttp
 import discord
 import inflect as ifl
-from discord import Interaction, ButtonStyle
-from discord.ui import Select, Button, button as discord_button
+from discord import ButtonStyle, Interaction
+from discord.ui import Button, Select
+from discord.ui import button as discord_button
+from yarl import URL
 
 import support
 from cogs import cah
-from support import EnhancedView
+from support import View
 
 inflect = ifl.engine()
 
 
-class CAHTerminableView(EnhancedView):
+class CAHTerminableView(View):
     """
     A subclass of :class:`EnhancedView` whose views are set to automatically disabled themselves and stop
     listening for interactions upon the end of the turn of the player who created them.
@@ -33,10 +35,10 @@ class CAHTerminableView(EnhancedView):
         player.terminable_views.append(self)
 
 
-class PackSelectView(EnhancedView):
+class CAHPackSelectView(View):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cards = None
+        self.cardset: cah.CAHDeck = None
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         pack_menu: Select = discord.utils.find(
@@ -54,7 +56,7 @@ class PackSelectView(EnhancedView):
         return super().interaction_check(interaction)
 
     @discord_button(label="Create Game", style=ButtonStyle.green, row=1)
-    async def submit(self, button: Button, interaction: Interaction):
+    async def submit(self, _: Button, interaction: Interaction):
         pack_menu: Select = discord.utils.find(
             lambda x: isinstance(x, Select), self.children
         )
@@ -67,26 +69,35 @@ class PackSelectView(EnhancedView):
 
         packs = pack_menu.values or ["CAH Base Set"]
 
-        request_url = "https://restagainsthumanity.com/api"
+        rah_url = URL("https://restagainsthumanity.com")
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                request_url, params={"packs": ",".join(packs)}
+                rah_url / "api", params={"packs": ",".join(packs)}
             ) as response:
                 if response.status == 200:
-                    self.cards = await response.json()
+                    self.cardset = cah.CAHDeck.parse_obj(await response.json())
                 else:
+                    issues_url = (
+                        URL(
+                            support.github()
+                            .get_repo("rest-against-humanity/api")
+                            .html_url
+                        )
+                        / "issues/new"
+                    )
+
                     msg = (
-                        f"I couldn't communicate with [REST Against Humanity](https://restagainsthumanity.com), "
+                        f"I couldn't communicate with [REST Against Humanity]({rah_url}), "
                         f"my source for CAH card data. Please try again.\n"
                         f"\n"
                         f"If the problem persists, open an issue on [REST Against Humanity's GitHub page]"
-                        f"({support.github().get_repo('rest-against-humanity').html_url}/issues/new)."
+                        f"({issues_url})."
                     )
                     embed = discord.Embed(
                         title="Something went wrong.",
                         description=msg,
-                        color=support.Color.red(),
+                        color=support.Color.error(),
                     )
                     await interaction.edit_original_response(
                         content=None, embed=embed, view=None
@@ -96,7 +107,7 @@ class PackSelectView(EnhancedView):
 
         self.stop()
 
-    async def get_packs(self):
+    async def get_packs(self) -> cah.CAHDeck | None:
         with support.Assets.cah():
             packs = open("packs.txt").read().splitlines()
 
@@ -132,7 +143,7 @@ class PackSelectView(EnhancedView):
 
         await self.wait()
 
-        return self.cards
+        return self.cardset
 
 
 class CAHCardSelectView(CAHTerminableView):
@@ -201,11 +212,11 @@ class CAHCardSelectView(CAHTerminableView):
 
         return menu
 
-    async def order_option_1_callback(self, interaction: Interaction):
+    async def order_option_1_callback(self, _: Interaction):
         self.submission = self.candidates[0]
         await self.finish()
 
-    async def order_option_2_callback(self, interaction: Interaction):
+    async def order_option_2_callback(self, _: Interaction):
         self.submission = self.candidates[1]
         await self.finish()
 
@@ -276,17 +287,14 @@ class CAHVotingView(CAHTerminableView):
             max_values=1,
         )
 
-        msg = (
-            "Pick your favorite submission. All submissions are anonymous; you won't know who submitted what "
-            "until you make your choice."
-        )
+        msg = "Pick your favorite submission."
 
         if self.game.settings.use_czar:
             msg += (
                 " The player who made the submission you choose will recieve a point."
             )
         else:
-            msg += " You cannot vote for your own submission."
+            msg += " (No, you can't vote for your own.)"
 
         embed = discord.Embed(
             title="Voting", description=msg, color=support.Color.mint()
@@ -335,7 +343,7 @@ class CAHVotingView(CAHTerminableView):
         return self.selection
 
 
-class CAHStatusCenterView(EnhancedView):
+class CAHStatusCenterView(View):
     def __init__(self, game: cah.CAHGame, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.game = game
@@ -470,3 +478,134 @@ class CAHStatusCenterView(EnhancedView):
             )
 
         return embed
+
+
+class CAHKickPlayerView(support.UserSelectionView):
+    def __init__(self, *args, **kwargs):
+        kwargs.update(
+            {
+                "max_users": 1,
+                "placeholder": "Select a player",
+            }
+        )
+
+        super().__init__(*args, **kwargs)
+
+        self.game = cah.CAHGame.retrieve_game(self.ctx.channel_id)
+        self.selected_player: cah.CAHPlayer = None
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        select: Select = discord.utils.find(
+            lambda item: isinstance(item, Select), self.children
+        )
+
+        player = self.game.retrieve_player(select.values[0])
+
+        if not player:
+            embed = discord.Embed(
+                title="That's not a player.",
+                description="You can only kick users who are also players in this Cards Against Humanity game.",
+                color=support.Color.error(),
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        elif player == self.game.retrieve_player(self.ctx.user):
+            embed = discord.Embed(
+                title="You can't kick yourself.",
+                description="You can't kick yourself from the game. If you want to leave, "
+                "use `/cah ciao > Leave Game` (consider transferring your host powers to another player beforehand, "
+                "though).",
+                color=support.Color.error(),
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        else:
+            self.selected_player = player
+            self.stop()
+            self.disable_all_items()
+            await interaction.response.edit_message(view=self)
+            return await super().interaction_check(interaction)
+
+    async def present(self, *args, **kwargs):
+        msg = "Select a player to kick.\n\n"
+
+        if self.game.is_joinable:
+            msg += (
+                "Kicked players can rejoin the game at any time before it starts. Even if they don't rejoin, "
+                "they can still spectate and chat in the game thread."
+            )
+        else:
+            msg += "Kicked players can still spectate and chat in the game thread."
+
+        embed = discord.Embed(
+            title="Kick a Player",
+            description=msg,
+            color=support.Color.caution(),
+        )
+
+        await self.ctx.respond(
+            embed=embed,
+            view=self,
+            ephemeral=True,
+        )
+
+        await self.wait()
+        return self.selected_player
+
+
+class CAHTransferHostView(support.UserSelectionView):
+    def __init__(self, *args, **kwargs):
+        kwargs.update(
+            {
+                "max_users": 1,
+                "placeholder": "Select a player",
+            }
+        )
+
+        super().__init__(*args, **kwargs)
+
+        self.game = cah.CAHGame.retrieve_game(self.ctx.channel_id)
+        self.selected_player: cah.CAHPlayer = None
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        select: Select = discord.utils.find(
+            lambda item: isinstance(item, Select), self.children
+        )
+
+        player = self.game.retrieve_player(select.values[0])
+
+        if not player:
+            embed = discord.Embed(
+                title="That's not a player.",
+                description="You can only transfer your powers to other players in this Cards Against Humanity game.",
+                color=support.Color.error(),
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        elif player == self.game.retrieve_player(self.ctx.user):
+            embed = discord.Embed(
+                title="???",
+                description="...you're the Game Host. Choose someone else. ",
+                color=support.Color.error(),
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        else:
+            self.selected_player = player
+            self.stop()
+            self.disable_all_items()
+            await interaction.response.edit_message(view=self)
+            return await super().interaction_check(interaction)
+
+    async def present(self, *args, **kwargs):
+        msg = "Select a player to make the new Game Host."
+        embed = discord.Embed(
+            title="Transfer Host Powers",
+            description=msg,
+            color=support.Color.caution(),
+        )
+
+        await self.ctx.respond(
+            embed=embed,
+            view=self,
+            ephemeral=True,
+        )
+
+        await self.wait()
+        return self.selected_player

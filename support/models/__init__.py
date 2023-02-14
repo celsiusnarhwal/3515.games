@@ -4,6 +4,7 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-from support.helpers import *
-from support.models import *
-from support.views import *
+from support.models.commands import *
+from support.models.games import *
+from support.models.pydantic import *
+from support.models.utils import *
