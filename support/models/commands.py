@@ -6,22 +6,9 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 import discord
-
-
-class SlashCommandGroup(discord.SlashCommandGroup):
-    """
-    Equivalent to :class:`discord.SlashCommandGroup` with the exception that commands created by instances of this class
-    are always guild-only.
-
-    Notes
-    -----
-    All of 3515.games' comnmands are guild-only. Using this subclass is preferred to explicitly passing
-    `guild_only=True` to every instantiation of :class:`discord.SlashCommandGroup`.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, guild_only=True)
 
 
 class Pseudocommand(discord.commands.SlashCommand):
@@ -43,3 +30,6 @@ class Pseudocommand(discord.commands.SlashCommand):
     async def __call__(self, ctx, *args, **kwargs):
         if await self.can_run(ctx):
             return await super().__call__(ctx, *args, **kwargs)
+
+
+SlashCommandGroup = partial(discord.SlashCommandGroup, guild_only=True)
