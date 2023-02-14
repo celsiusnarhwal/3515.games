@@ -55,21 +55,6 @@ class Fields(validate_arguments(attrs.field).model):
 
     @classmethod
     def field(cls, **kwargs):
-        """
-        Create an attrs field.
-
-        This is essentially a wrapper around :meth:`attrs.field`. :meth:`Field.attr` is a wrapper around this method
-        that sets ``init=False`` and is otherwise identical.
-
-        This method accepts the same arguments as :meth:`attrs.field` with one addition (see "Parameters").
-
-        Parameters
-        ----------
-        frozen : bool, default=False
-            Whether to freeze the field. Setting this to ``True`` is  equivalent to
-            ``on_setattr=attrs.setters.frozen``. Anything else passed to ``on_setattr``
-            will be overwritten if this is ``True``.
-        """
         return attrs.field(**cls.parse_obj(kwargs).dict())
 
     attr = classmethod(partialmethod(field, init=False))
