@@ -126,7 +126,7 @@ class GamePermissions(discord.Permissions):
 
     Notes
     -----
-    All objects of this class contain the ReadMessages/View Channels and Send Messages permissions at a minimum.
+    All objects of this class contain the Read Messages/View Channels and Send Messages permissions at a minimum.
     """
 
     def __init__(self, *args, **kwargs):
