@@ -10,6 +10,8 @@ from functools import partial
 
 import discord
 
+SlashCommandGroup = partial(discord.SlashCommandGroup, guild_only=True)
+
 
 class Pseudocommand(discord.commands.SlashCommand):
     """
@@ -30,6 +32,3 @@ class Pseudocommand(discord.commands.SlashCommand):
     async def __call__(self, ctx, *args, **kwargs):
         if await self.can_run(ctx):
             return await super().__call__(ctx, *args, **kwargs)
-
-
-SlashCommandGroup = partial(discord.SlashCommandGroup, guild_only=True)

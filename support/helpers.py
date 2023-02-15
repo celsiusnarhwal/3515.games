@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import random
+from functools import partial
 
 import alianator
 import discord
@@ -21,41 +22,12 @@ from github import Repository
 from tomlkit import TOMLDocument
 
 import support
+from support.models.commands import Pseudocommand
 
 # decorators
 
-
-def slash_command(**attrs):
-    """
-    Equivalent to :meth:`discord.slash_command` with the exception that commands created with this decorator
-    are always guild-only.
-
-    All arguments accepted by :meth:`discord.slash_command` are accepted by this decorator.
-
-    Notes
-    -----
-    All of 3515.games' commands are guild-only. Using this decorator is preferred to explicitly passing
-    `guild_only=True` to every invocation of :meth:`discord.commands.slash_command`.
-    """
-    return discord.slash_command(guild_only=True, **attrs)
-
-
-def pseudocommand():
-    """
-    A decorator that creates a pseudocommand.
-
-    Examples
-    --------
-    >>> import support
-    ... @support.pseudocommand()
-    ... async def command(ctx):
-    ...     ...
-
-    See Also
-    --------
-    :class:`support.models.PseudoCommand`
-    """
-    return application_command(cls=support.Pseudocommand)
+slash_command = partial(discord.slash_command, guild_only=True)
+pseudocommand = partial(application_command, cls=Pseudocommand)
 
 
 def bot_has_permissions(expected_permissions: discord.Permissions):
