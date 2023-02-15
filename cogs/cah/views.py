@@ -68,7 +68,7 @@ class CAHPackSelectView(View):
         packs = pack_menu.values or ["CAH Base Set"]
 
         try:
-            self.cardset = await cah.CAHDeck.new(packs)
+            self.cardset = await cah.CAHDeck.new(*packs)
         except ConnectionError:
             rah_repo = support.mona().get_repo("rest-against-humanity")
             msg = (
