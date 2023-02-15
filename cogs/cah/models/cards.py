@@ -12,20 +12,28 @@ import uuid
 
 import discord
 import nltk
+import orjson
 from attrs import define
 from llist import dllist, dllistnode
-from pydantic import BaseModel, validator
+from pydantic import BaseModel as PydanticBaseModel
+from pydantic import Field, validate_arguments, validator
 
 from cogs import cah
+from keyboard import *
 from support import Fields
+
+
+class BaseModel(PydanticBaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        extra = "allow"
+        json_loads = orjson.loads
 
 
 class CAHBlackCard(BaseModel):
     """
     Represents a black card in a Cards Against Humanity game.
     """
-
-    # white cards don't get their own class because they're literally just strings
 
     text: str
     pick: int
@@ -46,31 +54,22 @@ class CAHDeck(BaseModel):
     Represents a set of black and white cards in a Cards Against Humanity game.
     """
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
-
     black: list[CAHBlackCard]
-    white: list[str]
+    white: list[Optional[str]]  # not actually optional
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.backup = self.copy(deep=True)
 
-    @validator("white")
-    def normalize_white(cls, v):
-        """
-        Normalizes white cards.
+    @validator("white", pre=True, each_item=True)
+    def normalize_text(cls, v):
+        if len(normalized := re.sub(r"\b$", ".", v[0].upper() + v[1:])) <= 60:
+            return normalized
 
-        Cards beginning with a lowercase letter are made to begin with an uppercase one and cards ending without a
-        punctuation mark are appended with a period. Cards that exceed 60 characters in length following these
-        modifications are discarded to comply with Discord-imposed limitations.
-        """
-        for index, card in enumerate(v):
-            if normalized := re.sub(r"\b$", ".", card[0].upper() + card[1:]):
-                v[index] = normalized
-            else:
-                v.pop(index)
+    @validator("white")
+    def remove_none(cls, v):
+        while None in v:
+            v.remove(None)
 
         return v
 
@@ -83,7 +82,8 @@ class CAHDeck(BaseModel):
 
         return self.black.pop(random.randint(0, len(self.black) - 1))
 
-    def get_random_white(self, num_cards: int = 1) -> list[str]:
+    @validate_arguments
+    def get_random_white(self, num_cards: Annotated[int, Field(ge=1)] = 1) -> list[str]:
         """
         Return a given number of random white cards, removing them from the deck.
 
@@ -99,17 +99,15 @@ class CAHDeck(BaseModel):
         list[str]
             A list of white cards.
         """
-        num_cards = max(num_cards, 1)
-
         if num_cards > len(self.white):
             self.reset_white()
             num_cards = min(num_cards, len(self.white))
 
-        cards = [
+        cards = {
             self.white[i] for i in random.sample(range(len(self.white)), num_cards)
-        ]
+        }
 
-        self.white = list(set(self.white) - set(cards))
+        self.white = list(set(self.white) - cards)
 
         return cards
 
