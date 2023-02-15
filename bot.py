@@ -8,8 +8,8 @@
 The bot definition and event overrides.
 """
 
+import importlib
 import sys
-from abc import ABC
 
 import alianator
 import discord
@@ -19,7 +19,16 @@ import support
 from settings import settings
 
 
-class Bot(discord.Bot, ABC):
+class Bot(discord.Bot):
+    async def register_command(self, *args, **kwargs):
+        await super().register_command(*args, **kwargs)
+
+    def register_cog(self, cog: type):
+        if cog not in settings.disabled_cogs:
+            self.add_cog(cog(self))
+
+        return cog
+
     @property
     def pending_application_commands(self):
         return [
@@ -47,16 +56,12 @@ async def on_ready():
 
 
 @bot.event
-async def on_application_command_error(
-    ctx: discord.ApplicationContext, exception: discord.DiscordException
-):
+async def on_application_command_error(_, exception: discord.DiscordException):
     """
     Handles errors that occur during execution of application commands.
 
     Parameters
     ----------
-    ctx : discord.ApplicationContext
-        The command context.
     exception : discord.DiscordException
         The exception that was raised.
 
@@ -140,3 +145,7 @@ async def on_guild_join(guild: discord.Guild):
 
     if guild.system_channel.can_send(discord.Message):
         await guild.system_channel.send(embed=embed)
+
+
+# this must be imported for cogs to be registered and imported at the bottom of the file to avoid a circular import
+importlib.import_module("cogs")

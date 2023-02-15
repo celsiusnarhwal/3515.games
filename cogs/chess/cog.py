@@ -9,14 +9,15 @@ from discord import Option
 from discord.ext import commands
 
 import support
-from cogs import chess
-from cogs.generic import MasterCog
+from bot import bot
+from cogs import Cog, chess
 from support import SlashCommandGroup
 
 
-class ChessCog(MasterCog):
+@bot.register_cog
+class ChessCog(Cog):
     """
-    The cog for the chess modules, which facilitates chess games between two members of the same Discord server.
+    Commands and listeners for chess.
     """
 
     chess_group = SlashCommandGroup("chess", "Commands for playing chess.")

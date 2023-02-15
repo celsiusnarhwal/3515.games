@@ -8,14 +8,15 @@ import discord
 from discord import Option
 
 import support
-from cogs import MasterCog, rps
+from bot import bot
+from cogs import Cog, rps
 from support import SlashCommandGroup
 
 
-class RPSCog(MasterCog):
+@bot.register_cog
+class RPSCog(Cog):
     """
-    The cog for the Rock-Paper-Scissors module, which facilitates Rock-Paper-Scissors matches between two members of
-    the same Discord server.
+    Commands for Rock-Paper-Scissors.
     """
 
     rps_group = SlashCommandGroup("rps", "Commands for playing Rock-Paper-Scissors.")

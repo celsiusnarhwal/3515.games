@@ -12,15 +12,17 @@ from llist import dllistnode
 
 import shrine
 import support
-from cogs import MasterCog, uno
+from bot import bot
+from cogs import Cog, uno
 from support import SlashCommandGroup
 
 inflect = ifl.engine()
 
 
-class UnoCog(MasterCog):
+@bot.register_cog
+class UnoCog(Cog):
     """
-    The cog for the UNO module, which facilitates UNO games with up to 20 members of the same Discord server.
+    Commands and listeners for UNO.
     """
 
     uno_group = SlashCommandGroup("uno", "Commands for playing UNO.")

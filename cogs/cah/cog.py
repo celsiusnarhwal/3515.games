@@ -12,17 +12,17 @@ from llist import dllistnode
 
 import shrine
 import support
-from cogs import cah
-from cogs.generic import MasterCog
+from bot import bot
+from cogs import Cog, cah
 from support import SlashCommandGroup
 
 inflect = ifl.engine()
 
 
-class CAHCog(MasterCog):
+@bot.register_cog
+class CAHCog(Cog):
     """
-    The cog for the Cards Against Humanity module, which facilitates CAH games between up to 20 members of the same
-    Discord server.
+    Commands and listeners for Cards Against Humanity.
     """
 
     cah_group = SlashCommandGroup(

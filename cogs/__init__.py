@@ -4,17 +4,15 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-import inspect
-import sys
+import discord
+from attrs import define
+from discord.ext.commands import Cog as BaseCog
 
-from cogs.cah.cog import CAHCog
-from cogs.chess.cog import ChessCog
-from cogs.generic import *
-from cogs.rps.cog import RPSCog
-from cogs.uno.cog import UnoCog
 
-all_cogs = {
-    cog
-    for _, cog in inspect.getmembers(sys.modules[__name__], inspect.isclass)
-    if issubclass(cog, MasterCog)
-}
+@define
+class Cog(BaseCog):
+    """
+    Base class for cogs.
+    """
+
+    bot: discord.Bot

@@ -1,37 +1,21 @@
-########################################################################################################################
-#                         Copyright (C) 2023-present celsius narhwal <hello@celsiusnarhwal.dev>                        #
-#  This notice may not be altered or removed except by or with the express written permission of the copyright holder. #
-#                                      For more information, see the COPYING file.                                     #
-########################################################################################################################
-
 import discord
-from attr import define
 from discord.ext import commands
 
 import support
-from cogs import about, cah, uno
+from bot import bot
+from cogs import Cog, cah, misc, uno
 from support import slash_command
 
-__all__ = ["MasterCog", "GeneriCog"]
 
-
-@define(frozen=True)
-class MasterCog(commands.Cog):
-    """
-    Base class for cogs.
-    """
-
-    bot: discord.Bot
-
-
-class GeneriCog(MasterCog):
+@bot.register_cog
+class GeneriCog(Cog):
     """
     A cog to contain miscellaneous, standalone, commands that don't fit in any of the other cogs.
     """
 
     @slash_command(description="Allow me to reintroduce myself.")
     async def about(self, ctx: discord.ApplicationContext):
-        await about.AboutView(ctx=ctx).present()
+        await misc.AboutView(ctx=ctx).present()
 
     @slash_command(
         description="See which games I have the necessary permissions to play."
