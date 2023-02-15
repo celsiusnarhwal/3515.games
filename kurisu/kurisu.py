@@ -93,7 +93,7 @@ def copyright(
 
     with shrine.Torii.kurisu() as torii:
         template = torii.get_template("copyright.jinja")
-        notice = template.render().strip("\n") + "\n\n"
+        notice = template.render() + "\n\n"
 
         for file in [f for f in root.walkfiles("*.py") if not is_ignored(f)]:
             ratio = SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio()
