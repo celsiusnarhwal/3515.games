@@ -4,4 +4,17 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-from cogs.cogs import *
+import inspect
+import sys
+
+from cogs.cah.cog import CAHCog
+from cogs.chess.cog import ChessCog
+from cogs.generic import *
+from cogs.rps.cog import RPSCog
+from cogs.uno.cog import UnoCog
+
+all_cogs = {
+    cog
+    for _, cog in inspect.getmembers(sys.modules[__name__], inspect.isclass)
+    if issubclass(cog, MasterCog)
+}
