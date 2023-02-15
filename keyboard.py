@@ -9,4 +9,13 @@ A shortcut to certain names from the types and typing modules.
 """
 
 # noinspection PyUnresolvedReferences
-from typing import Any, Callable, ClassVar, Iterable, Iterator, Self
+from typing import (
+    Annotated,
+    Any,
+    Callable,
+    ClassVar,
+    Iterable,
+    Iterator,
+    Optional,
+    Self,
+)
