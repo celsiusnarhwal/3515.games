@@ -4,64 +4,61 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-"""
-The base settings configuration.
-"""
-import typing as t
-
 import discord
-from pydantic import BaseSettings, Field, StrictInt, StrictStr
+from pydantic import BaseSettings, Field
 
 
 class Settings(BaseSettings):
     """
-    Represents a settings configuration. New settings configurations should be created with Kurisu
-    (``kurisu settings new``).
+    A settings configuration.
 
-    Settings configurations must respect this class' type annotations and define values for any fields that lack
-    defaults. 3515.games will refuse to start if either of these conditions are not met.
+    New settings configurations should be created with Kurisu (``kurisu settings new``).
 
     Parameters
     ----------
     bot_name : str
         The name of 3515.games' bot user.
     app_id : int
-    database : dict
-        A dictionary of options for 3515.games' database connection. For supported options, see Pony's documentation:
-        https://docs.ponyorm.org/database.html#binding-the-database-object-to-a-specific-database
         3515.games' application ID.
+    database : dict
+        Options for 3515.games' database connection. See Pony's documentation[1]_ for supported options.
     owner_id : int, optional, default: 170966436125212673
         The user ID of 3515.games' owner. The default corresponds to celsiusnarhwal#3515.
     intents : discord.Intents, optional, default: discord.Intents.default() + discord.Intents.members
-        Gateway Intents. By default, this includes all non-privileged intents plus the GUILD_MEMBERS intent.
-        (See: https://discord.com/developers/docs/topics/gateway#gateway-intents)
+        Gateway Intents[2]_. By default, this includes all non-privileged intents plus the GUILD_MEMBERS intent.
     debug_guilds: list[int], optional, default: []
-        A list of IDs of guilds where 3515.games should create commands exclusively. If this list is non-empty,
-        3515.games will only be usable in the specified guilds.
+        IDs of guilds where 3515.games should create commands exclusively. If this list is non-empty, 3515.games will
+        only be usable in the specified guilds.
     extensions : list[str], optional, default: []
-        A list of extensions to load on startup.
+        Extensions to load on startup.
     disabled_cogs : list[discord.Cog], optional, default: []
-        A list of cogs to block from initialization. Commands and listeners and these cogs will not be registered on
-        startup and will thus not be usable.
+        Cogs to *not* register on startup.
     nltk_corpora : list[str], optional, default: ["averaged_perceptron_tagger"]
-        A list of NLTK corpora to download on startup. (See: https://www.nltk.org/book/ch02)
-    token : str, optional, default: os.getenv("BOT_TOKEN")
+        NLTK corpora[3]_ to download on startup.
+    token : str, optional, default: BOT_TOKEN environment variable
         3515.games' bot token.
     suppressed_warnings: list[Warning], optional, default: [RuntimeWarning]
-        A list of warnings to suppress. (See: https://docs.python.org/3/library/warnings.html#warning-filter)
+        Warnings to suppress[4]_.
+
+    References
+    ----------
+    .. [1] https://docs.ponyorm.org/database.html#binding-the-database-object-to-a-specific-database
+    .. [2] https://discord.com/developers/docs/topics/gateway#gateway-intents
+    .. [3] https://www.nltk.org/book/ch02
+    .. [4] https://docs.python.org/3/library/warnings.html#warning-filter
     """
 
     # Required
-    bot_name: StrictStr
-    app_id: StrictInt
+    bot_name: str
+    app_id: int
     database: dict
 
     # Optional
-    owner_id: StrictInt = 170966436125212673
+    owner_id: int = 170966436125212673
     intents: discord.Intents = discord.Intents.default() + discord.Intents.members
-    debug_guilds: list[StrictInt] = []
-    extensions: list[StrictStr] = []
+    debug_guilds: list[int] = []
+    extensions: list[str] = []
     disabled_cogs: list[discord.Cog] = []
-    nltk_corpora: list[StrictStr] = ["averaged_perceptron_tagger"]
-    token: StrictStr = Field(..., env="BOT_TOKEN")
-    suppressed_warnings: list[t.Type[Warning]] = [RuntimeWarning]
+    nltk_corpora: list[str] = ["averaged_perceptron_tagger"]
+    token: str = Field(..., env="BOT_TOKEN")
+    suppressed_warnings: list[type[Warning]] = [RuntimeWarning]

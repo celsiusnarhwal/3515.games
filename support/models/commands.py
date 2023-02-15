@@ -13,16 +13,15 @@ import discord
 SlashCommandGroup = partial(discord.SlashCommandGroup, guild_only=True)
 
 
-class Pseudocommand(discord.commands.SlashCommand):
+class Pseudocommand(discord.SlashCommand):
     """
     A pseudocommand.
 
+    Pseudocommands are corountines that are treated like commands at the code level but are not registered with
+    Discord and thus not accessible to end users.
+
     Notes
     -----
-    Pseudocommands are corountines that are treated like commands at the code level but are not actually accessible
-    to end users. 3515.games uses a custom subclass of :class:`discord.bot.Bot` that blocks the registration
-    of pseudocommands with the Discord API.
-
     Unlike regular commands, pseudocommands can be called directly without losing their checks.
     """
 
