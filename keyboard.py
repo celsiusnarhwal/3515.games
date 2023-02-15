@@ -5,7 +5,7 @@
 ########################################################################################################################
 
 """
-A shortcut to certain names from the types and typing modules.
+A shortcut to certain names from the typing module.
 """
 
 # noinspection PyUnresolvedReferences
