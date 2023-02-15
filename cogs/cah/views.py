@@ -6,13 +6,11 @@
 
 from __future__ import annotations
 
-import aiohttp
 import discord
 import inflect as ifl
 from discord import ButtonStyle, Interaction
 from discord.ui import Button, Select
 from discord.ui import button as discord_button
-from yarl import URL
 
 import support
 from cogs import cah
@@ -69,43 +67,29 @@ class CAHPackSelectView(View):
 
         packs = pack_menu.values or ["CAH Base Set"]
 
-        rah_url = URL("https://restagainsthumanity.com")
+        try:
+            self.cardset = await cah.CAHDeck.new(packs)
+        except ConnectionError:
+            rah_repo = support.mona().get_repo("rest-against-humanity")
+            msg = (
+                f"I couldn't communicate with [REST Against Humanity]({rah_repo.homepage}), "
+                f"my source for CAH card data. Please try again.\n"
+                f"\n"
+                f"If the problem persists, open an issue on [REST Against Humanity's GitHub page]"
+                f"({rah_repo.html_url}/issues/new)."
+            )
+            embed = discord.Embed(
+                title="Something went wrong.",
+                description=msg,
+                color=support.Color.error(),
+            )
+            await interaction.edit_original_response(
+                content=None, embed=embed, view=None
+            )
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                rah_url / "api", params={"packs": ",".join(packs)}
-            ) as response:
-                if response.status == 200:
-                    self.cardset = cah.CAHDeck.parse_obj(await response.json())
-                else:
-                    issues_url = (
-                        URL(
-                            support.github()
-                            .get_repo("rest-against-humanity/api")
-                            .html_url
-                        )
-                        / "issues/new"
-                    )
-
-                    msg = (
-                        f"I couldn't communicate with [REST Against Humanity]({rah_url}), "
-                        f"my source for CAH card data. Please try again.\n"
-                        f"\n"
-                        f"If the problem persists, open an issue on [REST Against Humanity's GitHub page]"
-                        f"({issues_url})."
-                    )
-                    embed = discord.Embed(
-                        title="Something went wrong.",
-                        description=msg,
-                        color=support.Color.error(),
-                    )
-                    await interaction.edit_original_response(
-                        content=None, embed=embed, view=None
-                    )
-
-                    return
-
-        self.stop()
+            return
+        else:
+            self.stop()
 
     async def get_packs(self) -> cah.CAHDeck | None:
         with support.Assets.cah():

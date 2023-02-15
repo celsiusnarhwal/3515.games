@@ -10,24 +10,17 @@ import random
 import re
 import uuid
 
+import aiohttp
 import discord
 import nltk
 import orjson
 from attrs import define
 from llist import dllist, dllistnode
-from pydantic import BaseModel as PydanticBaseModel
-from pydantic import Field, validate_arguments, validator
+from pydantic import BaseModel, Field, validate_arguments, validator
 
 from cogs import cah
 from keyboard import *
 from support import Fields
-
-
-class BaseModel(PydanticBaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
-        json_loads = orjson.loads
 
 
 class CAHBlackCard(BaseModel):
@@ -53,6 +46,10 @@ class CAHDeck(BaseModel):
     """
     Represents a set of black and white cards in a Cards Against Humanity game.
     """
+
+    class Config:
+        arbitrary_types_allowed = True
+        extra = "allow"
 
     black: list[CAHBlackCard]
     white: list[Optional[str]]  # not actually optional
@@ -116,6 +113,18 @@ class CAHDeck(BaseModel):
 
     def reset_white(self):
         self.white = self.backup.white.copy()
+
+    @classmethod
+    @validate_arguments
+    async def new(cls, *packs: str) -> Self:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://restagainsthumanity.com/api", params={"packs": packs}
+            ) as resp:
+                if resp.status != 200:
+                    raise ConnectionError
+
+                return cls.parse_obj(await resp.json(loads=orjson.loads))
 
 
 @define(on_setattr=Fields.setters.frozen)
