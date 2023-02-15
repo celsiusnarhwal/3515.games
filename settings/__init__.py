@@ -7,30 +7,31 @@
 """
 Bot settings.
 """
-import importlib as _importlib
-import os as _os
+import importlib
+import os
 
-from path import Path as _Path
+from path import Path
 
-from settings.base import Settings as _Settings
+from settings.base import Settings
 
-# why is this allowed
+__all__ = ["settings"]
+
 if (
-    _env_dir := (
-        _Path(__file__).parent / "envs" / (_env := _os.getenv("DOPPLER_ENVIRONMENT"))
+    env_dir := (
+        Path(__file__).parent / "envs" / (env := os.getenv("DOPPLER_ENVIRONMENT"))
     )
 ).exists():
-    if (_env_dir / (_cfg := _os.getenv("DOPPLER_CONFIG"))).with_suffix(".py").exists():
+    if (env_dir / (cfg := os.getenv("DOPPLER_CONFIG"))).with_suffix(".py").exists():
         try:
-            settings: _Settings = _importlib.import_module(
-                f"settings.envs.{_env}.{_cfg}"
+            settings: Settings = importlib.import_module(
+                f"settings.envs.{env}.{cfg}"
             ).settings
         except ImportError:
             raise ImportError(
-                f"Couldn't import settings from {_env}/{_cfg}.py. "
-                f"Are you sure {_env} is a Python package?"
+                f"Couldn't import settings from {env}/{cfg}.py. "
+                f"Are you sure {env} is a Python package?"
             )
     else:
-        raise Exception(f"No settings configuration for {_env}/{_cfg}")
+        raise Exception(f"No settings configuration for {env}/{cfg}")
 else:
-    raise Exception(f"Unknown environment: {_env}")
+    raise Exception(f"Unknown environment: {env}")
