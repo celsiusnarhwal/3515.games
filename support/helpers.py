@@ -16,9 +16,7 @@ import tomlkit as toml
 from discord import ButtonStyle
 from discord.commands import application_command
 from discord.ext import commands, pages
-from github import AuthenticatedUser
 from github import Github as GitHub
-from github import Repository
 from tomlkit import TOMLDocument
 
 import support
@@ -175,10 +173,16 @@ def pyproject() -> TOMLDocument:
     return toml.load(open("pyproject.toml"))["tool"]["poetry"]
 
 
-def github() -> AuthenticatedUser:
+def mona():
+    """
+    Return a :class:`github.AuthenticatedUser.AuthenticatedUser` object for @celsiusnarhwal.
+    """
     gh = GitHub(os.getenv("GITHUB_TOKEN"))
     return gh.get_user("celsiusnarhwal")
 
 
-def bot_repo() -> Repository:
-    return github().get_repo("3515.games")
+def bot_repo():
+    """
+    Return a :class:`github.Repository.Repository` object for celsiusnarhwal/3515.games.
+    """
+    return mona().get_repo("3515.games")
