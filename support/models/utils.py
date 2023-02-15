@@ -54,8 +54,8 @@ class Fields(validate_arguments(attrs.field).model):
         return values
 
     @classmethod
-    def field(cls, **kwargs):
-        return attrs.field(**cls.parse_obj(kwargs).dict())
+    def field(cls, frozen: bool = False, **kwargs):
+        return attrs.field(**cls.parse_obj(dict(frozen=frozen, **kwargs)).dict())
 
     attr = classmethod(partialmethod(field, init=False))
 
