@@ -4,4 +4,5 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
+from cogs.misc.cog import MiscCog
 from cogs.misc.views import *

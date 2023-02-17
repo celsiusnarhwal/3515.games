@@ -13,7 +13,8 @@ from llist import dllistnode
 import shrine
 import support
 from bot import bot
-from cogs import Cog, uno
+from cogs import uno
+from cogs.base import Cog
 from support import SlashCommandGroup
 
 inflect = ifl.engine()

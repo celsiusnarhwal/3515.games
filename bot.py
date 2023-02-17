@@ -147,5 +147,4 @@ async def on_guild_join(guild: discord.Guild):
         await guild.system_channel.send(embed=embed)
 
 
-# this must be imported for cogs to be registered and imported at the bottom of the file to avoid a circular import
 importlib.import_module("cogs")

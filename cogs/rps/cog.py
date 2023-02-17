@@ -9,7 +9,8 @@ from discord import Option
 
 import support
 from bot import bot
-from cogs import Cog, rps
+from cogs import rps
+from cogs.base import Cog
 from support import SlashCommandGroup
 
 

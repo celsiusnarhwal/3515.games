@@ -9,12 +9,13 @@ from discord.ext import commands
 
 import support
 from bot import bot
-from cogs import Cog, cah, misc, uno
+from cogs import cah, misc, uno
+from cogs.base import Cog
 from support import slash_command
 
 
 @bot.register_cog
-class GeneriCog(Cog):
+class MiscCog(Cog):
     """
     A cog to contain miscellaneous, standalone, commands that don't fit in any of the other cogs.
     """

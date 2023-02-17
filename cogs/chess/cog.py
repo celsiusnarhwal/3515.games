@@ -10,7 +10,8 @@ from discord.ext import commands
 
 import support
 from bot import bot
-from cogs import Cog, chess
+from cogs import chess
+from cogs.base import Cog
 from support import SlashCommandGroup
 
 
