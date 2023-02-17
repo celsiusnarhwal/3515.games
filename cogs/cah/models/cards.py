@@ -16,6 +16,7 @@ import nltk
 import orjson
 from attrs import define
 from llist import dllist, dllistnode
+from ordered_set import OrderedSet
 from pydantic import BaseModel, Field, validate_arguments, validator
 
 from cogs import cah
@@ -27,6 +28,9 @@ class CAHBlackCard(BaseModel):
     """
     Represents a black card in a Cards Against Humanity game.
     """
+
+    class Config:
+        frozen = True
 
     text: str
     pick: int
@@ -51,8 +55,8 @@ class CAHDeck(BaseModel):
         arbitrary_types_allowed = True
         extra = "allow"
 
-    black: list[CAHBlackCard]
-    white: list[Optional[str]]  # not actually optional
+    black: OrderedSet[CAHBlackCard]
+    white: OrderedSet[Optional[str]]  # not actually optional
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -65,10 +69,39 @@ class CAHDeck(BaseModel):
 
     @validator("white")
     def remove_none(cls, v):
-        while None in v:
-            v.remove(None)
-
+        v.remove(None)
         return v
+
+    # because pydantic keeps coercing these to lists for some reason???
+    @validator("black", "white")
+    def cast(cls, v):
+        return OrderedSet(v)
+
+    @classmethod
+    @validate_arguments
+    async def new(cls, *packs: str) -> Self:
+        """
+        Create a new deck given the exact, case-sensitive, names of one or more Cards Against Humanity packs.
+
+        Parameters
+        ----------
+        packs : str
+            The packs to include.
+
+        Returns
+        -------
+        CAHDeck
+            A new deck.
+
+        """
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://restagainsthumanity.com/api", params={"packs": packs}
+            ) as resp:
+                if resp.status != 200:
+                    raise ConnectionError
+
+                return cls.parse_obj(await resp.json(loads=orjson.loads))
 
     def get_random_black(self) -> CAHBlackCard:
         """
@@ -80,11 +113,9 @@ class CAHDeck(BaseModel):
         return self.black.pop(random.randint(0, len(self.black) - 1))
 
     @validate_arguments
-    def get_random_white(self, num_cards: Annotated[int, Field(ge=1)] = 1) -> list[str]:
+    def get_random_white(self, num_cards: Annotated[int, Field(ge=1)] = 1) -> set[str]:
         """
-        Return a given number of random white cards, removing them from the deck.
-
-        Lists returned by this method will never contain duplicate white cards.
+        Return a given number of random, unique, white cards, removing them from the deck.
 
         Parameters
         ----------
@@ -93,8 +124,8 @@ class CAHDeck(BaseModel):
 
         Returns
         -------
-        list[str]
-            A list of white cards.
+        set[str]
+            A set of white cards.
         """
         if num_cards > len(self.white):
             self.reset_white()
@@ -104,7 +135,7 @@ class CAHDeck(BaseModel):
             self.white[i] for i in random.sample(range(len(self.white)), num_cards)
         }
 
-        self.white = list(set(self.white) - cards)
+        self.white.difference_update(cards)
 
         return cards
 
@@ -114,17 +145,10 @@ class CAHDeck(BaseModel):
     def reset_white(self):
         self.white = self.backup.white.copy()
 
-    @classmethod
-    @validate_arguments
-    async def new(cls, *packs: str) -> Self:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://restagainsthumanity.com/api", params={"packs": packs}
-            ) as resp:
-                if resp.status != 200:
-                    raise ConnectionError
+    def __repr__(self):
+        return f"CAHDeck(black={len(self.black)}, white={len(self.white)})"
 
-                return cls.parse_obj(await resp.json(loads=orjson.loads))
+    __str__ = __repr__
 
 
 @define(on_setattr=Fields.setters.frozen)
