@@ -19,23 +19,8 @@ def verify_context(
     level: str, *, verify_host: bool = False, is_pseudocommand: bool = False
 ):
     """
-    A decorator which implements a context verification system for UNO games. This system has four levels. In
-    order, they are:
-
-    - "thread" (verifies that the context is an UNO game thread)
-    - "player" (verifies that the invoker is a player in the UNO game)
-    - "game" (verifies that the game has been started)
-    - "turn" (verifies that it's the invoking players turn)
-
-
-    Each verification level is inclusive of all previous ones, and *all* verification checks for the specified level
-    must pass in order for the decorated command to execute.
-
-    If the ``verify_host`` flag is set to True, the decorator will also check that the invoking user is
-    the Game Host; this, however, is independent of the four verificiation levels described above.
-
-    :param level: The verification level.
-    :param verify_host: Whether or not to verify that the invoking user is the Game Host.
+    A decorator that can dynamically allow or deny the use of a Cards Against Humanity command based on the context
+    in which it is used.
     """
 
     async def predicate(ctx: discord.ApplicationContext) -> bool:
@@ -146,16 +131,17 @@ def verify_context(
             async def popular_vote_mode() -> bool:
                 if game.is_voting:
                     if player.has_voted:
+                        vote = discord.utils.find(
+                            lambda c: player in c.voters, game.candidates
+                        )
+
                         message = "Please wait for the other players to finish."
                         embed = discord.Embed(
                             title="You've already cast your vote.",
                             description=message,
                             color=support.Color.error(),
-                        )
-                        vote = discord.utils.find(
-                            lambda c: player in c.voters, game.candidates
-                        )
-                        embed.add_field(name="Your Vote", value=vote.text)
+                        ).add_field(name="Your Vote", value=vote.text)
+
                         await ctx.respond(embed=embed, ephemeral=True)
 
                         return False

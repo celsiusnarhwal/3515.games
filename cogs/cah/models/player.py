@@ -21,13 +21,36 @@ inflect = ifl.engine()
 
 @define
 class CAHPlayer(BasePlayer):
+    """
+    A player in a Cards Against Humanity game.
+
+    Parameters
+    ----------
+    game: cah.CAHGame
+        The game the player is in.
+
+    Attributes
+    ----------
+    points: int
+        The player's point total.
+    consecutive_timeouts: int
+        The number of consecutive times the player has timed out.
+    hand: list[str]
+        The white cards in the player's possession.
+    has_submitted: bool
+        Whether the player has made a submission for the current round.
+    has_voted: bool
+        Whether the player has cast a vote for the current round. Applicable only to popular vote games.
+    terminable_views: list[cah.CAHTerminableView]
+    """
+
     game: cah.CAHGame
 
     points: int = Fields.attr(default=0)
     consecutive_timeouts: int = Fields.attr(default=0)
     hand: list[str] = Fields.attr(factory=list)
     has_submitted: bool = Fields.attr(default=False)
-    has_voted: bool = Fields.attr(default=False)  # only used in popular vote games
+    has_voted: bool = Fields.attr(default=False)
     terminable_views: list[cah.CAHTerminableView] = Fields.attr(factory=list)
 
     async def show_hand(self, ctx: discord.ApplicationContext):
@@ -57,18 +80,22 @@ class CAHPlayer(BasePlayer):
 
     async def force_pick(self, player_removal: bool = False):
         """
-        Picks white cards on the player's behalf.
-        :param player_removal: Flags whether the cards are being picked on the player's behalf as a result of them
-        being removed from the game.
+        Pick random white cards on the player's behalf.
+
+        Parameters
+        ----------
+        player_removal: bool
+            Flags whether this is happening as a consequence of the player's removal from the game.
         """
         # pick x number of cards from the player's hand at random, depending on how many white cards need to be played
         cards = [
             self.hand[i]
             for i in random.sample(range(len(self.hand)), self.game.black_card.pick)
         ]
+
         # create candidates from those cards and randomly choose one of them to submit
         candidate: cah.CAHCandidateCard = random.choice(
-            cah.CAHCandidateCard.make_candidates(self, *cards)
+            cah.CAHCandidateCard.create(self, *cards)
         )
 
         await self.submit_candidate(candidate, player_removal=player_removal)
@@ -77,10 +104,14 @@ class CAHPlayer(BasePlayer):
         self, candidate: cah.CAHCandidateCard, player_removal: bool = False
     ):
         """
-        Submits the player's candidate card.
-        :param candidate: The candidate card to submit.
-        :param player_removal: Flags whether the submission is being made on the player's behalf as a result of them
-        being removed from the game.
+        Submit a candidate card.
+
+        Parameters
+        ----------
+        candidate: cah.CAHCandidateCard
+            The candidate card to submit.
+        player_removal: bool
+            Flags whether this is happening automatically as a consequence of the player's removal from the game.
         """
         self.has_submitted = True
 
@@ -103,7 +134,7 @@ class CAHPlayer(BasePlayer):
 
     async def vote(self, ctx: discord.ApplicationContext):
         """
-        Prompts the player to vote for a candidate card.
+        Prompt the player to vote for a candidate card.
         """
         selection: cah.CAHCandidateCard = await cah.CAHVotingView(
             ctx=ctx, game=self.game
@@ -117,7 +148,7 @@ class CAHPlayer(BasePlayer):
 
     async def force_vote(self):
         """
-        Votes for a candidate card on the player's behalf.
+        Vote for a random candidate card on the player's behalf.
         """
         await self.terminate_views()
         await self.game.submit_vote(
@@ -126,15 +157,18 @@ class CAHPlayer(BasePlayer):
 
     def add_cards(self, num_cards):
         """
-        Adds white cards to the player's hand.
+        Add white cards to the player's hand.
 
-        :param num_cards: The number of white cards to add to the player's hand.
+        Parameters
+        ----------
+        num_cards: int
+            The number of cards to add.
         """
         self.hand.extend(self.game.deck.get_random_white(num_cards))
 
     def voice_overwrites(self) -> discord.Permissions:
         """
-        Returns the voice channel permission overwrites for the player.
+        Return the voice channel permission overwrites for the player.
         """
         if self.game.host == self.user:
             overwrites = {
@@ -158,9 +192,6 @@ class CAHPlayer(BasePlayer):
     def get_ranking(self, with_string: bool = False) -> str:
         """
         Returns a string representation of the player's ranking in the game. (e.g. "1st", "2nd", "3rd", etc.).
-
-        :param with_string: If True, the method will return the full ranking string in the
-        format "Xth of Y (tied with Z others)".
         """
         leaderboard_group = discord.utils.find(
             lambda group: self in group, self.game.get_leaderboard()

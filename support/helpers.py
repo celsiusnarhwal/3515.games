@@ -168,14 +168,14 @@ def fuzz(num: int | float) -> float:
 
 def pyproject() -> TOMLDocument:
     """
-    Return a dictionary-like object representing 3515.games pyproject.toml file.
+    Read the tool.poetry section of 3515.games' pyproject.toml file as a dictionary-like object.
     """
     return toml.load(open("pyproject.toml"))["tool"]["poetry"]
 
 
 def mona():
     """
-    Return a :class:`github.AuthenticatedUser.AuthenticatedUser` object for @celsiusnarhwal.
+    Return a PyGithub object for authenticated interactions with the GitHub API as @celsiusnarhwal.
     """
     gh = GitHub(os.getenv("GITHUB_TOKEN"))
     return gh.get_user("celsiusnarhwal")
@@ -183,6 +183,6 @@ def mona():
 
 def bot_repo():
     """
-    Return a :class:`github.Repository.Repository` object for celsiusnarhwal/3515.games.
+    Return a PyGithub object for authenticated interactions with the celsiusnarhwal/3515.games GitHub repository.
     """
     return mona().get_repo("3515.games")

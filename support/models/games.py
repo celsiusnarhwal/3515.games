@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import asyncio
+from abc import ABC, abstractmethod
 
 import discord
 import inflect as ifl
@@ -21,7 +22,7 @@ inflect = ifl.engine()
 
 
 @define
-class ThreadedGame:
+class ThreadedGame(ABC):
     __games__: ClassVar[dict[int, Self]]
 
     name: ClassVar[str] = ...
@@ -49,9 +50,17 @@ class ThreadedGame:
         """
         type(self).__games__.pop(self.thread.id)
 
+    @abstractmethod
+    async def force_close(self, *args, **kwargs):
+        ...
+
+    @abstractmethod
+    async def retrieve_player(self, *args, **kwargs):
+        ...
+
 
 @define
-class HostedGame(ThreadedGame):
+class HostedGame(ThreadedGame, ABC):
     """
     Consolidates common attributes for hosted multiplayer games. A hosted multiplayer a game is any game that supports
     more than two players where one of those players is deemed the "Game Host".
@@ -436,7 +445,7 @@ class HostedGame(ThreadedGame):
 @define
 class BasePlayer:
     """
-    The base class for objects representing players in a game.
+    Base class for objects representing players in a game.
     """
 
     user: discord.Member = Fields.field(frozen=True)
@@ -472,8 +481,8 @@ class BasePlayer:
     @property
     def display_avatar(self) -> str:
         """
-        The URL of the server avatar of the player's associated user. Equivalent to BasePlayer.avatar
-        if no server avatar exists.
+        The URL of the server avatar of the player's associated user. Equivalent to :attr:`avatar` if no server
+        avatar exists.
         """
         return self.user.display_avatar.url
 

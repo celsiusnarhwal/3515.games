@@ -26,7 +26,7 @@ from support import Fields
 
 class CAHBlackCard(BaseModel):
     """
-    Represents a black card in a Cards Against Humanity game.
+    A black card.
     """
 
     class Config:
@@ -48,7 +48,7 @@ class CAHBlackCard(BaseModel):
 
 class CAHDeck(BaseModel):
     """
-    Represents a set of black and white cards in a Cards Against Humanity game.
+    A deck of black and white cards.
     """
 
     class Config:
@@ -72,7 +72,7 @@ class CAHDeck(BaseModel):
         v.remove(None)
         return v
 
-    # because pydantic keeps coercing these to lists for some reason???
+    # EVEN THOUGH I LITERALLY SAID IT WAS SUPPOSED TO BE AN ORDEREDSET. FUCKER
     @validator("black", "white")
     def cast(cls, v):
         return OrderedSet(v)
@@ -154,8 +154,9 @@ class CAHDeck(BaseModel):
 @define(on_setattr=Fields.setters.frozen)
 class CAHCandidateCard:
     """
-    Represents a candidate card in a Cards Against Humanity game. A candidate card is a black card whose blank spaces
-    have been filled by white cards.
+    A candidate card.
+
+    A candidate card is the combination of a black card and one or more player-selected white cards.
     """
 
     text: str
@@ -168,9 +169,7 @@ class CAHCandidateCard:
     uuid: str = Fields.attr(factory=lambda: uuid.uuid4().hex)
 
     @classmethod
-    def make_candidates(
-        cls, player: cah.CAHPlayer, *white_cards
-    ) -> list[CAHCandidateCard]:
+    def create(cls, player: cah.CAHPlayer, *white_cards) -> list[CAHCandidateCard]:
         """
         Creates candidate cards.
 

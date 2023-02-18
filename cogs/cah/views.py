@@ -21,8 +21,7 @@ inflect = ifl.engine()
 
 class CAHTerminableView(View):
     """
-    A subclass of :class:`EnhancedView` whose views are set to automatically disabled themselves and stop
-    listening for interactions upon the end of the turn of the player who created them.
+    A special that kills itself at the end of the turn of the player who created them.
     """
 
     def __init__(self, *args, **kwargs):
@@ -34,6 +33,10 @@ class CAHTerminableView(View):
 
 
 class CAHPackSelectView(View):
+    """
+    Graphical interface for selecting card packs.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cardset: cah.CAHDeck = None
@@ -131,6 +134,10 @@ class CAHPackSelectView(View):
 
 
 class CAHCardSelectView(CAHTerminableView):
+    """
+    Graphical interface for selecting cards to play.
+    """
+
     def __init__(self, player: cah.CAHPlayer, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.player = player
@@ -145,9 +152,7 @@ class CAHCardSelectView(CAHTerminableView):
         )
 
         if not self.candidates:
-            self.candidates = cah.CAHCandidateCard.make_candidates(
-                self.player, *menu.values
-            )
+            self.candidates = cah.CAHCandidateCard.create(self.player, *menu.values)
 
             if self.game.black_card.pick == 2:
                 self.clear_items()
@@ -248,6 +253,10 @@ class CAHCardSelectView(CAHTerminableView):
 
 
 class CAHVotingView(CAHTerminableView):
+    """
+    Graphical interface for voting on submissions.
+    """
+
     def __init__(self, game: cah.CAHGame, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.game = game
@@ -328,6 +337,10 @@ class CAHVotingView(CAHTerminableView):
 
 
 class CAHStatusCenterView(View):
+    """
+    Graphical interface for the CAH Status Center.
+    """
+
     def __init__(self, game: cah.CAHGame, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.game = game
@@ -465,6 +478,10 @@ class CAHStatusCenterView(View):
 
 
 class CAHKickPlayerView(support.UserSelectionView):
+    """
+    Graphical interface for kicking a player from a Cards Against Humanity game.
+    """
+
     def __init__(self, *args, **kwargs):
         kwargs.update(
             {
@@ -536,6 +553,10 @@ class CAHKickPlayerView(support.UserSelectionView):
 
 
 class CAHTransferHostView(support.UserSelectionView):
+    """
+    Graphical interface for transferring host powers to another player in a Cards Against Humanity game.
+    """
+
     def __init__(self, *args, **kwargs):
         kwargs.update(
             {

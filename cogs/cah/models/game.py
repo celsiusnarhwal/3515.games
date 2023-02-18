@@ -28,6 +28,10 @@ inflect = ifl.engine()
 
 @define(slots=False)
 class CAHGame(HostedGame):
+    """
+    A Cards Against Humanity game.
+    """
+
     __games__: ClassVar = {}
 
     name: ClassVar = "Cards Against Humanity"
@@ -57,14 +61,23 @@ class CAHGame(HostedGame):
 
         await super().force_close(reason)
 
-    def retrieve_player(self, user, return_node=False) -> cah.CAHPlayer | dllistnode:
+    def retrieve_player(
+        self, user: discord.User, return_node: bool = False
+    ) -> cah.CAHPlayer | dllistnode:
         """
-        Retrieves a player from ``CAHGame().players`` given that player's user object.
+        Convert a :class:`discord.User` object to its corresponding :class:`CAHPlayer` object, if one exists.
 
-        :param user: The user object corresponding to the player. This can be a discord.User, discord.Member, or
-        discord.ThreadMember object.
-        :param return_node: If True, the player's dllistnode will be returned instead of their UnoPlayer object.
-        :return: An UnoPlayer object.
+        Parameters
+        ----------
+        user: discord.User
+            The player's user object.
+        return_node: bool
+            Whether to return the node containing the player object or the player object itself.
+
+        Returns
+        -------
+        cah.CAHPlayer | dllistnode
+            The player object or the node containing the player object.
         """
 
         if return_node:
@@ -77,9 +90,6 @@ class CAHGame(HostedGame):
             )
 
     async def open_lobby(self):
-        """
-        Sends an introductory message at the creation of an CAH game thread and pins said message to that thread.
-        """
         with shrine.Torii.cah() as torii:
             template = torii.get_template("lobby-open.md")
             intro_message = template.render(host=self.host.mention)
@@ -105,11 +115,16 @@ class CAHGame(HostedGame):
         self, ctx: discord.ApplicationContext, user: discord.User, is_host=False
     ):
         """
-        Adds a player to a not-yet-started CAH game.
+        Add a player to the game.
 
-        :param ctx: An ApplicationContext object.
-        :param user: The discord.User object corresponding to the player.
-        :param is_host: Flags whether the player being added is also the Game Host. Defaults to False.
+        Parameters
+        ----------
+        ctx: discord.ApplicationContext
+
+        user: discord.User
+            The player to add.
+        is_host: bool
+            Whether the player is the Game Host.
         """
         if user not in await self.thread.fetch_members():
             await self.thread.add_user(user)
@@ -152,9 +167,12 @@ class CAHGame(HostedGame):
 
     async def remove_player(self, player_node: dllistnode):
         """
-        Removes a player from an CAH game.
+        Remove a player from the game.
 
-        :param player_node: The dllistnode object corresponding to the player to be removed.
+        Parameters
+        ----------
+        player_node: dllistnode
+            The node containing the player to remove.
         """
 
         player: cah.CAHPlayer = player_node.value
@@ -213,9 +231,12 @@ class CAHGame(HostedGame):
 
     async def inactivity_kick(self, player: cah.CAHPlayer):
         """
-        Kicks a player from a CAH game for inactivity.
+        Kick a player for inactivity.
 
-        :param player: The cah.CAHPlayer object corresponding to the player to be kicked.
+        Parameters
+        ----------
+        player: cah.CAHPlayer
+            The player to kick.
         """
         msg = f"{player.user.mention} has been removed for inactivity."
         embed = discord.Embed(
@@ -239,7 +260,7 @@ class CAHGame(HostedGame):
 
     async def start_game(self):
         """
-        Starts a CAH game.
+        Start the game.
         """
         self.is_joinable = False
         await self.thread.edit(name=f"{self.short_name} with {self.host.name}!")
@@ -283,7 +304,7 @@ class CAHGame(HostedGame):
 
     async def start_round(self):
         """
-        Starts a new round of a CAH game.
+        Start a new round.
         """
         self.turn_uuid = uuid.uuid4()
         self.card_czar = (
@@ -319,7 +340,7 @@ class CAHGame(HostedGame):
 
     async def start_voting(self):
         """
-        Starts the voting phase of a CAH round.
+        Start the voting phase of the current round.
         """
         self.turn_uuid = uuid.uuid4()
         self.is_voting = True
@@ -347,17 +368,23 @@ class CAHGame(HostedGame):
 
     async def submit_vote(self, candidate: cah.CAHCandidateCard, **_):
         """
-        Submits a vote for a candidate card.
+        Submit a vote for a candidate card.
 
-        :param candidate: The candidate card to submit a vote for.
+        Parameters
+        ----------
+        candidate: cah.CAHCandidateCard
+            The candidate card.
         """
         await self.end_round(winning_submission=candidate)
 
     async def end_round(self, winning_submission: cah.CAHCandidateCard):
         """
-        Ends a round of a CAH game.
+        End the current round.
 
-        :param winning_submission: The round's winning submission.
+        Parameters
+        ----------
+        winning_submission: cah.CAHCandidateCard
+            The winning submission.
         """
         self.turn_uuid = None
         self.is_voting = False
@@ -408,9 +435,17 @@ class CAHGame(HostedGame):
 
     async def end_game(self, game_winner: cah.CAHPlayer):
         """
-        Ends a CAH game. Triggered only by the win condition; other endings are handled by ``force_close()``.
+        End the game.
 
-        :param game_winner: The winner of the game.
+        Parameters
+        ----------
+        game_winner: cah.CAHPlayer
+            The player who won the game.
+
+        Notes
+        -----
+        This method is only triggered when a player meets the win condition; other game-ending scenarios are
+        handled by :meth:`force_close`.
         """
         self.__games__.pop(self.thread.id)
 
@@ -435,7 +470,9 @@ class CAHGame(HostedGame):
 
     async def turn_timer(self):
         """
-        Enforces a time limit on player actions.
+        Start a timer for the current turn.
+
+        The game will forcefully progress if this timer expires and the current turn has not yet ended.
         """
 
         async def play_callback():
@@ -479,7 +516,7 @@ class CAHGame(HostedGame):
 
         turn_uuid = self.turn_uuid
 
-        await asyncio.sleep(self.settings.timeout)
+        await asyncio.sleep(support.fuzz(self.settings.timeout))
 
         if turn_uuid == self.turn_uuid and self.retrieve_game(self.thread.id):
             await play_callback() if not self.is_voting else await vote_callback()
@@ -520,9 +557,17 @@ class CAHGame(HostedGame):
 
     async def kick_player(self, player_node: dllistnode):
         """
-        Kicks a player from the game.
+        Kick a player from the game.
 
-        :param player_node: The node of the player to kick.
+        Parameters
+        ----------
+        player_node: dllistnode
+            The node of the player to kick.
+
+        Notes
+        -----
+        This method is only invoked at the explicit request of the Game Host. It shouldn't be confused with
+        :meth:`inactivity_kick`, which is invoked automatically to punish idle players.
         """
         embed = discord.Embed(
             title="Player Kicked",
@@ -546,7 +591,13 @@ class CAHGame(HostedGame):
 
 class CAHPopularVoteGame(CAHGame):
     """
-    :class:`CAHGame` subclass for popular vote games.
+    A Cards Against Humanity game where winners are determined by popular vote rather than a Card Czar.
+
+    An object of this class is created rather than a :class:`CAHGame` object when `/cah create` command is invoked
+    with the `voting` option set to "Popular Vote".
+
+    This class overrides the functionality of some methods to accommodate the popular vote system. Its objects
+    can generally be treated as equivalent to those of :class:`CAHGame`.
     """
 
     async def remove_player(self, player_node: dllistnode):
@@ -703,6 +754,10 @@ class CAHPopularVoteGame(CAHGame):
 
 @define(frozen=True)
 class CAHGameSettings:
+    """
+    Settings for a Cards Against Humanity game.
+    """
+
     max_players: int
     points_to_win: int
     timeout: int
