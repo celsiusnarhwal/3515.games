@@ -11,53 +11,52 @@ import math
 import random
 import uuid
 from collections import Counter
-from typing import TypedDict, Self
+from contextlib import asynccontextmanager
 
 import chess as pychess
 import discord
+from attrs import define
 from chess import square_name
+from pydantic import BaseModel, validate_arguments
 
 import shrine
 import support
 from cogs import chess
-from support import posessive
+from keyboard import *
+from shrine.kami import posessive
+from support import BasePlayer, Fields, ThreadedGame
 
 
-class ChessGame:
-    __all_games__ = dict()
+@define(slots=False)
+class ChessGame(ThreadedGame):
+    __games__: ClassVar[dict[int, Self]] = {}
 
-    def __init__(self, players, thread: discord.Thread, saving_enabled: bool):
-        self.thread = thread
-        self.saving_enabled = saving_enabled
+    players: list[ChessPlayer] = Fields.field()
+    saving_enabled: bool = Fields.field(frozen=True)
 
-        self.guild = thread.guild
-        self.has_started = False
-        self.players = [ChessPlayer(player, self) for player in players]
-        self.current_player = None
-        self.turn_number = 0
-        self.turn_uuid = None
-        self.board = ChessBoard()
-        self.turn_record: discord.Embed = None
+    has_started: bool = Fields.attr(default=False)
+    current_player: ChessPlayer = Fields.attr(default=None)
+    turn_number: int = Fields.attr(default=0)
+    turn_uuid: uuid.UUID = Fields.attr(default=None)
+    white: ChessPlayer = Fields.attr(default=None)
+    black: ChessPlayer = Fields.attr(default=None)
+    turn_record: discord.Embed = Fields.attr(default=None)
+
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+
+        self.board: ChessBoard = ChessBoard()
+        self.processor = ChessEventProcessor(self)
+        self.players = [ChessPlayer(player, self) for player in self.players]
 
         for player in self.players:
-            player.opponent = (
-                self.players[0] if player == self.players[1] else self.players[1]
-            )
-
-        self.white = None
-        self.black = None
-
-        self.__all_games__[self.thread.id] = self
+            player.set_opponent()
 
     async def game_timer(self):
-        await asyncio.sleep(43200)
+        await asyncio.sleep(60**2 * 8)
 
         if self.retrieve_game(self.thread.id):
             await self.force_close("time_limit")
-
-    @classmethod
-    def retrieve_game(cls, thread_id: int) -> Self:
-        return cls.__all_games__.get(thread_id)
 
     @classmethod
     def retrieve_duplicate_game(cls, players, guild) -> Self:
@@ -65,7 +64,7 @@ class ChessGame:
             lambda game: Counter([user.id for user in players])
             == Counter([player.user.id for player in game.players])
             and game.guild == guild,
-            cls.__all_games__.values(),
+            cls.__games__.values(),
         )
 
     def retrieve_player(self, user):
@@ -74,7 +73,7 @@ class ChessGame:
         )
 
     async def force_close(self, reason: str):
-        self.__all_games__.pop(self.thread.id)
+        self.kill()
 
         async def thread_deletion():
             for player in self.players:
@@ -86,7 +85,7 @@ class ChessGame:
                 embed = discord.Embed(
                     title="Your chess match was forced to end.",
                     description=msg,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                     timestamp=discord.utils.utcnow(),
                 )
 
@@ -102,7 +101,7 @@ class ChessGame:
                 embed = discord.Embed(
                     title="Your chess match was forced to end.",
                     description=msg,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                     timestamp=discord.utils.utcnow(),
                 )
 
@@ -118,7 +117,7 @@ class ChessGame:
             embed = discord.Embed(
                 title="This chess match was forced to end.",
                 description=msg,
-                color=support.Color.red(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
 
@@ -140,22 +139,22 @@ class ChessGame:
 
     async def open_lobby(self):
         msg = (
-            "Your chess match will take place in this thread.\n"
+            "Your chess game will take place in this thread.\n"
             "\n"
-            "When you're ready, type `/chess ready`. When both players are ready, the match will begin.\n"
+            "When you're ready, type `/chess ready`. When both players are ready, the game will begin.\n"
             "\n"
-            "Spectators are welcome, but only the players will be permitted to talk in this thread.\n"
+            "You two and server moderators are the only ones who can talk here. (Spectators are welcome, though.)\n"
         )
 
         embed = discord.Embed(
-            title=f"Welcome, {self.players[0].user.name} and {self.players[1].user.name}.\n",
+            title=f"Hi, {self.players[0].user.name} and {self.players[1].user.name}!\n",
             description=msg,
             color=support.Color.mint(),
         )
 
         if self.saving_enabled:
             embed.set_footer(
-                text="Game saving is enabled. Please review /about > Legal > Privacy Policy."
+                text="Game saving is enabled. Please review /about > Privacy."
             )
         else:
             embed.set_footer(text="Game saving is disabled.")
@@ -193,7 +192,7 @@ class ChessGame:
         )
 
         async with self.thread.typing():
-            with chess.get_board_png(board=self.board) as board_png:
+            async with self.board.image() as board_png:
                 embed.set_image(url=f"attachment://{board_png.filename}")
                 await self.thread.send(embed=embed, file=board_png)
 
@@ -227,7 +226,7 @@ class ChessGame:
         self.turn_uuid = None
 
         async with self.thread.typing():
-            with chess.get_board_png(board=self.board) as board_png:
+            async with self.board.image() as board_png:
                 self.turn_record.set_image(url=f"attachment://{board_png.filename}")
                 await self.thread.send(embed=self.turn_record, file=board_png)
 
@@ -245,7 +244,9 @@ class ChessGame:
         if turn_uuid == self.turn_uuid and self.retrieve_game(self.thread.id):
             msg = f"{self.current_player.user.mention} has 30 seconds left to move."
             embed = discord.Embed(
-                title="30 Second Warning", description=msg, color=support.Color.orange()
+                title="30 Second Warning",
+                description=msg,
+                color=support.Color.caution(),
             )
             await self.thread.send(embed=embed)
 
@@ -255,14 +256,14 @@ class ChessGame:
                 embed = discord.Embed(
                     title=f"{self.current_player.user.name} timed out.",
                     description=msg,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await self.thread.send(embed=embed)
 
                 await self.end_game(reason="timeout", player=self.current_player)
 
     async def end_game(self, reason: str, **kwargs):
-        self.__all_games__.pop(self.thread.id)
+        self.kill()
 
         async def forfeit():
             forfeiter: ChessPlayer = kwargs.get("player")
@@ -275,7 +276,7 @@ class ChessGame:
                 msg = f"{winner.user.mention} wins by forfeit."
 
                 return discord.Embed(
-                    title=f"Chess: Game Over! {winner.user.name} wins!",
+                    title=f"Game Over! {winner.user.name} wins!",
                     description=msg,
                     color=support.Color.mint(),
                 )
@@ -289,7 +290,7 @@ class ChessGame:
                 embed = discord.Embed(
                     title="This chess match was forfeited.",
                     description=msg,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
 
                 forfeit_msg = await self.thread.send(embed=embed)
@@ -301,7 +302,7 @@ class ChessGame:
             msg = "Both players agreed to a draw."
 
             return discord.Embed(
-                title="Chess: Game Over! It's a draw!",
+                title="Game Over! It's a draw!",
                 description=msg,
                 color=support.Color.mint(),
             )
@@ -317,7 +318,7 @@ class ChessGame:
             embed = discord.Embed(
                 title="You timed out.",
                 description=msg,
-                color=support.Color.red(),
+                color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),
             )
             await offender.user.send(embed=embed)
@@ -327,7 +328,7 @@ class ChessGame:
             msg = f"{offender.opponent.user.mention} wins on time."
 
             return discord.Embed(
-                title=f"Chess: Game Over! {offender.opponent.user.name} wins!",
+                title=f"Game Over! {offender.opponent.user.name} wins!",
                 description=msg,
                 color=support.Color.mint(),
             )
@@ -347,7 +348,7 @@ class ChessGame:
             msg = f"{winner.user.mention} wins by checkmate. Congratulations!"
 
             return discord.Embed(
-                title=f"Chess: Game Over! {winner.user.name} wins!",
+                title=f"Game Over! {winner.user.name} wins!",
                 description=msg,
                 color=support.Color.mint(),
             )
@@ -363,7 +364,6 @@ class ChessGame:
         embed_to_send = await reason_map[reason]()
 
         if embed_to_send:
-
             if self.saving_enabled and self.board.move_stack:
                 embed_to_send.description += (
                     f"\n\nPlayers can save a record of this game with the Save Game button "
@@ -386,16 +386,15 @@ class ChessGame:
         await self.thread.delete()
 
 
-class ChessPlayer:
-    def __init__(self, user: discord.User, game: ChessGame):
-        self.user = user
-        self.game = game
+@define
+class ChessPlayer(BasePlayer):
+    game: ChessGame
 
-        self.is_ready = False
-        self.opponent = None
-        self.has_proposed_draw = False
-        self.color: pychess.Color = None
-        self.piece_symbols: list[str] = None
+    is_ready: bool = Fields.attr(default=False)
+    opponent: ChessPlayer = Fields.attr(default=None)
+    has_proposed_draw: bool = Fields.attr(default=False)
+    color: pychess.Color = Fields.attr(default=None)
+    piece_symbols: list[str] = Fields.attr(default=None)
 
     async def ready(self):
         self.is_ready = True
@@ -413,12 +412,11 @@ class ChessPlayer:
     async def move_with_gui(self, ctx: discord.ApplicationContext):
         view = chess.ChessMoveView(ctx=ctx, player=self)
 
-        move = await view.initiate_view()
+        move = await view.start()
 
         self.game.board.push(move)
 
-        processor = ChessEventProcessor(self.game)
-        processor.move_event(player=self, move=move, move_data=view.move_data)
+        self.game.processor.move_event(player=self, move=move, data=view.move_data)
 
         await self.end_turn()
 
@@ -444,24 +442,26 @@ class ChessPlayer:
             board_copy = self.game.board.copy()
             board_copy.pop()
 
-            move_data: ChessMoveData = {
-                "piece": board_copy.piece_at(move.from_square),
-                "origin": move.from_square,
-                "destination": move.to_square,
-                "promotion": ChessPiece.from_piece_type(move.promotion, self.color),
-            }
+            # not using construct() here causes a bizarre ConfigError with pydantic so we'll just have to cope for now
+            move_data = ChessMoveData.construct(
+                piece=board_copy.piece_at(move.from_square),
+                origin=move.from_square,
+                destination=move.to_square,
+                promotion=ChessPiece.from_piece_type(move.promotion, self.color),
+            )
 
-            processor = ChessEventProcessor(self.game)
-            processor.move_event(player=self, move=move, move_data=move_data)
+            self.game.processor.move_event(player=self, move=move, data=move_data)
 
             await self.end_turn()
         else:
-            with shrine.Torii.chess() as torii:
-                template = torii.get_template("invalid-move.md")
-                msg = template.render()
+            msg = (
+                "The move you entered is invalid. You must enter a valid move using either algebraic or "
+                "Universal Chess Interface (UCI) notation. If you're confused, use `/chess move` without "
+                "specifying the `move` option to make a move using the graphical interface."
+            )
 
             embed = discord.Embed(
-                title="Invalid Move", description=msg, color=support.Color.red()
+                title="Invalid Move", description=msg, color=support.Color.error()
             )
 
             await ctx.respond(embed=embed, ephemeral=True)
@@ -482,7 +482,7 @@ class ChessPlayer:
                 f"by proposing a draw themselves or reject the proposal by doing nothing. "
             )
             embed = discord.Embed(
-                title="Draw Proposed", description=msg, color=support.Color.orange()
+                title="Draw Proposed", description=msg, color=support.Color.caution()
             )
             await self.game.thread.send(embed=embed)
         else:
@@ -519,6 +519,9 @@ class ChessPlayer:
 
         return embed_colors[self.color]
 
+    def set_opponent(self):
+        self.opponent = discord.utils.find(lambda p: p is not self, self.game.players)
+
     def __str__(self):
         return self.user.name
 
@@ -528,13 +531,15 @@ class ChessBoard(pychess.Board):
         piece = super().piece_at(square)
         return ChessPiece.from_base_piece(piece) if piece else None
 
+    @asynccontextmanager
+    async def image(self) -> discord.File:
+        async with chess.get_board_image(board=self) as image:
+            yield image
+
 
 class ChessPiece(pychess.Piece):
     def name(self) -> str:
         return pychess.PIECE_NAMES[self.piece_type]
-
-    def emoji(self):
-        pass
 
     @classmethod
     def from_base_piece(cls, piece: pychess.Piece) -> ChessPiece:
@@ -558,27 +563,28 @@ class ChessPiece(pychess.Piece):
         return self.symbol() == other.symbol()
 
 
-class ChessMoveData(TypedDict):
-    piece: chess.ChessPiece
-    origin: int
-    destination: int
-    promotion: chess.ChessPiece
+class ChessMoveData(BaseModel):
+    piece: ChessPiece = None
+    origin: int = 0
+    destination: int = 0
+    promotion: ChessPiece = None
+
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
 
 
+@define(frozen=True)
 class ChessEventProcessor:
-    def __init__(self, game: ChessGame):
-        self.game = game
+    game: ChessGame
 
-    def move_event(
-        self, player: ChessPlayer, move: pychess.Move, move_data: ChessMoveData
-    ):
-        piece: ChessPiece = move_data["piece"]
-        origin: str = square_name(move_data["origin"])
-        destination: str = square_name(move_data["destination"])
-
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    def move_event(self, player: ChessPlayer, move: pychess.Move, data: ChessMoveData):
         msg = (
-            f"**{player.user.mention}** moves **{piece}** from {origin.capitalize()} "
-            f"to {destination.capitalize()}."
+            f"**{player.user.mention}** moves **{data.piece}** from {square_name(data.origin).capitalize()} "
+            f"to {square_name(data.destination).capitalize()}."
         )
 
         embed = discord.Embed(
@@ -593,7 +599,7 @@ class ChessEventProcessor:
         self.game.turn_record = embed
 
         if move.promotion:
-            self.promotion_event(self, move_data)
+            self.promotion_event(self, data)
 
         board_copy = self.game.board.copy(stack=1)
         board_copy.pop()
@@ -610,15 +616,11 @@ class ChessEventProcessor:
         elif self.game.board.is_check():
             self.check_event(player.opponent)
 
-    def promotion_event(self, player: ChessPlayer, move_data: dict):
-        piece: ChessPiece = ChessPiece.from_symbol(move_data["piece"])
-        destination: str = move_data["destination"]
-        promotion: ChessPiece = ChessPiece.from_symbol(move_data["promotion"])
-
+    def promotion_event(self, player: ChessPlayer, data: ChessMoveData):
         msg = (
             f"**{player.user.name}** promotes "
-            f"**{piece} ({square_name(destination).capitalize()})** "
-            f"to a {promotion}."
+            f"**{ChessPiece.from_symbol(data.piece)} ({square_name(data.destination).capitalize()})** "
+            f"to a {ChessPiece.from_symbol(data.promotion)}."
         )
 
         self.game.turn_record.add_field(name="Pawn Promoted", value=msg, inline=False)

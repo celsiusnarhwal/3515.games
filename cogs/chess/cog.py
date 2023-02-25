@@ -23,7 +23,7 @@ class ChessCog(Cog):
 
     chess_group = SlashCommandGroup("chess", "Commands for playing chess.")
 
-    @chess_group.command(description="Challenge someone to a game of chess.")
+    @chess_group.command()
     @support.bot_has_permissions(support.GamePermissions.chess())
     @support.invoked_in_text_channel()
     async def challenge(
@@ -37,6 +37,9 @@ class ChessCog(Cog):
             default="Enabled",
         ),
     ):
+        """
+        Challenge someone to a game of chess.
+        """
 
         saving = True if saving == "Enabled" else False
 
@@ -77,7 +80,7 @@ class ChessCog(Cog):
                 players=[ctx.user, opponent], guild=ctx.guild
             )
             msg = (
-                f"You're in an ongoing chess match with {opponent.mention} in this server. "
+                f"You're in an ongoing chess game with {opponent.mention} in this server. "
                 f"You'll need to wrap it up before you can challenge them to another one."
             )
             embed = discord.Embed(
@@ -157,7 +160,10 @@ class ChessCog(Cog):
             )
 
             chess_game = chess.ChessGame(
-                thread=game_thread, players=[ctx.user, opponent], saving_enabled=saving
+                guild=ctx.guild,
+                thread=game_thread,
+                players=[ctx.user, opponent],
+                saving_enabled=saving,
             )
 
             await chess_game.open_lobby()
@@ -168,7 +174,7 @@ class ChessCog(Cog):
             embed = discord.Embed(
                 title="A chess game has begun!",
                 description=f"{ctx.user.mention} has challenged {opponent.mention} "
-                f"to a game of chess. You can spectate their match by going to the "
+                f"to a game of chess! You can spectate their game by going to the "
                 f"game thread.",
                 color=support.Color.mint(),
             )
@@ -179,11 +185,12 @@ class ChessCog(Cog):
 
             await chess_game.game_timer()
 
-    @chess_group.command(
-        description="Identify yourself as ready to begin a chess match."
-    )
+    @chess_group.command()
     @chess.verify_context(level="player")
     async def ready(self, ctx: discord.ApplicationContext):
+        """
+        Ready yourself to begin a chess game.
+        """
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
@@ -197,10 +204,10 @@ class ChessCog(Cog):
             await ctx.respond(embed=embed, ephemeral=True)
         else:
             msg = (
-                "The match will begin as soon as both players are ready. Make sure you really are ready to play; "
+                "The game will begin as soon as both players are ready. Make sure you really are ready to play; "
                 "once you select the Yes button below, you won't be able to change your mind.\n"
                 "\n"
-                "Identify yourself as ready?"
+                "Are you ready to play?"
             )
             embed = discord.Embed(
                 title="Ready to play?", description=msg, color=support.Color.caution()
@@ -226,7 +233,7 @@ class ChessCog(Cog):
                     embeds=[],
                 )
 
-    @chess_group.command(description="Make a move in a chess match.")
+    @chess_group.command()
     @chess.verify_context(level="turn")
     async def move(
         self,
@@ -239,6 +246,9 @@ class ChessCog(Cog):
             required=False,
         ),
     ):
+        """
+        Make a move.
+        """
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
@@ -247,17 +257,23 @@ class ChessCog(Cog):
         else:
             await player.move_with_gui(ctx)
 
-    @chess_group.command(description="View the board in a chess match.")
+    @chess_group.command()
     @chess.verify_context(level="game")
     async def board(self, ctx: discord.ApplicationContext):
+        """
+        View the board and move history.
+        """
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
         await player.view_board(ctx)
 
-    @chess_group.command(description="Forfeit a chess match.")
+    @chess_group.command()
     @chess.verify_context(level="player")
     async def forfeit(self, ctx: discord.ApplicationContext):
+        """
+        Forfeit the game.
+        """
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
@@ -269,13 +285,13 @@ class ChessCog(Cog):
                 "This can't be undone.\n"
                 "\n"
                 ""
-                "Forfeit this match?"
+                "Forfeit this game?"
             )
         else:
             msg = (
-                "Forfeiting will immediately end the match for both you and your opponent. This can't be undone.\n"
+                "Forfeiting will immediately end the game for both you and your opponent. This can't be undone.\n"
                 "\n"
-                "Forfeit this match?"
+                "Forfeit this game?"
             )
 
         embed = discord.Embed(
@@ -290,7 +306,7 @@ class ChessCog(Cog):
 
         if confirmation:
             await ctx.interaction.edit_original_response(
-                content="Forfeiting the match...", view=None, embeds=[]
+                content="Forfeiting the game...", view=None, embeds=[]
             )
             await player.forfeit()
         else:
@@ -298,9 +314,7 @@ class ChessCog(Cog):
                 content=f"Okay! The game is still on.", view=None, embeds=[]
             )
 
-    @chess_group.command(
-        description="Propose a draw in a chess match, or rescind a proposal you've already made."
-    )
+    @chess_group.command()
     @chess.verify_context(level="game")
     async def draw(
         self,
@@ -311,6 +325,9 @@ class ChessCog(Cog):
             choices=["Propose", "Rescind"],
         ),
     ):
+        """
+        Make or rescind a proposal to draw.
+        """
         chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
         player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
         if mode == "Propose":
@@ -325,7 +342,7 @@ class ChessCog(Cog):
             else:
                 msg = (
                     f"If you think it's time to wrap things up, you can propose a draw. If "
-                    f"{player.opponent.user.mention} accepts, the match will end in a draw, with neither player "
+                    f"{player.opponent.user.mention} accepts, the game will end in a draw, with neither player "
                     f"being declared the winner.\n"
                     "\n"
                     "If you change your mind before your opponent accepts your proposal, you can rescind your "
@@ -371,8 +388,11 @@ class ChessCog(Cog):
                 await ctx.respond(content="Rescinding your proposal...", ephemeral=True)
                 await player.rescind_draw()
 
-    @chess_group.command(description="Revisit your past chess matches.")
+    @chess_group.command()
     async def replay(self, ctx: discord.ApplicationContext):
+        """
+        Review and replay your past chess games.
+        """
         view = chess.ChessReplayMenuView(ctx=ctx)
         await view.initiate_view()
 
@@ -399,12 +419,12 @@ class ChessCog(Cog):
             await player.forfeit()
 
             msg = (
-                f"I forfeited your chess match against {player.opponent.user.mention} in {chess_game.guild} "
+                f"I forfeited your chess game against {player.opponent.user.mention} in {chess_game.guild} "
                 f"on your behalf because you left the game thread."
             )
 
             embed = discord.Embed(
-                title="Chess Match Forfeited",
+                title="Chess Game Forfeited",
                 description=msg,
                 color=support.Color.error(),
                 timestamp=discord.utils.utcnow(),

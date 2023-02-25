@@ -4,7 +4,7 @@ simple.
 {% endfilter %}
 
 {% filter deline %}
-WHen it's your turn, make a move with `/chess move`. When it's not your turn (or even when it is your turn), you can
+When it's your turn, make a move with `/chess move`. When it's not your turn (or even when it is your turn), you can
 view the board and move history with `/chess board`.
 {% endfilter %}
 

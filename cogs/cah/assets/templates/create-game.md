@@ -24,7 +24,7 @@ mind.
 Before we start, let's review your game settings.
 {% endfilter %}
 
-\***\*Game Settings\*\***
+**__Game Settings__**
 **Players**: {{ max_players }}
 **Points to Win**: {{ points }}
 **Timeout**: {{ timeout }} seconds

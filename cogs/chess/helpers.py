@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import os
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from tempfile import TemporaryDirectory
 
 import chess.svg as pychess_svg
@@ -17,30 +17,13 @@ from path import Path
 from reportlab.graphics import renderPM
 from svglib.svglib import svg2rlg
 
-import database.models as orm
 import support
 from cogs import chess
-
 
 # decorators
 
 
 def verify_context(level: str):
-    """
-    A decorator which implements a context verification system for chess matches. This system has four levels. In
-    order, they are:
-
-    - "thread" (verifies that the context is an chess game thread)
-    - "player" (verifies that the invoker is a player in the chess match)
-    - "game" (verifies that the game has been started)
-    - "turn" (verifies that it's the invoking players turn)
-
-    Each verification level is inclusive of all previous ones, and *all* verification checks for the specified level
-    must pass in order for the decorated command to execute.
-
-    :param level: The verification level.
-    """
-
     async def predicate(ctx: discord.ApplicationContext):
         command_name = f"`/{ctx.command.qualified_name}`"
 
@@ -55,7 +38,7 @@ def verify_context(level: str):
                 embed = discord.Embed(
                     title="You can't do that here.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -67,11 +50,11 @@ def verify_context(level: str):
             if any(player.user == ctx.user for player in game.players):
                 return True
             else:
-                message = f"Only players in this chess match can use {command_name}."
+                message = f"Only players in this chess game can use {command_name}."
                 embed = discord.Embed(
-                    title="You're not playing in this match.",
+                    title="You're not playing in this game.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -84,13 +67,13 @@ def verify_context(level: str):
                 return True
             else:
                 message = (
-                    f"You can't use {command_name} until the match has begun. Wait until the match has begun, "
+                    f"You can't use {command_name} until the game has begun. Wait until the game has begun, "
                     f"then try again."
                 )
                 embed = discord.Embed(
-                    title="This match hasn't started yet.",
+                    title="This game hasn't started yet.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -106,7 +89,7 @@ def verify_context(level: str):
                 embed = discord.Embed(
                     title="It's not your turn.",
                     description=message,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await ctx.respond(embed=embed, ephemeral=True)
 
@@ -135,10 +118,9 @@ def verify_context(level: str):
 # context managers
 
 
-@contextmanager
-def get_board_png(**kwargs) -> discord.File:
-    with TemporaryDirectory() as tmp:
-        with Path(tmp):
-            open("board.svg", "w+").write(pychess_svg.board(**kwargs, size=1800))
-            renderPM.drawToFile(svg2rlg("board.svg"), "board.png", fmt="png")
-            yield discord.File(os.path.abspath("board.png"))
+@asynccontextmanager
+async def get_board_image(**kwargs) -> discord.File:
+    with (TemporaryDirectory() as tmp, Path(tmp)):
+        open("board.svg", "w+").write(pychess_svg.board(**kwargs, size=1800))
+        renderPM.drawToFile(svg2rlg("board.svg"), "board.png", fmt="png")
+        yield discord.File(os.path.abspath("board.png"))

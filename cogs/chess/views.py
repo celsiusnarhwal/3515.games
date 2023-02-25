@@ -16,14 +16,15 @@ import chess as pychess
 import chess.pgn as pychess_pgn
 import discord
 from chess import square_name
-from discord import Interaction, ButtonStyle
-from discord.ui import Select, Modal, InputText, Button, button as discord_button
+from discord import ButtonStyle, Interaction
+from discord.ui import Button, InputText, Modal, Select
+from discord.ui import button as discord_button
 from path import Path
 
 import database.models as orm
 import support
 from cogs import chess
-from support import EnhancedView
+from support import View
 
 
 class ChessSelect(Select):
@@ -38,7 +39,7 @@ class ChessSelect(Select):
 
 
 # tw // eldritch horror
-class ChessMoveView(EnhancedView):
+class ChessMoveView(View):
     """
     Provides a user interface for a player to move a piece.
     """
@@ -52,17 +53,13 @@ class ChessMoveView(EnhancedView):
 
     PIECE_SELECTION, ORIGIN, DESTINATION, PROMOTION, CONFIRMATION = range(5)
 
+    # holy hell this is baaaaaaaaad
     def __init__(self, player: chess.ChessPlayer, **kwargs):
         super().__init__(**kwargs)
         self.player = player
         self.uuid = player.game.turn_uuid
 
-        self.move_data: chess.ChessMoveData = {
-            "piece": None,
-            "origin": 0,
-            "destination": 0,
-            "promotion": None,
-        }
+        self.move_data = chess.ChessMoveData()
 
         self.board = self.player.game.board
         self.legal_moves = dict()
@@ -78,12 +75,6 @@ class ChessMoveView(EnhancedView):
 
         self.current_stage = self.PIECE_SELECTION
         self.stage_history = []
-
-        for move in self.board.legal_moves:
-            if self.legal_moves.get(move.from_square):
-                self.legal_moves[move.from_square].append(move.to_square)
-            else:
-                self.legal_moves[move.from_square] = [move.to_square]
 
         self.stages = [
             ChessSelect(
@@ -112,6 +103,12 @@ class ChessMoveView(EnhancedView):
             ),
         ]
 
+        for move in self.board.legal_moves:
+            if self.legal_moves.get(move.from_square):
+                self.legal_moves[move.from_square].append(move.to_square)
+            else:
+                self.legal_moves[move.from_square] = [move.to_square]
+
         for menu in self.stages:
             menu.callback = self.select_menu_callback
 
@@ -123,7 +120,7 @@ class ChessMoveView(EnhancedView):
         elif self.uuid != self.player.game.turn_uuid:
             msg = "Looks like this message is outdated. You'll have to use `/chess move` again to make a move."
             embed = discord.Embed(
-                title="Whoops.", description=msg, color=support.Color.red()
+                title="Whoops.", description=msg, color=support.Color.error()
             )
 
             await interaction.response.edit_message(
@@ -161,8 +158,17 @@ class ChessMoveView(EnhancedView):
             self.PROMOTION: "promotion",
         }
 
+        reset_values = {
+            self.PIECE_SELECTION: None,
+            self.ORIGIN: 0,
+            self.DESTINATION: 0,
+            self.PROMOTION: None,
+        }
+
         if self.current_stage in move_data_keys.keys():
-            self.move_data[move_data_keys[self.current_stage]] = ""
+            self.move_data[move_data_keys[self.current_stage]] = reset_values[
+                self.current_stage
+            ]
             self.stages[self.current_stage].options.clear()
             self.stages[self.current_stage].values.clear()
 
@@ -429,7 +435,7 @@ class ChessMoveView(EnhancedView):
             self.clear_items()
 
             select_menu = await stages[self.current_stage]()
-            with chess.get_board_png(**self.image_data) as board_png:
+            async with chess.get_board_image(**self.image_data) as board_png:
                 select_menu.embed.set_image(url=f"attachment://{board_png.filename}")
                 self.add_item(select_menu)
 
@@ -480,21 +486,21 @@ class ChessMoveView(EnhancedView):
             self.image_data["lastmove"] = self.get_move()
             self.image_data["arrows"] = [(origin_square, destination_square)]
 
-            with chess.get_board_png(**self.image_data) as board_png:
+            async with chess.get_board_image(**self.image_data) as board_png:
                 embed.set_image(url=f"attachment://{board_png.filename}")
                 await interaction.response.defer()
                 await interaction.edit_original_response(
                     embed=embed, file=board_png, attachments=[], view=self
                 )
 
-    async def initiate_view(self):
+    async def start(self):
         await self.present()
         await self.wait()
 
         return self.get_move()
 
 
-class ChessBoardView(EnhancedView):
+class ChessBoardView(View):
     class MoveHistoryPaginator:
         def __init__(self, board: chess.ChessBoard):
             self.board = board
@@ -560,7 +566,7 @@ class ChessBoardView(EnhancedView):
     @discord_button(
         label="Flip Orientation", custom_id="orientation", style=ButtonStyle.gray, row=2
     )
-    async def flip_orientation(self, button: Button, interaction: Interaction):
+    async def flip_orientation(self, _, interaction: Interaction):
         self.image_data["orientation"] = not self.image_data["orientation"]
 
         await self.present(interaction)
@@ -568,7 +574,7 @@ class ChessBoardView(EnhancedView):
     @discord_button(
         label="Hide Coordinates", custom_id="coordinates", style=ButtonStyle.gray, row=2
     )
-    async def toggle_coordinates(self, button: Button, interaction: Interaction):
+    async def toggle_coordinates(self, _, interaction: Interaction):
         self.image_data["coordinates"] = not self.image_data["coordinates"]
 
         button = discord.utils.find(
@@ -759,7 +765,7 @@ class ChessBoardView(EnhancedView):
         next_button.disabled = last_button.disabled = not self.history.has_next()
 
     async def present(self, interaction: Interaction = None):
-        with chess.get_board_png(**self.image_data) as board_png:
+        async with chess.get_board_image(**self.image_data) as board_png:
             if interaction:
                 await interaction.response.defer()
                 await interaction.edit_original_response(
@@ -792,7 +798,7 @@ class ChessBoardView(EnhancedView):
         await self.present()
 
 
-class ChessEndgameView(EnhancedView):
+class ChessEndgameView(View):
     def __init__(self, game: chess.ChessGame):
         super().__init__()
         self.game = game
@@ -805,7 +811,7 @@ class ChessEndgameView(EnhancedView):
             embed = discord.Embed(
                 title="You didn't play in this game.",
                 description=msg,
-                color=support.Color.red(),
+                color=support.Color.error(),
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
         elif interaction.user in self.has_saved:
@@ -813,14 +819,14 @@ class ChessEndgameView(EnhancedView):
             embed = discord.Embed(
                 title="You did that already.",
                 description=msg,
-                color=support.Color.red(),
+                color=support.Color.error(),
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
             return await super().interaction_check(interaction)
 
     @discord_button(label="Save Game", style=ButtonStyle.gray)
-    async def save_game(self, button: Button, interaction: Interaction):
+    async def save_game(self, _, interaction: Interaction):
         pgn = pychess_pgn.Game.from_board(self.game.board)
 
         headers = {
@@ -865,7 +871,7 @@ class ChessEndgameView(EnhancedView):
         )
 
 
-class ChessReplayMenuView(EnhancedView):
+class ChessReplayMenuView(View):
     async def select_menu_callback(self, interaction: Interaction):
         menu: Select = discord.utils.find(
             lambda x: isinstance(x, Select), self.children
@@ -912,7 +918,7 @@ class ChessReplayMenuView(EnhancedView):
         disabled=True,
         row=2,
     )
-    async def replay_game(self, button: Button, interaction: Interaction):
+    async def replay_game(self, _, interaction: Interaction):
         select_menu: Select = discord.utils.find(
             lambda x: isinstance(x, Select), self.children
         )
@@ -931,7 +937,7 @@ class ChessReplayMenuView(EnhancedView):
         disabled=True,
         row=2,
     )
-    async def export_game(self, button: Button, interaction: Interaction):
+    async def export_game(self, _, interaction: Interaction):
         await interaction.response.defer(ephemeral=True)
 
         select_menu: Select = discord.utils.find(
@@ -942,16 +948,15 @@ class ChessReplayMenuView(EnhancedView):
         with orm.db_session:
             game = orm.ChessGame.get(id=game_id)
 
-        with TemporaryDirectory() as tmp:
-            with Path(tmp):
-                filename = (
-                    f"({game.server}) {game.white} vs. {game.black} [{game.date}].pgn"
-                )
-                open(filename, "w+").write(game.pgn)
-                pgn_file = discord.File(filename)
-                await interaction.followup.send(
-                    content="Your PGN is ready!", file=pgn_file, ephemeral=True
-                )
+        with (TemporaryDirectory() as tmp, Path(tmp)):
+            filename = (
+                f"({game.server}) {game.white} vs. {game.black} [{game.date}].pgn"
+            )
+            open(filename, "w+").write(game.pgn)
+            pgn_file = discord.File(filename)
+            await interaction.followup.send(
+                content="Your PGN is ready!", file=pgn_file, ephemeral=True
+            )
 
     @discord_button(
         label="Import PGN",
@@ -960,7 +965,7 @@ class ChessReplayMenuView(EnhancedView):
         disabled=False,
         row=2,
     )
-    async def import_game(self, button: Button, interaction: Interaction):
+    async def import_game(self, _, interaction: Interaction):
         class PGNImportModal(Modal):
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
@@ -993,7 +998,7 @@ class ChessReplayMenuView(EnhancedView):
         disabled=True,
         row=3,
     )
-    async def delete_game(self, button: Button, interaction: Interaction):
+    async def delete_game(self, _, interaction: Interaction):
         select_menu: Select = discord.utils.find(
             lambda x: isinstance(x, Select), self.children
         )
@@ -1029,7 +1034,7 @@ class ChessReplayMenuView(EnhancedView):
         disabled=False,
         row=3,
     )
-    async def delete_all_games(self, button: Button, interaction: Interaction):
+    async def delete_all_games(self, _, interaction: Interaction):
         with orm.db_session:
             orm.ChessGame.select(
                 lambda g: g.user_id == str(interaction.user.id)
@@ -1046,7 +1051,7 @@ class ChessReplayMenuView(EnhancedView):
                 embed = discord.Embed(
                     title="Nothing to see here.",
                     description=msg,
-                    color=support.Color.red(),
+                    color=support.Color.error(),
                 )
                 await self.ctx.respond(embed=embed, ephemeral=True)
             else:
@@ -1069,7 +1074,8 @@ class ChessReplayMenuView(EnhancedView):
                 await self.ctx.respond(embed=embed, view=self, ephemeral=True)
 
 
-class ChessReplayView(EnhancedView):
+# believe it or not, subclassing ChessBoardView actually makes things worse!
+class ChessReplayView(View):
     class MoveHistoryPaginator:
         def __init__(self, board: pychess.Board):
             self.board = board
@@ -1134,7 +1140,7 @@ class ChessReplayView(EnhancedView):
     @discord_button(
         label="Flip Orientation", custom_id="orientation", style=ButtonStyle.gray, row=2
     )
-    async def flip_orientation(self, button: Button, interaction: Interaction):
+    async def flip_orientation(self, _, interaction: Interaction):
         self.image_data["orientation"] = not self.image_data["orientation"]
 
         await self.present(interaction)
@@ -1142,7 +1148,7 @@ class ChessReplayView(EnhancedView):
     @discord_button(
         label="Hide Coordinates", custom_id="coordinates", style=ButtonStyle.gray, row=2
     )
-    async def toggle_coordinates(self, button: Button, interaction: Interaction):
+    async def toggle_coordinates(self, _, interaction: Interaction):
         self.image_data["coordinates"] = not self.image_data["coordinates"]
 
         button = discord.utils.find(
@@ -1161,7 +1167,7 @@ class ChessReplayView(EnhancedView):
         row=2,
         disabled=True,
     )
-    async def toggle_move_highlight(self, button: Button, interaction: Interaction):
+    async def toggle_move_highlight(self, _, interaction: Interaction):
         self.highlight_last_move = not self.highlight_last_move
 
         board = self.history.current()
@@ -1251,7 +1257,7 @@ class ChessReplayView(EnhancedView):
         next_button.disabled = last_button.disabled = not self.history.has_next()
 
     async def present(self, interaction):
-        with chess.get_board_png(**self.image_data) as board_png:
+        async with chess.get_board_image(**self.image_data) as board_png:
             await interaction.response.defer()
             await interaction.edit_original_response(
                 file=board_png, attachments=[], view=self
@@ -1313,7 +1319,7 @@ class ChessReplayView(EnhancedView):
         last_button.callback = self.history_last
         self.add_item(last_button)
 
-        with chess.get_board_png(**self.image_data) as board_png:
+        async with chess.get_board_image(**self.image_data) as board_png:
             await interaction.response.defer(ephemeral=True)
             await interaction.followup.send(
                 file=board_png, embed=None, view=self, ephemeral=True
