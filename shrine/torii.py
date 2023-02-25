@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from functools import wraps
 
 from jinja2 import Environment, FileSystemLoader, Template
@@ -28,7 +29,9 @@ class Torii(Environment):
     extensions_: ClassVar[list[type]] = []
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, extensions=self.extensions_)
+        super().__init__(
+            *args, **kwargs, extensions=self.extensions_, enable_async=True
+        )
         self.filters.update(self.filters_)
         self.globals.update(self.globals_)
 
@@ -37,27 +40,27 @@ class Torii(Environment):
         return cls(loader=FileSystemLoader(pointer / "templates"))
 
     @classmethod
-    def about(cls):
-        return cls._get(Assets.about())
+    def misc(cls) -> Self:
+        return cls._get(Assets.misc())
 
     @classmethod
-    def rps(cls):
+    def rps(cls) -> Self:
         return cls._get(Assets.rps())
 
     @classmethod
-    def uno(cls):
+    def uno(cls) -> Self:
         return cls._get(Assets.uno())
 
     @classmethod
-    def chess(cls):
+    def chess(cls) -> Self:
         return cls._get(Assets.chess())
 
     @classmethod
-    def cah(cls):
+    def cah(cls) -> Self:
         return cls._get(Assets.cah())
 
     @classmethod
-    def kurisu(cls):
+    def kurisu(cls) -> Self:
         return cls._get(Assets.kurisu())
 
     def get_template(self, name: str, *args, **kwargs) -> Shintai:
@@ -65,7 +68,7 @@ class Torii(Environment):
         template.__class__ = Shintai
         return template
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -74,43 +77,22 @@ class Torii(Environment):
 
 class Shintai(Template):
     """
-    Base class for Jinja templates.
+    Base class for Jinja templates rendered by :class:`Torii`.
     """
 
     def render(self, *args, **kwargs) -> str:
-        """
-        Equivalent to :meth:`jinja2.Template.render`, but strips the rendered template of trailing newlines.
-
-        Parameters
-        ----------
-        *args
-            Positional arguments to :meth:`jinja2.Template.render`.
-        *kwargs
-            Keyword arguments to :meth:`jinja2.Template.render`.
-
-        Returns
-        -------
-        str
-            The rendered template.
-        """
         return super().render(*args, **kwargs).strip("\n")
 
-    def slender(self, *args, **kwargs):
-        """
-        Render the template with blocks trimmed and stripped of leading whitespace.
+    def slender(self, *args, **kwargs) -> str:
+        @contextmanager
+        def slim():
+            trim, lstrip = self.environment.trim_blocks, self.environment.lstrip_blocks
+            self.environment.trim_blocks = self.environment.lstrip_blocks = True
+            yield
+            self.environment.trim_blocks, self.environment.lstrip_blocks = trim, lstrip
 
-        *args
-            Positional arguments to :meth:`jinja2.Template.render`.
-        **kwargs
-            Keyword arguments to :meth:`jinja2.Template.render`.
-
-        Returns
-        -------
-        str
-            The rendered template.
-        """
-        self.environment.trim_blocks = self.environment.lstrip_blocks = True
-        return self.render(*args, **kwargs)
+        with slim():
+            return self.render(*args, **kwargs)
 
 
 def register_tag(cls: type) -> type:
