@@ -92,7 +92,7 @@ class UnoCardAttr(Enum, metaclass=UnoCardAttrMeta):
 
     @property
     def sortcode(self):
-        return self.__class__.index(self)
+        return type(self).index(self)
 
     def __str__(self):
         return str(self.value).title()

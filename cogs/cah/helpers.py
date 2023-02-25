@@ -131,16 +131,24 @@ def verify_context(
             async def popular_vote_mode() -> bool:
                 if game.is_voting:
                     if player.has_voted:
-                        vote = discord.utils.find(
+                        vote: cah.CAHCandidateCard = discord.utils.find(
                             lambda c: player in c.voters, game.candidates
                         )
 
                         message = "Please wait for the other players to finish."
-                        embed = discord.Embed(
-                            title="You've already cast your vote.",
-                            description=message,
-                            color=support.Color.error(),
-                        ).add_field(name="Your Vote", value=vote.text)
+                        embed = (
+                            discord.Embed(
+                                title="You've already cast your vote.",
+                                description=message,
+                                color=support.Color.error(),
+                            )
+                            .add_field(name="Your Vote", value=vote.text, inline=False)
+                            .add_field(
+                                name="Submitted By",
+                                value=vote.player.mention,
+                                inline=False,
+                            )
+                        )
 
                         await ctx.respond(embed=embed, ephemeral=True)
 

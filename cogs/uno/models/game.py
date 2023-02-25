@@ -447,7 +447,7 @@ class UnoGame(HostedGame):
         End the game. This is only called when a player meets the win condition, and should not be confused
         with force closing the game.
         """
-        self.__games__.pop(self.thread.id)
+        self.kill()
 
         with shrine.Torii.uno() as torii:
             template = torii.get_template("game-over.md")
@@ -628,16 +628,16 @@ class UnoEventProcessor:
     game: uno.UnoGame
 
     async def card_played_event(
-        self, player: uno.uno.UnoPlayer, card: uno.uno.UnoCard, with_draw: bool = False
+        self, player: uno.UnoPlayer, card: uno.UnoCard, with_draw: bool = False
     ):
         """
         The handler for the event of playing a card.
 
         Parameters
         ----------
-        player: :class:`uno.uno.UnoPlayer`
+        player: :class:`uno.UnoPlayer`
             The player who played the card.
-        card: :class:`uno.uno.UnoCard`
+        card: :class:`uno.UnoCard`
             The card that was played.
         with_draw: :class:`bool`
             Whether the card was played in conjunction with a draw.
@@ -659,26 +659,26 @@ class UnoEventProcessor:
 
         self.game.turn_record.append(embed)
 
-        if card.color is uno.uno.UnoCardColor.WILD:
+        if card.color is uno.UnoCardColor.WILD:
             await self.wild_event(player=player)
 
         match card.suit:
-            case uno.uno.UnoCardSuit.DRAW_TWO:
+            case uno.UnoCardSuit.DRAW_TWO:
                 await self.draw_two_event()
-            case uno.uno.UnoCardSuit.DRAW_FOUR:
+            case uno.UnoCardSuit.DRAW_FOUR:
                 await self.draw_four_event()
-            case uno.uno.UnoCardSuit.SKIP:
+            case uno.UnoCardSuit.SKIP:
                 await self.skip_event()
-            case uno.uno.UnoCardSuit.REVERSE:
+            case uno.UnoCardSuit.REVERSE:
                 await self.reverse_event()
 
-    async def card_drawn_event(self, player: uno.uno.UnoPlayer):
+    async def card_drawn_event(self, player: uno.UnoPlayer):
         """
         The handler for the event of drawing a card.
 
         Parameters
         ----------
-        player: :class:`uno.uno.UnoPlayer`
+        player: :class:`uno.UnoPlayer`
             The player who drew the card.
         """
         embed = discord.Embed(
@@ -701,7 +701,7 @@ class UnoEventProcessor:
         """
         self.game.skip_next_player = True
 
-        next_player: uno.uno.UnoPlayer = await self.game.walk_players(
+        next_player: uno.UnoPlayer = await self.game.walk_players(
             self.game.current_player, 1, use_value=True
         )
         await next_player.add_cards(2)
@@ -719,7 +719,7 @@ class UnoEventProcessor:
         """
         self.game.skip_next_player = True
 
-        next_player: uno.uno.UnoPlayer = await self.game.walk_players(
+        next_player: uno.UnoPlayer = await self.game.walk_players(
             self.game.current_player, 1, use_value=True
         )
         await next_player.add_cards(4)
@@ -762,23 +762,23 @@ class UnoEventProcessor:
             inline=False,
         )
 
-    async def wild_event(self, player: uno.uno.UnoPlayer):
+    async def wild_event(self, player: uno.UnoPlayer):
         """
         The handler for the event of a Wild card being played.
 
         Parameters
         ----------
-        player: :class:`uno.uno.UnoPlayer`
+        player: :class:`uno.UnoPlayer`
             The player who played the Wild card.
         """
 
         card = self.game.card_in_play
 
         color_emoji = {
-            uno.uno.UnoCardColor.RED: "🔴",
-            uno.uno.UnoCardColor.BLUE: "🔵",
-            uno.uno.UnoCardColor.GREEN: "🟢",
-            uno.uno.UnoCardColor.YELLOW: "🟡",
+            uno.UnoCardColor.RED: "🔴",
+            uno.UnoCardColor.BLUE: "🔵",
+            uno.UnoCardColor.GREEN: "🟢",
+            uno.UnoCardColor.YELLOW: "🟡",
         }
         self.game.turn_record[-1].add_field(
             name="🎲 A Wild card appears!",
@@ -787,13 +787,13 @@ class UnoEventProcessor:
             inline=False,
         )
 
-    async def say_uno_event(self, player: uno.uno.UnoPlayer):
+    async def say_uno_event(self, player: uno.UnoPlayer):
         """
         The handler for the event of a a player saying 'UNO!'.
 
         Parameters
         ----------
-        player: :class:`uno.uno.UnoPlayer`
+        player: :class:`uno.UnoPlayer`
             The player who said 'UNO!'.
         """
         player.can_say_uno = False
@@ -807,7 +807,7 @@ class UnoEventProcessor:
 
         await self.game.thread.send(content="@everyone", embed=embed)
 
-    async def turn_timeout_event(self, player: uno.uno.UnoPlayer):
+    async def turn_timeout_event(self, player: uno.UnoPlayer):
         """
         The handler for the event of a player's turn timing out.
 
@@ -825,8 +825,8 @@ class UnoEventProcessor:
 
     async def callout_event(
         self,
-        challenger: uno.uno.UnoPlayer,
-        target: uno.uno.UnoPlayer,
+        challenger: uno.UnoPlayer,
+        target: uno.UnoPlayer,
         callout_success: bool,
     ):
         """
@@ -834,9 +834,9 @@ class UnoEventProcessor:
 
         Parameters
         ----------
-        challenger: :class:`uno.uno.UnoPlayer`
+        challenger: :class:`uno.UnoPlayer`
             The player making the callout.
-        target: :class:`uno.uno.UnoPlayer`
+        target: :class:`uno.UnoPlayer`
             The player being called out.
         callout_success: :class:`bool`
             Whether or not the callout was successful.

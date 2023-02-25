@@ -152,9 +152,10 @@ class CAHCardSelectView(CAHTerminableView):
         )
 
         if not self.candidates:
-            self.candidates = cah.CAHCandidateCard.create(self.player, *menu.values)
+            chosen_cards = [card for card in self.cards if card.uuid in menu.values]
+            self.candidates = cah.CAHCandidateCard.create(self.player, *chosen_cards)
 
-            if self.game.black_card.pick == 2:
+            if len(self.candidates) == 2:
                 self.clear_items()
 
                 option1_button = Button(label="Option 1", style=ButtonStyle.gray)
@@ -197,7 +198,7 @@ class CAHCardSelectView(CAHTerminableView):
         )
 
         for card in self.cards:
-            menu.add_option(label=card, value=card)
+            menu.add_option(label=card.text, value=card.uuid)
 
         return menu
 

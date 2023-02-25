@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import copy
 import random
 import re
 import uuid
@@ -19,7 +20,7 @@ from llist import dllist, dllistnode
 from ordered_set import OrderedSet
 from pydantic import BaseModel, Field, validate_arguments, validator
 
-from cogs import cah
+from cogs.cah.models.player import CAHPlayer
 from keyboard import *
 from support import Fields
 
@@ -46,6 +47,29 @@ class CAHBlackCard(BaseModel):
         return self.text
 
 
+class CAHWhiteCard(BaseModel):
+    """
+    A white card.
+    """
+
+    class Config:
+        frozen = True
+
+    text: Optional[str]  # not actually optional
+    uuid: str = Field(default_factory=lambda: uuid.uuid4().hex, const=True)
+
+    @validator("text", pre=True)
+    def normalize(cls, v):
+        if len(normalized := re.sub(r"\b$", ".", v[0].upper() + v[1:])) <= 60:
+            return normalized
+
+    def __str__(self):
+        return self.text
+
+    def __bool__(self):
+        return bool(self.text)
+
+
 class CAHDeck(BaseModel):
     """
     A deck of black and white cards.
@@ -56,26 +80,17 @@ class CAHDeck(BaseModel):
         extra = "allow"
 
     black: OrderedSet[CAHBlackCard]
-    white: OrderedSet[Optional[str]]  # not actually optional
+    white: OrderedSet[CAHWhiteCard]
+    backup: CAHDeck = None
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.backup = self.copy(deep=True)
-
-    @validator("white", pre=True, each_item=True)
-    def normalize_text(cls, v):
-        if len(normalized := re.sub(r"\b$", ".", v[0].upper() + v[1:])) <= 60:
-            return normalized
-
-    @validator("white")
-    def remove_none(cls, v):
-        v.remove(None)
-        return v
-
-    # EVEN THOUGH I LITERALLY SAID IT WAS SUPPOSED TO BE AN ORDEREDSET. FUCKER
     @validator("black", "white")
     def cast(cls, v):
-        return OrderedSet(v)
+        return OrderedSet(filter(None, v))
+
+    @validator("backup", always=True)
+    def create_backup(cls, v, values):
+        if v is None:
+            return cls.construct(**copy.deepcopy(values))
 
     @classmethod
     @validate_arguments
@@ -92,11 +107,10 @@ class CAHDeck(BaseModel):
         -------
         CAHDeck
             A new deck.
-
         """
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                "https://restagainsthumanity.com/api", params={"packs": packs}
+                "https://restagainsthumanity.com/api/v2/cards", params={"packs": packs}
             ) as resp:
                 if resp.status != 200:
                     raise ConnectionError
@@ -160,18 +174,17 @@ class CAHCandidateCard:
     """
 
     text: str
-    player: cah.CAHPlayer
+    player: CAHPlayer
     white_cards: list[str]
 
-    voters: list[cah.CAHPlayer] = Fields.attr(
-        factory=list, on_setattr=Fields.setters.NO_OP
-    )
+    voters: list[CAHPlayer] = Fields.attr(factory=list, on_setattr=Fields.setters.NO_OP)
     uuid: str = Fields.attr(factory=lambda: uuid.uuid4().hex)
 
     @classmethod
-    def create(cls, player: cah.CAHPlayer, *white_cards) -> list[CAHCandidateCard]:
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    def create(cls, player: CAHPlayer, *white_cards: CAHWhiteCard) -> list[Self]:
         """
-        Creates candidate cards.
+        Create candidate cards.
 
         Parameters
         ----------
@@ -200,7 +213,7 @@ class CAHCandidateCard:
 
         proper_nouns = []
         for card in white_cards:
-            words = re.sub(r"[.?!,]", "", card).split()
+            words = re.sub(r"[.?!,]", "", card.text).split()
             proper_nouns.extend(
                 [word for word, pos in nltk.pos_tag(words) if pos.startswith("NNP")]
             )
@@ -213,6 +226,8 @@ class CAHCandidateCard:
                 tokens.pop()
 
             for card in c1, c2:
+                text = card.text
+
                 if underscores in tokens:
                     underscore_node: dllistnode = tokens.nodeat(
                         [*tokens].index(underscores)
@@ -227,16 +242,16 @@ class CAHCandidateCard:
                         and not underscore_node.prev.value.rstrip().endswith(
                             tuple(punctuation)
                         )
-                        and card.split()[0] not in proper_nouns
+                        and text.split()[0] not in proper_nouns
                     )
 
                     if strip:
-                        card = card.rstrip(punctuation)
+                        text = text.rstrip(punctuation)
 
                     if decapitalize:
-                        card = card[0].lower() + card[1:]
+                        text = text[0].lower() + text[1:]
 
-                    tokens.insertbefore(f"**{card}**", underscore_node)
+                    tokens.insertbefore(f"**{text}**", underscore_node)
                     tokens.remove(underscore_node)
 
             candidates.append(cls("".join(tokens), player, white_cards))

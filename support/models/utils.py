@@ -16,15 +16,13 @@ from pydantic import root_validator, validate_arguments
 
 from keyboard import *
 
+__all__ = ["Fields", "Color", "Assets", "GamePermissions"]
+
 
 # noinspection PyUnresolvedReferences, PyMethodParameters
 class Fields(validate_arguments(attrs.field).model):
     """
-    Helper class for creating attrs fields.
-
-    attrs setters and validators are also accessible through this class.
-
-    https://attrs.org
+    Helper class for creating attrs fields. https://attrs.org
 
     Notes
     -----
@@ -66,23 +64,23 @@ class Color(discord.Color):
     """
 
     @classmethod
-    def mint(cls):
+    def mint(cls) -> Self:
         return cls(0x03CB98)
 
     @classmethod
-    def white(cls):
+    def white(cls) -> Self:
         return cls(0xFFFFFF)
 
     @classmethod
-    def black(cls):
+    def black(cls) -> Self:
         return cls(0x000000)
 
     @classmethod
-    def caution(cls):
+    def caution(cls) -> Self:
         return cls.orange()
 
     @classmethod
-    def error(cls):
+    def error(cls) -> Self:
         return cls.red()
 
 
@@ -96,31 +94,39 @@ class Assets(Path):
         return cls.joinpath("cogs", module, "assets")
 
     @classmethod
-    def about(cls):
-        return cls._get("about")
+    def misc(cls) -> Self:
+        return cls._get("misc")
 
     @classmethod
-    def rps(cls):
+    def rps(cls) -> Self:
         return cls._get("rps")
 
     @classmethod
-    def uno(cls):
+    def uno(cls) -> Self:
         return cls._get("uno")
 
     @classmethod
-    def chess(cls):
+    def chess(cls) -> Self:
         return cls._get("chess")
 
     @classmethod
-    def cah(cls):
+    def cah(cls) -> Self:
         return cls._get("cah")
 
     @classmethod
-    def kurisu(cls):
+    def kurisu(cls) -> Self:
         return cls("kurisu/assets")
 
 
-class GamePermissions(discord.Permissions):
+class GPMeta(type):
+    # for mathematical compatibility between GamePermissions and discord.Permissions
+    def __instancecheck__(self, instance):
+        return type(instance) is discord.Permissions or super().__instancecheck__(
+            instance
+        )
+
+
+class GamePermissions(discord.Permissions, metaclass=GPMeta):
     """
     Permissions constants.
 
@@ -134,7 +140,7 @@ class GamePermissions(discord.Permissions):
         self.update(read_messages=True, send_messages=True)
 
     @classmethod
-    def universal(cls):
+    def universal(cls) -> Self:
         return cls()
 
     @classmethod

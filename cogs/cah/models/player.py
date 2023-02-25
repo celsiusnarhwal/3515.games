@@ -14,13 +14,13 @@ from attr import define
 
 import support
 from cogs import cah
-from support import BasePlayer, Fields
+from support import BasePlayer, Fields, PlayerVoiceMixin
 
 inflect = ifl.engine()
 
 
 @define
-class CAHPlayer(BasePlayer):
+class CAHPlayer(PlayerVoiceMixin, BasePlayer):
     """
     A player in a Cards Against Humanity game.
 
@@ -48,7 +48,7 @@ class CAHPlayer(BasePlayer):
 
     points: int = Fields.attr(default=0)
     consecutive_timeouts: int = Fields.attr(default=0)
-    hand: list[str] = Fields.attr(factory=list)
+    hand: list[cah.CAHCandidateCard] = Fields.attr(factory=list)
     has_submitted: bool = Fields.attr(default=False)
     has_voted: bool = Fields.attr(default=False)
     terminable_views: list[cah.CAHTerminableView] = Fields.attr(factory=list)
@@ -165,29 +165,6 @@ class CAHPlayer(BasePlayer):
             The number of cards to add.
         """
         self.hand.extend(self.game.deck.get_random_white(num_cards))
-
-    def voice_overwrites(self) -> discord.Permissions:
-        """
-        Return the voice channel permission overwrites for the player.
-        """
-        if self.game.host == self.user:
-            overwrites = {
-                "allow": discord.Permissions.voice() - discord.Permissions.stream,
-                "deny": discord.Permissions.none(),
-            }
-        else:
-            overwrites = {
-                "allow": discord.Permissions(
-                    connect=True, speak=True, use_voice_activation=True
-                ),
-                "deny": discord.Permissions.none(),
-            }
-
-        overwrites["allow"] += discord.Permissions(
-            view_channel=True, read_message_history=True
-        )
-
-        return discord.PermissionOverwrite.from_pair(**overwrites)
 
     def get_ranking(self, with_string: bool = False) -> str:
         """

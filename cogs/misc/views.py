@@ -57,7 +57,7 @@ class AboutView(View):
             async def back(self, button: Button, interaction: Interaction):
                 await AboutView(ctx=self.ctx).present(interaction)
 
-        with support.Assets.about():
+        with support.Assets.misc():
             credits_text = open(os.path.join("pages", "credits.md")).read()
             embed = discord.Embed(
                 title="Credits", description=credits_text, color=support.Color.mint()
@@ -128,14 +128,14 @@ class AboutView(View):
         await original_message.edit(embed=embed)
 
     async def present(self, interaction: Interaction = None):
-        with support.Assets.about():
+        with support.Assets.misc():
             about_text = open(os.path.join("pages", "main.md")).read()
 
         about_embed = discord.Embed(
             title="About Me", description=about_text, color=support.Color.mint()
         )
 
-        with support.Assets.about():
+        with support.Assets.misc():
             bot_logo = discord.File("bot_logo.png", filename="bot_logo.png")
             about_embed.set_image(url="attachment://bot_logo.png")
             if interaction:

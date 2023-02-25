@@ -39,8 +39,15 @@ class ThreadedGame(ABC):
         """
         Retrieves a game given the unique identifier of its associated game thread.
 
-        :param thread_id: The unique identifier of the game's associated thread.
-        :return: The object associated with the passed-in thread ID if one exists; otherwise None.
+        Parameters
+        ----------
+        thread_id: int
+            The unique identifier of the game thread.
+
+        Returns
+        -------
+        Self | None
+            The game associated with the specified game thread if one exists; otherwise None.
         """
         return cls.__games__.get(thread_id)
 
@@ -56,6 +63,10 @@ class ThreadedGame(ABC):
 
     @abstractmethod
     async def retrieve_player(self, *args, **kwargs):
+        ...
+
+    @abstractmethod
+    async def open_lobby(self, *args, **kwargs):
         ...
 
 
@@ -100,9 +111,18 @@ class HostedGame(ThreadedGame, ABC):
         Retrieves games where the Game Host is a particular user and that are taking place in a
         particular server.
 
-        :param user: The Game Host to look for.
-        :param guild_id: The unique identifier of the server to search for games in.
-        :return: An ``UnoGame`` object associated with the specified Game Host and server if one exists; otherwise None.
+        Parameters
+        ----------
+        user: discord.User
+            The user to search for.
+        guild_id: int
+            The unique identifier of the server to search in.
+
+        Returns
+        -------
+        Self | None
+            The game where the Game Host is the specified user and that is taking place in the specified server if one
+            exists; otherwise None.
         """
         return discord.utils.find(
             lambda g: g.host == user and g.guild.id == guild_id,
@@ -432,6 +452,10 @@ class HostedGame(ThreadedGame, ABC):
 
         return self.voice_channel
 
+    @abstractmethod
+    def kick_player(self, *args, **kwargs):
+        ...
+
     @property
     def has_started(self):
         """
@@ -488,3 +512,28 @@ class BasePlayer:
 
     def __str__(self):
         return self.name
+
+
+class PlayerVoiceMixin:
+    def voice_overwrites(self) -> discord.Permissions:
+        """
+        Return the voice channel permission overwrites for the player.
+        """
+        if self.game.host == self.user:
+            overwrites = {
+                "allow": discord.Permissions.voice() - discord.Permissions.stream,
+                "deny": discord.Permissions.none(),
+            }
+        else:
+            overwrites = {
+                "allow": discord.Permissions(
+                    connect=True, speak=True, use_voice_activation=True
+                ),
+                "deny": discord.Permissions.none(),
+            }
+
+        overwrites["allow"] += discord.Permissions(
+            view_channel=True, read_message_history=True
+        )
+
+        return discord.PermissionOverwrite.from_pair(**overwrites)
