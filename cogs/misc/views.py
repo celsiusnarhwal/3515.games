@@ -10,6 +10,7 @@ import os
 import platform
 
 import discord
+import inflect as ifl
 from discord import ButtonStyle, Interaction
 from discord.ui import Button
 from discord.ui import button as discord_button
@@ -17,6 +18,8 @@ from discord.ui import button as discord_button
 import support
 import uptime
 from support.views import View
+
+inflect = ifl.engine()
 
 
 class AboutView(View):
@@ -94,7 +97,7 @@ class AboutView(View):
             "Python Version": platform.python_version(),
             "Pycord Version": discord.__version__,
             "Uptime": uptime.get_uptime(),
-            "Ping": f"{round(self.ctx.bot.latency * 1000, 3)} ms",
+            "Ping": f"{inflect.no('second', round(self.ctx.bot.latency, 2))}",
         }
 
         embed = discord.Embed(
