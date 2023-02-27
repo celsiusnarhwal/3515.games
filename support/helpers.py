@@ -166,7 +166,7 @@ def fuzz(num: int | float) -> float:
     return num + (num * 0.1 * (0.5 - random.random()))
 
 
-def pyproject() -> TOMLDocument:
+def poetry() -> TOMLDocument:
     """
     Read the tool.poetry section of 3515.games' pyproject.toml file as a dictionary-like object.
     """

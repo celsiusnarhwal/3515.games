@@ -342,7 +342,7 @@ def release(
     github = support.bot_repo()
 
     last_version = semver.parse_version_info(github.get_latest_release().tag_name)
-    new_version = semver.parse_version_info(support.pyproject()["version"])
+    new_version = semver.parse_version_info(support.poetry()["version"])
 
     if new_version <= last_version:
         print(

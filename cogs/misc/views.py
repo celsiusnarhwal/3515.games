@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import os
 import platform
-import time
 
 import discord
 from discord import ButtonStyle, Interaction
@@ -51,10 +50,10 @@ class AboutView(View):
         )
 
     @discord_button(label="Credits", emoji="🎬", style=ButtonStyle.gray)
-    async def credits(self, button: Button, interaction: Interaction):
+    async def credits(self, _, interaction: Interaction):
         class CreditsView(View):
             @discord_button(label="Back", style=ButtonStyle.red)
-            async def back(self, button: Button, interaction: Interaction):
+            async def back(self, _, interaction: Interaction):
                 await AboutView(ctx=self.ctx).present(interaction)
 
         with support.Assets.misc():
@@ -74,7 +73,7 @@ class AboutView(View):
             )
 
     @discord_button(label="Technical Data", emoji="💻", style=ButtonStyle.gray)
-    async def technical(self, button: Button, interaction: Interaction):
+    async def technical(self, _, interaction: Interaction):
         class TechnicalView(View):
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
@@ -87,15 +86,15 @@ class AboutView(View):
                 )
 
             @discord_button(label="Back", style=ButtonStyle.red)
-            async def back(self, button: Button, interaction: Interaction):
+            async def back(self, _, interaction: Interaction):
                 await AboutView(ctx=self.ctx).present(interaction)
 
         statistics = {
-            "Bot Version": support.pyproject()["version"],
+            "Bot Version": support.poetry()["version"],
             "Python Version": platform.python_version(),
             "Pycord Version": discord.__version__,
             "Uptime": uptime.get_uptime(),
-            "Ping": "Calculating...",
+            "Ping": f"{round(self.ctx.bot.latency * 1000, 3)} ms",
         }
 
         embed = discord.Embed(
@@ -107,25 +106,18 @@ class AboutView(View):
         for index, (stat, value) in enumerate(statistics.items()):
             embed.add_field(name=stat, value=value, inline=True)
 
-            if index % 2 == 1:
+            if (index + 1) % 2 == 0:
                 embed.add_field(name="\u200b", value="\u200b")
 
-        original_message = await self.ctx.interaction.original_message()
+        original_message = await self.ctx.interaction.original_response()
         embed.set_author(
             name="About", icon_url=original_message.author.display_avatar.url
         )
 
-        ping_start = time.perf_counter()
         await interaction.response.defer()
         await original_message.edit(
             embed=embed, attachments=[], view=TechnicalView(ctx=self.ctx)
         )
-        ping_end = time.perf_counter()
-
-        embed.set_field_at(
-            index=6, name="Ping", value=f"{round(ping_end - ping_start, 3)}s"
-        )
-        await original_message.edit(embed=embed)
 
     async def present(self, interaction: Interaction = None):
         with support.Assets.misc():
