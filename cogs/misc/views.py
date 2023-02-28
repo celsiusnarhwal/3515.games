@@ -110,7 +110,7 @@ class AboutView(View):
             embed.add_field(name=stat, value=value, inline=True)
 
             if (index + 1) % 2 == 0:
-                embed.add_field(name="\u200b", value="\u200b")
+                embed.append_field(support.u200b())
 
         original_message = await self.ctx.interaction.original_response()
         embed.set_author(
