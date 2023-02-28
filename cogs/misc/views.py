@@ -116,8 +116,7 @@ class AboutView(View):
                     )
                     .add_field(
                         name="Python Version",
-                        value="The current version of the [Python](https://python.org) "
-                        "programming language used by 3515.games.",
+                        value="The current version of [Python](https://python.org) used by 3515.games.",
                         inline=False,
                     )
                     .add_field(
@@ -163,7 +162,7 @@ class AboutView(View):
 
         version = support.poetry()["version"]
         current_release = discord.utils.find(
-            lambda r: r.title == version, support.bot_repo().get_releases()
+            lambda r: r.tag_name == version, support.bot_repo().get_releases()
         )
 
         statistics = {
