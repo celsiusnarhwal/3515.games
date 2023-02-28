@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "3515.games"
-version = "0.0.1"
+version = "0.0.0"
 description = "3515.games is a Discord bot that lets you enjoy real-time social games with your friends."
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
 packages = [{ include = "kurisu" }]
@@ -12,7 +12,7 @@ attrs = "^22.2.0"
 chess = "^1.9.0"
 dict-deep = "^4.1.2"
 humanize = "^4.0.0"
-inflect = "^5.4.0"
+inflect = "^6.0.2"
 jinja2 = "^3.1.2"
 jinja2-simple-tags = "^0.4.1"
 llist = "^0.7.1"
