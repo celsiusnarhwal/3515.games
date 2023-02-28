@@ -166,11 +166,16 @@ def fuzz(num: int | float) -> float:
     return num + (num * 0.1 * (0.5 - random.random()))
 
 
-def zero_width_field() -> discord.EmbedField:
+def zero_width_field() -> dict:
     """
-    Return a zero-width embed field.
+    Return a dictionary of keyword arguments for creating a zero-width embed field.
+
+    Examples
+    --------
+    >>> embed = discord.Embed()
+    >>> embed.add_field(**zero_width_field())
     """
-    return discord.EmbedField(name="\u200b", value="\u200b")
+    return dict(name="\u200b", value="\u200b")
 
 
 def poetry() -> TOMLDocument:
