@@ -166,6 +166,36 @@ def fuzz(num: int | float) -> float:
     return num + (num * 0.1 * (0.5 - random.random()))
 
 
+def chrysalis(cls: type) -> type:
+    """
+    A hacky-ish decorator that enables metaclasses to be defined as inner classes of their descendants.
+
+    Examples
+    --------
+    >>> @chrysalis
+    ... class MyClass:
+    ...     class Meta:
+    ...         def __instancecheck__(self, instance):
+    ...             print("Metaclass method called!")
+    ...             return True
+    ...
+    ... isinstance(MyClass(), MyClass)
+    Metaclass method called!
+    """
+    if metaclass := getattr(cls, "Meta", None):
+        mcs = type("Meta", (type(cls),), dict(**vars(metaclass)))
+        return mcs(cls.__name__, cls.__bases__, dict(**vars(cls)))
+
+    return cls
+
+
+def u200b() -> discord.EmbedField:
+    """
+    Return a zero-width embed field.
+    """
+    return discord.EmbedField(name="\u200b", value="\u200b")
+
+
 def poetry() -> TOMLDocument:
     """
     Read the tool.poetry section of 3515.games' pyproject.toml file as a dictionary-like object.
