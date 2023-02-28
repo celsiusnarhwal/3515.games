@@ -13,13 +13,23 @@ import sys
 
 import alianator
 import discord
+from attrs import define
 from click import secho as print
 
 import support
 from settings import settings
+from support import Fields
 
 
+@define
 class Bot(discord.Bot):
+    intents: discord.Intents = Fields.field(default=settings.intents)
+    debug_guilds: list[int] = Fields.field(default=settings.debug_guilds)
+    owner_id: int = Fields.field(default=settings.owner_id)
+
+    def __attrs_pre_init__(self):
+        super().__init__()
+
     async def register_command(self, *args, **kwargs):
         await super().register_command(*args, **kwargs)
 
@@ -38,11 +48,7 @@ class Bot(discord.Bot):
         ]
 
 
-bot = Bot(
-    intents=settings.intents,
-    debug_guilds=settings.debug_guilds,
-    owner_id=settings.owner_id,
-)
+bot = Bot()
 
 
 @bot.event
@@ -67,16 +73,9 @@ async def on_application_command_error(_, exception: discord.DiscordException):
 
     Notes
     -----
-    This overrides the default implemnetation of :meth:`discord.Bot.on_application_command_error`. Doing so allows
-    for the suppression of :class:`discord.CheckFailure` exceptions, as it is generally not useful to know that one
-    has been raised. In development, it also allows for the propagation of exception tracebacks to Rich.[1]_
-
     Since the overwhelming majority of the bot's operations are catalyzed by application commands, this should
-    be dispatched for most runtime exceptions.
-
-    References
-    ----------
-    .. [1] https://rich.readthedocs.io/en/latest/traceback.html
+    be dispatched for most runtime exceptions. There's appparently nothing to be done about the ones it *isn't*
+    dispatched for, though.
     """
     if type(exception) is not discord.CheckFailure:
         cause = exception.__cause__ or exception
