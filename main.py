@@ -13,7 +13,7 @@ import warnings
 import nltk
 from click import secho as print
 
-import uptime
+import clock
 from bot import bot
 from database.models import db
 from settings import settings
@@ -62,5 +62,5 @@ if __name__ == "__main__":
     print(f"Hello! {settings.bot_name} will be ready in just a moment.")
     setup()
 
-    uptime.mark_startup()
+    clock.start()
     bot.run(settings.token)

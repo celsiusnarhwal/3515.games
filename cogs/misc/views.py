@@ -8,15 +8,17 @@ from __future__ import annotations
 
 import os
 import platform
+import re
 
 import discord
+import humanize
 import inflect as ifl
 from discord import ButtonStyle, Interaction
 from discord.ui import Button
 from discord.ui import button as discord_button
 
+import clock
 import support
-import uptime
 from support.views import View
 
 inflect = ifl.engine()
@@ -65,7 +67,7 @@ class AboutView(View):
                 title="Credits", description=credits_text, color=support.Color.mint()
             )
 
-            original_message = await self.ctx.interaction.original_message()
+            original_message = await self.ctx.interaction.original_response()
             embed.set_author(
                 name="About", icon_url=original_message.author.display_avatar.url
             )
@@ -168,7 +170,7 @@ class AboutView(View):
             "Bot Version": f"{version} ([What's new?]({current_release.html_url}))",
             "Python Version": platform.python_version(),
             "Pycord Version": discord.__version__,
-            "Uptime": uptime.get_uptime(),
+            "Uptime": re.sub("an?", "1", humanize.naturaldelta(clock.clock().uptime)),
             "Ping": get_latency(),
         }
 
