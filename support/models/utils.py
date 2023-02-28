@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import inspect
+import operator
 from functools import partialmethod
 
 import attrs
@@ -118,15 +119,7 @@ class Assets(Path):
         return cls("kurisu/assets")
 
 
-class GPMeta(type):
-    # for mathematical compatibility between GamePermissions and discord.Permissions
-    def __instancecheck__(self, instance):
-        return type(instance) is discord.Permissions or super().__instancecheck__(
-            instance
-        )
-
-
-class GamePermissions(discord.Permissions, metaclass=GPMeta):
+class GamePermissions(discord.Permissions):
     """
     Permissions constants.
 
@@ -251,6 +244,18 @@ class GamePermissions(discord.Permissions, metaclass=GPMeta):
 
         return permissions
 
+    @staticmethod
+    def _bitmath(op: Callable):
+        def wrapper(self, other):
+            cls = type(self)
+            return cls(op(cls.__base__(self.value), other).value)
+
+        return wrapper
+
+    __and__ = _bitmath(operator.and_)
+    __or__ = _bitmath(operator.or_)
+    __sub__ = _bitmath(operator.sub)
+
     def __iter__(self):
-        # god bless python
-        return type(self).__base__.__iter__(type(self).__base__(self.value))
+        cls = type(self)
+        return cls.__base__.__iter__(cls.__base__(self.value))
