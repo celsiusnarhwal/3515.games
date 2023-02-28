@@ -78,6 +78,15 @@ class AboutView(View):
     @discord_button(label="Technical Data", emoji="💻", style=ButtonStyle.gray)
     async def technical(self, _, interaction: Interaction):
         class TechnicalView(View):
+            class TechnialDefinitionsView(View):
+                @discord_button(label="Back", style=ButtonStyle.red)
+                async def back(self, _, interaction: Interaction):
+                    original_message = await self.ctx.interaction.original_response()
+                    await interaction.response.defer()
+                    await original_message.edit(
+                        embed=embed, attachments=[], view=TechnicalView(ctx=self.ctx)
+                    )
+
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
                 self.add_item(
@@ -92,17 +101,79 @@ class AboutView(View):
             async def back(self, _, interaction: Interaction):
                 await AboutView(ctx=self.ctx).present(interaction)
 
+            @discord_button(label="Definitions", emoji="📖", style=ButtonStyle.gray)
+            async def definitions(self, _, interaction: Interaction):
+                embed = (
+                    discord.Embed(
+                        title="Technical Definitions", color=support.Color.mint()
+                    )
+                    .add_field(
+                        name="Bot Version",
+                        value="The current version of 3515.games.",
+                        inline=False,
+                    )
+                    .add_field(
+                        name="Python Version",
+                        value="The current version of the [Python](https://python.org) "
+                        "programming language used by 3515.games.",
+                        inline=False,
+                    )
+                    .add_field(
+                        name="Pycord Version",
+                        value="The current version of [Pycord](https://pycord.dev) used by 3515.games.",
+                        inline=False,
+                    )
+                    .add_field(
+                        name="Uptime",
+                        value="The current length of time for which 3515.games has continuously been online.",
+                        inline=False,
+                    )
+                    .add_field(
+                        name="Ping",
+                        value="An approximation of how long Discord is taking to respond to requests from 3515.games. "
+                        "A high ping can cause 3515.games to appear slow or dysfunctional when responding to "
+                        "user interactions.",
+                        inline=False,
+                    )
+                    .set_author(
+                        name="Technical Data",
+                        icon_url=self.ctx.bot.user.display_avatar.url,
+                    )
+                )
+                original_message = await self.ctx.interaction.original_response()
+                await interaction.response.defer()
+                await original_message.edit(
+                    embed=embed,
+                    attachments=[],
+                    view=TechnicalView.TechnialDefinitionsView(ctx=self.ctx),
+                )
+
+        def get_latency():
+            latency = self.ctx.bot.latency
+
+            if latency >= 1:
+                suffix = "second"
+            else:
+                latency *= 1000
+                suffix = "m"
+
+            return inflect.no(suffix, round(latency, 2))
+
+        version = support.poetry()["version"]
+        current_release = discord.utils.find(
+            lambda r: r.title == version, support.bot_repo().get_releases()
+        )
+
         statistics = {
-            "Bot Version": support.poetry()["version"],
+            "Bot Version": f"{version} ([What's new?]({current_release.html_url}))",
             "Python Version": platform.python_version(),
             "Pycord Version": discord.__version__,
             "Uptime": uptime.get_uptime(),
-            "Ping": f"{inflect.no('second', round(self.ctx.bot.latency, 2))}",
+            "Ping": get_latency(),
         }
 
         embed = discord.Embed(
             title="Technical Data",
-            description="Statistics for nerds.",
             color=support.Color.mint(),
         )
 
@@ -110,7 +181,7 @@ class AboutView(View):
             embed.add_field(name=stat, value=value, inline=True)
 
             if (index + 1) % 2 == 0:
-                embed.append_field(support.zero_width_field())
+                embed.add_field(**support.zero_width_field())
 
         original_message = await self.ctx.interaction.original_response()
         embed.set_author(
