@@ -44,7 +44,7 @@ from settings import settings
 inflect = ifl.engine()
 
 here = Path(__file__).parent
-root = here.parent
+root = support.root()
 
 app = typer.Typer()
 app.add_typer(kurisu.settings.app, name="settings")

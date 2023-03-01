@@ -3,7 +3,7 @@ name = "3515.games"
 version = "0.0.0"
 description = "3515.games is a Discord bot that lets you enjoy real-time social games with your friends."
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
-packages = [{ include = "kurisu" }]
+packages = [{ include = "src/kurisu" }]
 
 [tool.poetry.dependencies]
 python = "^3.11.1"
@@ -45,7 +45,7 @@ wonderwords = "^2.2.0"
 typer = { extras = ["all"], version = "^0.7.0" }
 
 [tool.poetry.scripts]
-kurisu = "kurisu.kurisu:app"
+kurisu = "src.kurisu.kurisu:app"
 
 [tool.black]
 line-length = 88

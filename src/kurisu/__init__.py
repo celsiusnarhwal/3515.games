@@ -4,8 +4,16 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
+import os
 import sys
 
 from path import Path
 
-sys.path.append(Path(__file__).parent)
+here = Path(__file__).parent.realpath()
+src = here.parent.realpath()
+root = os.environ["ROOT"] = src.parent.realpath()
+
+for path in here, src:
+    sys.path.insert(0, path)
+
+src.chdir()
