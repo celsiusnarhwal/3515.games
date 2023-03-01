@@ -7,7 +7,7 @@
 3. Bump the project version with `poetry version`. If necessary, check the most recently published version of the
    project with `gh release view --json tagName`.
 
-4. Run `python -c import platform; print(platform.python_version())`. Ensure the `FROM` statement in the
+4. Run `python --version`. Ensure the `FROM` statement in the
    [`Dockerfile`](Dockerfile) is pulling an image with the same Python version.
 
 5. Run `poetry --version` (note the double dash). Ensure the `POETRY_VERSION` environment variable in
