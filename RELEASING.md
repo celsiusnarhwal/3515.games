@@ -8,7 +8,7 @@
 3. Bump the project version with `poetry version`. If necessary, check the most recently published version of the
    project with `gh release view --json tagName`.
 
-4. Run `poetry --version` (note the double dash). Ensure `POETRY_VERSION` environment variable in
+4. Run `poetry --version` (note the double dash). Ensure the `POETRY_VERSION` environment variable in
    the [`Dockerfile`](Dockerfile) is set to the same version.
 
 5. Commit any uncommitted changes to the `dev` branch and pull any remote ones.
