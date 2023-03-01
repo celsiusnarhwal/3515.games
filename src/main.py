@@ -8,10 +8,13 @@
 The program entrypoint.
 """
 import logging
+import os
 import warnings
 
+import nest_asyncio as nest
 import nltk
 from click import secho as print
+from path import Path
 
 import clock
 from bot import bot
@@ -48,12 +51,19 @@ def load_extensions():
     bot.load_extensions(*settings.extensions)
 
 
+def set_directory_context():
+    src = Path(__file__).parent
+    os.environ["ROOT"] = src.parent.realpath()
+    src.chdir()
+
+
 def setup():
     configure_logging()
     suppress_warnings()
     configure_nltk()
     configure_database()
     load_extensions()
+    set_directory_context()
 
 
 if __name__ == "__main__":
@@ -62,5 +72,8 @@ if __name__ == "__main__":
     print(f"Hello! {settings.bot_name} will be ready in just a moment.")
     setup()
 
+    # From here on out, the current directory is /src and NOT the project root!
+
+    nest.apply()
     clock.start()
     bot.run(settings.token)

@@ -17,6 +17,7 @@ from discord import ButtonStyle
 from discord.commands import application_command
 from discord.ext import commands, pages
 from github import Github as GitHub
+from path import Path
 from tomlkit import TOMLDocument
 
 import support
@@ -119,6 +120,13 @@ def is_celsius_narhwal(user: discord.User = None):
 # miscellaneous
 
 
+def root() -> Path:
+    """
+    Return a Path object pointing to the project root.
+    """
+    return Path(os.getenv("ROOT"))
+
+
 def pagimoji(
     button_style: ButtonStyle = ButtonStyle.secondary,
 ) -> list[pages.PaginatorButton]:
@@ -182,7 +190,8 @@ def poetry() -> TOMLDocument:
     """
     Read the tool.poetry section of 3515.games' pyproject.toml file as a dictionary-like object.
     """
-    return toml.load(open("pyproject.toml"))["tool"]["poetry"]
+    with root():
+        return toml.load(open("pyproject.toml"))["tool"]["poetry"]
 
 
 def mona():
