@@ -20,7 +20,7 @@
 8. Start 3515.games.dev via [`src/main.py`](src/main.py). Ensure the bot successfully starts, runs, and responds to user
    interaction, then stop it.
 
-9. Build and run 3515.games.dev's Docker image via [`dockerfile.sh`](dev.dockerfile.sh). Ensure the Docker image
+9. Build and run 3515.games.dev's Docker image via [`dockerfile.sh`](dockerfile.sh). Ensure the Docker image
    builds
    and that the bot successfully starts, runs, and responds to user interaction, then stop it.
 
