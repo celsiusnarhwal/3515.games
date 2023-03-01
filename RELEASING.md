@@ -1,9 +1,8 @@
 # Releasing
 
-1. Checkout the `main` branch, commit any unsaved changes to it, and pull any remote ones. There shouldn't be any, but
-   check anyway.
+1. Checkout the `dev` branch.
 
-2. Checkout the `dev` branch.
+2. If changes intended for release exist in branches other than `dev`, merge them into `dev`.
 
 3. Bump the project version with `poetry version`. If necessary, check the most recently published version of the
    project with `gh release view --json tagName`.
