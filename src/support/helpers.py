@@ -13,6 +13,7 @@ from functools import partial
 import alianator
 import discord
 import tomlkit as toml
+from dict_deep import deep_get
 from discord import ButtonStyle
 from discord.commands import application_command
 from discord.ext import commands, pages
@@ -183,8 +184,9 @@ def poetry() -> TOMLDocument:
     """
     Read the tool.poetry section of 3515.games' pyproject.toml file as a dictionary-like object.
     """
-    with Path(os.getenv("ROOT")):
-        return toml.load(open("pyproject.toml"))["tool"]["poetry"]
+    with Path(os.getenv("PROJECT")):
+        pyproject = toml.load(open("pyproject.toml"))
+        return deep_get(pyproject, "tool.poetry")
 
 
 def mona():
