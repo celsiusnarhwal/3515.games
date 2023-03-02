@@ -15,11 +15,12 @@ import pathlib
 import re
 import subprocess
 import sys
+import textwrap
 import urllib.parse
 from difflib import SequenceMatcher
-from enum import Enum
+from enum import StrEnum, auto
+from importlib import metadata
 
-import discord
 import gitignorefile as gitignore
 import inflect as ifl
 import pendulum
@@ -28,6 +29,7 @@ import tomlkit as toml
 import typer
 from path import Path
 from rich import print
+from yarl import URL
 
 import kurisu.settings
 import shrine
@@ -38,13 +40,10 @@ from settings import settings
 inflect = ifl.engine()
 
 here = Path(__file__).parent
-root = Path(os.getenv("PROJECT"))
+project = Path(os.getenv("PROJECT"))
 
 app = typer.Typer()
 app.add_typer(kurisu.settings.app, name="settings")
-
-
-# TODO write kurisu notes command
 
 
 @app.command(name="copyright")
@@ -85,14 +84,14 @@ def copyright(
 
     verbose = verbose and not quiet
 
-    is_ignored = gitignore.parse(root / ".gitignore")
+    is_ignored = gitignore.parse(project / ".gitignore")
     changed = 0
 
     with shrine.Torii.kurisu() as torii:
         template = torii.get_template("copyright.jinja")
         notice = template.render() + "\n\n"
 
-        for file in [f for f in root.walkfiles("*.py") if not is_ignored(f)]:
+        for file in [f for f in project.walkfiles("*.py") if not is_ignored(f)]:
             ratio = SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio()
 
             if 0.9 <= ratio < 1:
@@ -115,10 +114,12 @@ def copyright(
     echo(output)
 
 
-class DocSite(str, Enum):
-    DISCORD = "discord"
-    PYCORD = "pycord"
-    NUMPYDOC = "numpydoc"
+class DocSite(StrEnum):
+    ATTRS = auto()
+    DISCORD = auto()
+    PYCORD = auto()
+    PYDANTIC = auto()
+    NUMPYDOC = auto()
 
 
 @app.command(name="docs")
@@ -128,12 +129,14 @@ def docs(
     )
 ):
     """
-    Open the documentation for the Discord API, Pycord, or Numpydoc.
+    Open frequently-used documentation sites.
     """
 
     sites = {
+        DocSite.ATTRS: f"https://attrs.org/en/{metadata.version('attrs')}",
         DocSite.DISCORD: "https://discord.com/developers/docs",
-        DocSite.PYCORD: f"https://docs.pycord.dev/en/v{discord.__version__}",
+        DocSite.PYCORD: f"https://docs.pycord.dev/en/v{metadata.version('py-cord')}",
+        DocSite.PYDANTIC: "https://docs.pydantic.dev",
         DocSite.NUMPYDOC: "https://numpydoc.readthedocs.io/en/latest/format.html",
     }
 
@@ -277,7 +280,7 @@ def licenses(
 
     dependencies = [
         dep["name"]
-        for dep in toml.load((root / "poetry.lock").open())["package"]
+        for dep in toml.load((project / "poetry.lock").open())["package"]
         if dep["category"] == "main"
     ]
 
@@ -309,6 +312,25 @@ def licenses(
         if copy:
             pyperclip.copy(license_file)
             print("[bold green]License documentation copied to clipboard[/]")
+
+
+@app.command(name="notes")
+def notes():
+    """
+    Generate release notes.
+    """
+    version = support.poetry()["version"]
+    changelog = URL(support.repo().get_contents("CHANGELOG.md").html_url)
+
+    notes = f"""
+    This is 3515.games {version}.
+    
+    For release notes, see the [changelog]({changelog / f"#{version.replace('.', '-')}"}).
+    """
+
+    pyperclip.copy(textwrap.dedent(notes).strip())
+
+    print(f"[bold green]Release notes copied to clipboard[/]")
 
 
 @app.command(name="portal")
