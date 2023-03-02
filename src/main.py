@@ -30,7 +30,7 @@ def configure_logging():
     logger = logging.getLogger("discord")
     logger.setLevel(logging.DEBUG)
     handler = logging.FileHandler(
-        filename=f"{os.getenv('ROOT')}/3515.games.log", encoding="utf-8", mode="w"
+        filename=f"{os.getenv('PROJECT')}/3515.games.log", encoding="utf-8", mode="w"
     )
     handler.setFormatter(
         logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
@@ -67,9 +67,9 @@ def setup():
 
 
 if __name__ == "__main__":
-    root = os.environ["ROOT"] = Path(__file__).parent.parent.realpath()
+    project = os.environ["PROJECT"] = Path(__file__).parent.parent.realpath()
 
-    print(f"\n{(root / 'COPYING').text()}\n", fg="magenta")
+    print(f"\n{(project / 'COPYING').text()}\n", fg="magenta")
 
     print(f"Hello! {settings.bot_name} will be ready in just a moment.")
     setup()
