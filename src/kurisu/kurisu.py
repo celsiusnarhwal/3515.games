@@ -20,34 +20,31 @@ from difflib import SequenceMatcher
 from enum import Enum
 
 import discord
-import git as pygit
 import gitignorefile as gitignore
 import inflect as ifl
 import pendulum
 import pyperclip
-import semver
 import tomlkit as toml
 import typer
-import wonderwords
-from InquirerPy.base import Choice
 from path import Path
 from rich import print
-from rich.progress import track
 
 import kurisu.settings
 import shrine
 import support
-from kurisu import prompts
 from kurisu.docs import get_docs_for_click
 from settings import settings
 
 inflect = ifl.engine()
 
 here = Path(__file__).parent
-root = support.root()
+root = Path(os.getenv("PROJECT"))
 
 app = typer.Typer()
 app.add_typer(kurisu.settings.app, name="settings")
+
+
+# TODO write kurisu notes command
 
 
 @app.command(name="copyright")
@@ -322,124 +319,6 @@ def portal():
     typer.launch(
         f"https://discord.com/developers/applications/{settings.app_id}/information/"
     )
-
-
-@app.command(name="release", rich_help_panel="Dangerous Commands")
-def release(
-    dry_run: bool = typer.Option(
-        None,
-        "--dry-run",
-        "-n",
-        help="Run through the release flow without "
-        "actually pushing a release or making any "
-        "repository changes.",
-    ),
-):
-    """
-    Create a new release. This command is interactive only.
-    """
-    git = pygit.Repo().git
-    github = support.bot_repo()
-
-    last_version = semver.parse_version_info(github.get_latest_release().tag_name)
-    new_version = semver.parse_version_info(support.poetry()["version"])
-
-    if new_version <= last_version:
-        print(
-            f"[bold red]Error:[/] [bold]Proposed version {new_version} is not greater than "
-            f"latest version {last_version}[/bold]. Update pyproject.toml and try again."
-        )
-        raise typer.Exit(1)
-
-    if dry_run:
-        print(
-            f"[bold blue]Notice:[/] This is a dry run. No release will be published and no changes will be made "
-            f"to the repository.\n"
-        )
-    else:
-        print(
-            f"[bold yellow]Warning:[/] This is NOT a dry run. Proceed with caution.\n"
-        )
-
-    release_title = prompts.text(
-        message="Enter a title for this release.",
-        default=str(new_version),
-        validate=lambda result: bool(result.strip()),
-        invalid_message="You must enter a title.",
-    ).execute()
-
-    release_notes = None
-
-    match prompts.select(
-        message="How would you like to enter the release notes?",
-        choices=[
-            Choice(name="Write from scratch", value="scratch"),
-            Choice(name="Import from a file", value="file"),
-        ],
-    ).execute():
-        case "scratch":
-            prompts.text(
-                "Kurisu will open your default text editor. Save the file and close the editor "
-                "when you're done. Press Enter to continue."
-            ).execute()
-            release_notes = typer.edit(require_save=False, extension=".md")
-
-            if not release_notes.strip():
-                print("[bold red]Error:[/] [bold]Release notes cannot be empty.[/bold]")
-                raise typer.Exit(1)
-        case "file":
-            release_notes = prompts.filepath(
-                message="Enter the path to a Markdown or plain text file.",
-                validate=lambda result: Path(result).ext in [".md", ".txt"]
-                and Path(result).text().strip(),
-                invalid_message="The file must be an existing, non-empty, Markdown or plain text file.",
-                filter=lambda result: Path(result).text(),
-            ).execute()
-
-    if not prompts.confirm(
-        "Confirm you understand that you are merging the development branch into the main branch "
-        "and that the development branch's codebase, as it was last committed, will be deployed to the "
-        "production instance of 3515.games."
-    ).execute():
-        raise typer.Exit()
-
-    passphrase = " ".join(wonderwords.RandomWord().random_words(4))
-
-    prompts.text(
-        message=f"Enter the passphrase located at the bottom of your terminal.",
-        long_instruction=f"Passphrase: {passphrase}",
-        validate=lambda result: result == passphrase,
-        invalid_message="Incorrect passphrase.",
-    ).execute()
-
-    if not prompts.select(
-        message="Final confirmation. There's no going back after this.",
-        choices=[
-            Choice(name="Push it", value=True),
-            Choice(name="Never mind", value=False),
-        ],
-    ).execute():
-        raise typer.Exit()
-
-    if not dry_run:
-        for _ in track(
-            description="Pushing...",
-            sequence=[
-                git.checkout(github.default_branch),
-                git.merge("dev"),
-                git.push(),
-                github.create_git_tag_and_release(
-                    tag=str(new_version),
-                    release_name=release_title,
-                    release_message=release_notes,
-                    object=github.get_branch(github.default_branch).commit.sha,
-                    type="commit",
-                ),
-            ],
-        ):
-            pass
-
-    print(f"[bold green]Released 3515.games {new_version}[/]")
 
 
 @app.callback(
