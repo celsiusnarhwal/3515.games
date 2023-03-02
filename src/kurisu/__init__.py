@@ -11,7 +11,7 @@ from path import Path
 
 here = Path(__file__).parent.realpath()
 src = here.parent.realpath()
-root = os.environ["ROOT"] = src.parent.realpath()
+project = os.environ["PROJECT"] = src.parent.realpath()
 
 for path in here, src:
     sys.path.insert(0, path)
