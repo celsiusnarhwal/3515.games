@@ -162,7 +162,7 @@ class AboutView(View):
 
         version = support.poetry()["version"]
         current_release = discord.utils.find(
-            lambda r: r.tag_name == version, support.bot_repo().get_releases()
+            lambda r: r.tag_name == version, support.repo().get_releases()
         )
 
         statistics = {

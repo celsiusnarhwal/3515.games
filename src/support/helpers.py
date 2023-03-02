@@ -197,7 +197,7 @@ def mona():
     return gh.get_user("celsiusnarhwal")
 
 
-def bot_repo():
+def repo():
     """
     Return a PyGithub object for authenticated interactions with the celsiusnarhwal/3515.games GitHub repository.
     """
