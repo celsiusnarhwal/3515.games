@@ -211,8 +211,8 @@ class UnoCard:
         The card's corresponding Discord emoji.
         """
         with support.Assets.uno():
-            card_emoji = toml.load(open("uno_card_emotes.toml"))
-            return discord.PartialEmoji.from_str(deep_get(card_emoji, self.emoji_key))
+            emoji = toml.load(open("uno_card_emotes.toml"))
+            return discord.PartialEmoji.from_str(deep_get(emoji, self.emoji_key))
 
     @property
     def emoji_key(self) -> str:
