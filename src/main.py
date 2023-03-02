@@ -11,7 +11,6 @@ import logging
 import os
 import warnings
 
-import nest_asyncio as nest
 import nltk
 from click import secho as print
 from path import Path
@@ -22,10 +21,17 @@ from database.models import db
 from settings import settings
 
 
+def check_current_directory():
+    if Path.getcwd() != Path(__file__).parent:
+        raise RuntimeError("The current working directory must be /src.")
+
+
 def configure_logging():
     logger = logging.getLogger("discord")
     logger.setLevel(logging.DEBUG)
-    handler = logging.FileHandler(filename="3515.games.log", encoding="utf-8", mode="w")
+    handler = logging.FileHandler(
+        filename=f"{os.getenv('ROOT')}/3515.games.log", encoding="utf-8", mode="w"
+    )
     handler.setFormatter(
         logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
     )
@@ -51,29 +57,23 @@ def load_extensions():
     bot.load_extensions(*settings.extensions)
 
 
-def set_directory_context():
-    src = Path(__file__).parent
-    os.environ["ROOT"] = src.parent.realpath()
-    src.chdir()
-
-
 def setup():
+    check_current_directory()
     configure_logging()
     suppress_warnings()
     configure_nltk()
     configure_database()
     load_extensions()
-    set_directory_context()
 
 
 if __name__ == "__main__":
-    print(f"\n{open('COPYING').read()}\n", fg="magenta")
+    root = os.environ["ROOT"] = Path(__file__).parent.parent.realpath()
+
+    print(f"\n{(root / 'COPYING').text()}\n", fg="magenta")
 
     print(f"Hello! {settings.bot_name} will be ready in just a moment.")
     setup()
 
-    # From here on out, the current directory is /src and NOT the project root!
-
-    nest.apply()
+    # nest.apply()
     clock.start()
     bot.run(settings.token)
