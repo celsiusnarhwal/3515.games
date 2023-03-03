@@ -88,7 +88,7 @@ def check():
 
         return CheckResult(
             new > old,
-            f"The project version is too low. Use [cyan]poetry version[/] it to "
+            f"The project version is too low. Use [cyan]poetry version[/] to bump it to "
             f"[cyan]{old.bump_patch()}[/] or higher.",
         )
 
