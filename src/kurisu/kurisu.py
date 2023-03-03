@@ -12,6 +12,7 @@ import importlib
 import json
 import os
 import pathlib
+import platform
 import re
 import subprocess
 import sys
@@ -21,19 +22,26 @@ from difflib import SequenceMatcher
 from enum import StrEnum, auto
 from importlib import metadata
 
-import gitignorefile as gitignore
+import discord.utils
+import git
 import inflect as ifl
+import marko
 import pendulum
 import pyperclip
+import semver
 import tomlkit as toml
 import typer
+from bs4 import BeautifulSoup
+from halo import Halo
 from path import Path
+from pydantic.dataclasses import dataclass
 from rich import print
 from yarl import URL
 
 import kurisu.settings
 import shrine
 import support
+from keyboard import *
 from kurisu.docs import get_docs_for_click
 from settings import settings
 
@@ -46,8 +54,138 @@ app = typer.Typer()
 app.add_typer(kurisu.settings.app, name="settings")
 
 
+class LogSymbols(StrEnum):
+    INFO = ("[blue]ℹ[/]",)
+    SUCCESS = ("[green]✔[/]",)
+    WARNING = ("[yellow]⚠[/]",)
+    ERROR = "[red]✖[/]"
+
+
+@app.command(name="check")
+def check():
+    """
+    Check certain release criteria.
+    """
+
+    @dataclass
+    class CheckResult:
+        result: bool
+        info: str = None
+
+        def __bool__(self):
+            return self.result
+
+    checks = []
+
+    def checkmark(func: Callable):
+        checks.append(func)
+        return func
+
+    @checkmark
+    def check_version():
+        old = semver.parse_version_info(support.repo().get_latest_release().tag_name)
+        new = semver.parse_version_info(support.poetry()["version"])
+
+        return CheckResult(
+            new > old,
+            f"The project version is too low. Use [cyan]poetry version[/] it to "
+            f"[cyan]{old.bump_patch()}[/] or higher.",
+        )
+
+    @checkmark
+    def check_changelog():
+        with project:
+            with Path("CHANGELOG.md").open() as file:
+                changelog = BeautifulSoup(
+                    marko.render(marko.parse(file.read())), "html.parser"
+                )
+
+        version = support.poetry()["version"]
+
+        result = bool(
+            discord.utils.find(
+                lambda heading: version in heading.text, changelog.find_all("h2")
+            )
+        )
+
+        return CheckResult(
+            result or not check_version().result,
+            f"CHANGELOG.md is missing an entry for [cyan]{version}[/].",
+        )
+
+    @checkmark
+    def check_copyright():
+        result = (
+            subprocess.run(
+                ["kurisu", "copyright", "-nvz"], capture_output=True
+            ).returncode
+            == 0
+        )
+
+        return CheckResult(
+            result,
+            "Copyright notices are out-of-date. Run [cyan]kurisu copyright[/].",
+        )
+
+    @checkmark
+    def check_docker_python():
+        with project:
+            result = (
+                Path("Dockerfile").lines()[0].split()[1].split(":")[1]
+                == platform.python_version()
+            )
+
+            return CheckResult(
+                result,
+                f"The Python version in the Dockerfile is incorrect. Change it to "
+                f"[cyan]{platform.python_version()}[/].",
+            )
+
+    @checkmark
+    def check_docker_poetry():
+        with project:
+            poetry_line = discord.utils.find(
+                lambda line: "ENV POETRY_VERSION" in line, Path("Dockerfile").lines()
+            )
+
+            docker_poetry = poetry_line.split("=")[1].strip()
+
+        version_pattern = re.compile(r"Poetry \(version (\d+\.\d+\.\d+)\)")
+
+        installed_poetry = version_pattern.match(
+            subprocess.run(["poetry", "--version"], capture_output=True).stdout.decode()
+        ).group(1)
+
+        return CheckResult(
+            docker_poetry == installed_poetry,
+            f"The Poetry version in the Dockerfile is incorrect. Change it to [cyan]{installed_poetry}[/].",
+        )
+
+    with project:
+        if git.Repo().active_branch.name != "dev":
+            print(
+                "[bold red]You must be on the [cyan]dev[/] branch to use this commmand.[/]"
+            )
+            raise typer.Exit(1)
+
+    with Halo(text="Running checks...", spinner="dots") as spinner:
+        if not all(checks := [check() for check in checks]):
+            spinner.stop()
+
+            for res in checks:
+                if not res:
+                    print(f"{LogSymbols.ERROR} {res.info}")
+
+            raise typer.Exit(1)
+
+        spinner.succeed("All checks passed!")
+
+
 @app.command(name="copyright")
 def copyright(
+    nonzero: bool = typer.Option(
+        None, "--nonzero", "-z", help="Exit nonzero if files are changed."
+    ),
     verbose: bool = typer.Option(
         None, "--verbose", "-v", help="Show the name of each changed file."
     ),
@@ -83,23 +221,22 @@ def copyright(
             fp.write_text(content)
 
     verbose = verbose and not quiet
-
-    is_ignored = gitignore.parse(project / ".gitignore")
     changed = 0
 
     with shrine.Torii.kurisu() as torii:
         template = torii.get_template("copyright.jinja")
         notice = template.render() + "\n\n"
 
-        for file in [f for f in project.walkfiles("*.py") if not is_ignored(f)]:
-            ratio = SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio()
+        with (project, git.Repo() as repo):
+            for file in [f for f in project.walkfiles("*.py") if not repo.ignored(f)]:
+                ratio = SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio()
 
-            if 0.9 <= ratio < 1:
-                write(file, notice + "".join(file.lines()[6:]))
-            elif ratio == 1:
-                pass
-            else:
-                write(file, notice + file.text())
+                if 0.9 <= ratio < 1:
+                    write(file, notice + "".join(file.lines()[6:]))
+                elif ratio == 1:
+                    pass
+                else:
+                    write(file, notice + file.text())
 
     if changed:
         output = (
@@ -112,6 +249,9 @@ def copyright(
         output += " (dry run)"
 
     echo(output)
+
+    if nonzero and changed:
+        raise typer.Exit(1)
 
 
 class DocSite(StrEnum):
