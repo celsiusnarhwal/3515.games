@@ -65,7 +65,7 @@ def clock() -> Clock:
     """
     if not _clock:
         raise RuntimeError(
-            "The clock has not been started. You may need to call start()."
+            "The clock has not been started. You may need to start_clock()."
         )
 
     return _clock
