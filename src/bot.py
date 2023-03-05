@@ -18,14 +18,13 @@ from click import secho as print
 
 import support
 from settings import settings
-from support import Fields
 
 
 @define
 class Bot(discord.Bot):
-    intents: discord.Intents = Fields.field(default=settings.intents)
-    debug_guilds: list[int] = Fields.field(default=settings.debug_guilds)
-    owner_id: int = Fields.field(default=settings.owner_id)
+    intents: discord.Intents = settings.intents
+    debug_guilds: list[int] = settings.debug_guilds
+    owner_id: int = settings.owner_id
 
     def __attrs_pre_init__(self):
         super().__init__()
