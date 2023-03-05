@@ -11,6 +11,7 @@ import logging
 import os
 import warnings
 
+import nest_asyncio as nest
 import nltk
 from click import secho as print
 from path import Path
@@ -74,6 +75,6 @@ if __name__ == "__main__":
     print(f"Hello! {settings.bot_name} will be ready in just a moment.")
     setup()
 
-    # nest.apply()
-    clock.start_clock()
+    nest.apply()
+    clockworks.start_clock()
     bot.run(settings.token)
