@@ -32,6 +32,7 @@ class UnoCog(Cog):
     # game creation commands
 
     @uno_group.command(name="create", description="Create a UNO game.")
+    @support.not_in_maintenance()
     @support.bot_has_permissions(support.GamePermissions.uno())
     @support.invoked_in_text_channel()
     @uno.UnoGame.verify_unique_host()

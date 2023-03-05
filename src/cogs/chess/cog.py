@@ -24,6 +24,7 @@ class ChessCog(Cog):
     chess_group = SlashCommandGroup("chess", "Commands for playing chess.")
 
     @chess_group.command()
+    @support.not_in_maintenance()
     @support.bot_has_permissions(support.GamePermissions.chess())
     @support.invoked_in_text_channel()
     async def challenge(

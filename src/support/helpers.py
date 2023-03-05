@@ -21,6 +21,7 @@ from github import Github as GitHub
 from path import Path
 from tomlkit import TOMLDocument
 
+import clockworks
 import support
 from support.models.commands import Pseudocommand
 
@@ -41,9 +42,7 @@ def bot_has_permissions(expected_permissions: discord.Permissions):
     async def predicate(ctx: discord.ApplicationContext):
         actual_permissions = ctx.channel.permissions_for(ctx.me)
 
-        if actual_permissions >= expected_permissions:
-            return True
-        else:
+        if actual_permissions < expected_permissions:
             message = (
                 f"I'm missing the following permissions that I need in order to use "
                 f"`/{ctx.command.qualified_name}` in this channel: \n\n"
@@ -66,6 +65,8 @@ def bot_has_permissions(expected_permissions: discord.Permissions):
 
             return False
 
+        return True
+
     return commands.check(predicate)
 
 
@@ -76,9 +77,7 @@ def invoked_in_text_channel():
 
     async def predicate(ctx: discord.ApplicationContext):
         command_name = f"`/{ctx.command.qualified_name}`"
-        if isinstance(ctx.channel, discord.TextChannel):
-            return True
-        else:
+        if not isinstance(ctx.channel, discord.TextChannel):
             message = (
                 f"You can only use {command_name} in regular text channels - not threads. "
                 f"Go to a text channel, then try again."
@@ -92,6 +91,8 @@ def invoked_in_text_channel():
             await ctx.respond(embed=embed, ephemeral=True)
             return False
 
+        return True
+
     return commands.check(predicate)
 
 
@@ -104,9 +105,7 @@ def is_celsius_narhwal(user: discord.User = None):
     """
 
     async def predicate(ctx: discord.ApplicationContext):
-        if ctx.bot.is_owner(ctx.user):
-            return True
-        else:
+        if not ctx.bot.is_owner(ctx.user):
             msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
             embed = discord.Embed(
                 title="You can't do that.", description=msg, color=support.Color.error()
@@ -115,7 +114,40 @@ def is_celsius_narhwal(user: discord.User = None):
 
             return False
 
+        return True
+
     return user.id == 170966436125212673 if user else commands.check(predicate)
+
+
+def not_in_maintenance():
+    """
+    A decorator that checks if the bot is in maintenance mode.
+    """
+
+    async def predicate(ctx: discord.ApplicationContext):
+        if clockworks.clock().maintenance_start_time is not None:
+            maintenance_end_time = discord.utils.format_dt(
+                clockworks.clock().maintenance_end_time, style="f"
+            )
+
+            msg = (
+                "3515.games is currently in maintenance mode. You can't create new games while maintenance "
+                "is in progress.\n"
+                "\n"
+                f"Maintenance is expected to end no later than "
+                f"{maintenance_end_time} in your time zone."
+            )
+
+            embed = discord.Embed(
+                title="Road work ahead.", description=msg, color=support.Color.orange()
+            )
+            await ctx.respond(embed=embed, ephemeral=True)
+
+            return False
+
+        return True
+
+    return commands.check(predicate)
 
 
 # miscellaneous

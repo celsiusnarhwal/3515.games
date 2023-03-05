@@ -35,6 +35,7 @@ class CAHCog(Cog):
     @cah_group.command(
         name="create", description="Create a Cards Against Humanity game."
     )
+    @support.not_in_maintenance()
     @support.bot_has_permissions(support.GamePermissions.cah())
     @support.invoked_in_text_channel()
     @cah.CAHGame.verify_unique_host()

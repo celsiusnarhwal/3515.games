@@ -15,7 +15,7 @@ import nltk
 from click import secho as print
 from path import Path
 
-import clock
+import clockworks
 from bot import bot
 from database.models import db
 from settings import settings
@@ -75,5 +75,5 @@ if __name__ == "__main__":
     setup()
 
     # nest.apply()
-    clock.start()
+    clock.start_clock()
     bot.run(settings.token)

@@ -17,7 +17,7 @@ from discord import ButtonStyle, Interaction
 from discord.ui import Button
 from discord.ui import button as discord_button
 
-import clock
+import clockworks
 import support
 from support.views import View
 
@@ -169,7 +169,9 @@ class AboutView(View):
             "Bot Version": f"{version} ([What's new?]({current_release.html_url}))",
             "Python Version": platform.python_version(),
             "Pycord Version": discord.__version__,
-            "Uptime": re.sub("an?", "1", humanize.naturaldelta(clock.clock().uptime)),
+            "Uptime": re.sub(
+                "an?", "1", humanize.naturaldelta(clockworks.clock().uptime)
+            ),
             "Ping": get_latency(),
         }
 

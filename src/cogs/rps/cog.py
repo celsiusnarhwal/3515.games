@@ -25,6 +25,7 @@ class RPSCog(Cog):
     @rps_group.command(
         description="Challenge someone to a game of Rock-Paper-Scissors."
     )
+    @support.not_in_maintenance()
     @support.bot_has_permissions(support.GamePermissions.rps())
     async def challenge(
         self,

@@ -4,10 +4,6 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-"""
-Timekeeping for uptime and maintenance.
-"""
-
 from __future__ import annotations
 
 import pendulum
@@ -15,15 +11,15 @@ from attrs import define
 
 from support import Fields
 
-__all__ = ["start", "clock"]
+__all__ = ["start_clock", "clock"]
 
-clockworks: Clock = None
+_clock: Clock = None
 
 
 @define
 class Clock:
     startup_time: pendulum.DateTime = Fields.attr(factory=pendulum.now)
-    maintenance_start: pendulum.DateTime = Fields.attr(default=None)
+    maintenance_start_time: pendulum.DateTime = Fields.attr(default=None)
 
     def start_maintenance(self):
         """
@@ -35,7 +31,7 @@ class Clock:
         --------
         Maintenance mode, once entered, is permanent for the current session, reversible only by restarting the bot.
         """
-        self.maintenance_start = pendulum.now()
+        self.maintenance_start_time = pendulum.now()
 
     @property
     def uptime(self) -> int:
@@ -45,31 +41,31 @@ class Clock:
         return (pendulum.now() - self.startup_time).seconds
 
     @property
-    def maintenance_end(self) -> pendulum.DateTime:
+    def maintenance_end_time(self) -> pendulum.DateTime:
         """
         The projected end time of the current maintenance period.
         """
-        if not self.maintenance_start:
+        if not self.maintenance_start_time:
             raise RuntimeError("3515.games is not in maintenance mode.")
 
-        return self.maintenance_start + pendulum.duration(hours=8)
+        return self.maintenance_start_time + pendulum.duration(hours=8)
 
 
-def start():
+def start_clock():
     """
     Start the clock.
     """
-    global clockworks
-    clockworks = Clock()
+    global _clock
+    _clock = Clock()
 
 
 def clock() -> Clock:
     """
     Return the clock.
     """
-    if not clockworks:
+    if not _clock:
         raise RuntimeError(
             "The clock has not been started. You may need to call start()."
         )
 
-    return clockworks
+    return _clock
