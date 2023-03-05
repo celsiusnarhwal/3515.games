@@ -2350,7 +2350,7 @@ files = [
 name = "wonderwords"
 version = "2.2.0"
 description = "A python package for random words and sentences in the english language"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -2537,4 +2537,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.1"
-content-hash = "7bdc56f5c636919342194f2802e089df080f7b9cc175b3c615eab3113a23ebf4"
+content-hash = "329b3afe689e7f5b0a61d8f746ab25d527df87d55491d6cb55dad696a331f49a"
