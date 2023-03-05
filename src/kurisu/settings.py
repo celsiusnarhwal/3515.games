@@ -13,7 +13,6 @@ from path import Path
 from rich import print
 
 import shrine
-import support
 
 here = Path(__file__).parent
 root = here.parent
