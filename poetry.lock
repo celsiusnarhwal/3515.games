@@ -557,6 +557,22 @@ python-dotenv = "*"
 dev = ["check-manifest"]
 
 [[package]]
+name = "elysia"
+version = "1.0.1"
+description = "A better* way of creating attrs fields"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "elysia-1.0.1-py3-none-any.whl", hash = "sha256:feaac988836281115e54bf96363b9272120d6fa065fea01dbc0cecebab3053f1"},
+    {file = "elysia-1.0.1.tar.gz", hash = "sha256:f25f868bd6d4cedaaa23c110c451ab2c6d9e1f716cc27afd4670b26e46f0eb1e"},
+]
+
+[package.dependencies]
+attrs = ">=22.2.0,<23.0.0"
+pydantic = ">=1.10.5,<2.0.0"
+
+[[package]]
 name = "executing"
 version = "1.2.0"
 description = "Get the currently executing AST node of a frame, and other information"
@@ -2537,4 +2553,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.1"
-content-hash = "329b3afe689e7f5b0a61d8f746ab25d527df87d55491d6cb55dad696a331f49a"
+content-hash = "84020966fe8c1ceede6b67fa7906ba34cb6ac185afb1c98ba3648233f28749f8"

@@ -13,6 +13,7 @@ import uuid
 import discord
 import inflect as ifl
 from attrs import define
+from elysia import Fields
 from llist import dllist, dllistnode
 from sortedcontainers import SortedKeyList
 
@@ -21,7 +22,7 @@ import support
 from cogs import cah
 from keyboard import *
 from shrine.kami import posessive
-from support import Fields, HostedGame
+from support import HostedGame
 
 inflect = ifl.engine()
 

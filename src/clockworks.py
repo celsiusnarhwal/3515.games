@@ -8,8 +8,7 @@ from __future__ import annotations
 
 import pendulum
 from attrs import define
-
-from support import Fields
+from elysia import Fields
 
 __all__ = ["start_clock", "clock"]
 

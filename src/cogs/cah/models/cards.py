@@ -16,13 +16,13 @@ import discord
 import nltk
 import orjson
 from attrs import define
+from elysia import Fields
 from llist import dllist, dllistnode
 from ordered_set import OrderedSet
 from pydantic import BaseModel, Field, validate_arguments, validator
 
 from cogs.cah.models.player import CAHPlayer
 from keyboard import *
-from support import Fields
 
 
 class CAHBlackCard(BaseModel):

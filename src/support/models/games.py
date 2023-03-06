@@ -13,10 +13,10 @@ import discord
 import inflect as ifl
 from attrs import define
 from discord.ext import commands
+from elysia import Fields
 
 import support
 from keyboard import *
-from support.models.utils import Fields
 
 inflect = ifl.engine()
 

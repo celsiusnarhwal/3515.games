@@ -11,10 +11,11 @@ import random
 
 import discord
 from attrs import define
+from elysia import Fields
 
 import support
 from cogs import rps
-from support import BasePlayer, Fields
+from support import BasePlayer
 
 
 @define(slots=False)

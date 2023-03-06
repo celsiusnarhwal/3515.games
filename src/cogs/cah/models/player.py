@@ -11,10 +11,11 @@ import random
 import discord
 import inflect as ifl
 from attr import define
+from elysia import Fields
 
 import support
 from cogs import cah
-from support import BasePlayer, Fields, PlayerVoiceMixin
+from support import BasePlayer, PlayerVoiceMixin
 
 inflect = ifl.engine()
 

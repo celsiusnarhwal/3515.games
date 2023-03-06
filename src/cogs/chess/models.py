@@ -17,6 +17,7 @@ import chess as pychess
 import discord
 from attrs import define
 from chess import square_name
+from elysia import Fields
 from pydantic import BaseModel, validate_arguments
 
 import shrine
@@ -24,7 +25,7 @@ import support
 from cogs import chess
 from keyboard import *
 from shrine.kami import posessive
-from support import BasePlayer, Fields, ThreadedGame
+from support import BasePlayer, ThreadedGame
 
 
 @define(slots=False)

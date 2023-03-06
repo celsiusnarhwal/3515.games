@@ -15,10 +15,10 @@ import discord
 import tomlkit as toml
 from attrs import define
 from dict_deep import deep_get
+from elysia import Fields
 
 import support
 from keyboard import *
-from support import Fields
 
 __all__ = ["UnoCard", "UnoCardColor", "UnoCardSuit"]
 
