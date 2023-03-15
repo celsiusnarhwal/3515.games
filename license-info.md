@@ -61,5 +61,6 @@ Here are some examples of how the AGPL affects your use of 3515.games.
 If you have any questions, shoot me an email at [hello@celsiusnarhwal.dev](mailto:hello@celsiusnarhwal.dev).
 
 [^1]:
+
 With one exception: if the larger program is licensed under version 3 of the GNU General Public License (GPL),
 the larger program can remain licensed under the GPL, but everything from 3515.games must be licensed under the AGPL.
