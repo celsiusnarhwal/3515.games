@@ -257,10 +257,11 @@ class DocSite(StrEnum):
     DISCORD = auto()
     PYCORD = auto()
     PYDANTIC = auto()
+    MATERIAL = auto()
     NUMPYDOC = auto()
 
 
-@app.command(name="docs")
+@app.command(name="docs", no_args_is_help=True)
 def docs(
     site: DocSite = typer.Argument(
         ..., help="The documentation site to open.", show_default=False
@@ -275,6 +276,7 @@ def docs(
         DocSite.DISCORD: "https://discord.com/developers/docs",
         DocSite.PYCORD: f"https://docs.pycord.dev/en/v{metadata.version('py-cord')}",
         DocSite.PYDANTIC: "https://docs.pydantic.dev",
+        DocSite.MATERIAL: "https://squidfunk.github.io/mkdocs-material/getting-started",
         DocSite.NUMPYDOC: "https://numpydoc.readthedocs.io/en/latest/format.html",
     }
 
@@ -369,24 +371,7 @@ def invite(
 
 
 @app.command(name="licenses")
-def licenses(
-    output: pathlib.Path = typer.Option(
-        None,
-        "--output",
-        "-o",
-        help="The file to write the documentation to. If neither this "
-        "nor -c are provided, the documentation will be "
-        "printed to standard output.",
-    ),
-    copy: bool = typer.Option(
-        None,
-        "--copy",
-        "-c",
-        help="Copy the documentaton to the clipboard. If neither "
-        "this nor -o are provided, the documentation will be "
-        "printed to standard output.",
-    ),
-):
+def licenses():
     """
     Create Markdown-formatted documentation of 3515.games' software licenses.
     """
@@ -440,16 +425,7 @@ def licenses(
 
     license_file = re.sub(r"-{3,}", "\n\g<0>", license_file)
 
-    if not (output or copy):
-        print(license_file)
-    else:
-        if output:
-            output.write_text(license_file)
-            print(f"[bold green]License documentation saved to {output}[/]")
-
-        if copy:
-            pyperclip.copy(license_file)
-            print("[bold green]License documentation copied to clipboard[/]")
+    (root / "docs" / "legal" / "acknowledgements.md").write_text(license_file)
 
 
 @app.command(name="notes")
