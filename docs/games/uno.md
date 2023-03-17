@@ -34,8 +34,8 @@ To get started, you'll need to create an UNO game with `/uno create`.
 </details>
 
 !!! tip
-Creating a game makes you the Game Host, which endows you with certain powers and responsibilities, including starting
-the game when everyone is ready to play. For more, see [Hosting a Game](#hosting-a-game).
+    Creating a game makes you the Game Host, which endows you with certain powers and responsibilities, including starting
+    the game when everyone is ready to play. For more, see [Hosting a Game](#hosting-a-game).
 
 Once a game has been created, players can join it with `/uno ciao`. UNO games are played in threads, so anyone
 who can both see and talk in the thread's parent channel can join in the game.
@@ -74,8 +74,8 @@ choose anyone that matches the color or suit of the last card played.
 When applicable, the menu will tell you what the last card played was to aid you in your decision.
 
 !!! tip
-You can use the "Show Playable Cards" button to filter the card selection menu down to only the cards that can be
-played on the current turn. If you don't have any playable cards, you'll be told as much.
+    You can use the "Show Playable Cards" button to filter the card selection menu down to only the cards that can be
+    played on the current turn. If you don't have any playable cards, you'll be told as much.
 
 <details>
     <summary>The different types of UNO cards</summary>
@@ -112,8 +112,8 @@ played on the current turn. If you don't have any playable cards, you'll be told
 ### Drawing Cards
 
 !!! tip inline end
-You have a perfectly equal chance of drawing any given card. This means cards with <b>special effects</b> can appear
-more often than you may be predisposed to expect.
+    You have a perfectly equal chance of drawing any given card. This means cards with <b>special effects</b> can appear
+    more often than you may be predisposed to expect.
 
 If it's your turn and you don't have any playable cards, you can draw one with `/uno play > Draw Card`. When you draw
 a card, you have two options: either you can a) draw the card and keep it, or b) draw the card and, if possible
@@ -139,7 +139,7 @@ need to say "UNO!" once more or risk being penalized.
 3515.games will tell you when you need to say "UNO!", so you don't need to worry about remembering the semantics.
 
 !!! tip
-It doesn't have to be your turn for you to be able to say "UNO!".
+    It doesn't have to be your turn for you to be able to say "UNO!".
 
 ### Making Callouts
 
@@ -167,8 +167,8 @@ Wild and Wild +4 cards are worth 50 points; Reverse, Skip, and +2 cards are wort
 are worth their face value.
 
 !!! tip "Zero-point games"
-If you create an UNO game where the number of points required to win is 0, the first player to get rid of all their
-cards will win the entire game.
+    If you create an UNO game where the number of points required to win is 0, the first player to get rid of all their
+    cards will win the entire game.
 
 ### Viewing Statistics
 
@@ -238,9 +238,9 @@ If you don't want to be the Game Host anymore, you can transfer your powers to a
 you and onto whoever you select.
 
 !!! danger
-If you're the Game Host, you leaving the game will end it for all other players. Keep in mind that `/uno ciao` isn't
-the only way to leave a game — leaving the game thread will also kick you out, and being the Game Host **does not**
-exempt you from being kicked for inactivity.
+    If you're the Game Host, you leaving the game will end it for all other players. Keep in mind that `/uno ciao` isn't
+    the only way to leave a game — leaving the game thread will also kick you out, and being the Game Host **does not**
+    exempt you from being kicked for inactivity.
 
 ## Bad Endings
 
@@ -256,8 +256,8 @@ This can happen if:
 - The game takes too long to end by other means
 
 ??? info "Implementation details"
-While 3515.games stays as close to the [official UNO rules](https://service.mattel.com/instruction_sheets/42001pr.pdf)
-as reasonably possible, there are a few notable deviations.
+    While 3515.games stays as close to the [official UNO rules](https://service.mattel.com/instruction_sheets/42001pr.pdf)
+    as reasonably possible, there are a few notable deviations.
 
     - There's no limitation on when you can play Wild +4 cards.
     - If you have only one card and haven't said "UNO!", you're eligible to be penalized for it by other players
