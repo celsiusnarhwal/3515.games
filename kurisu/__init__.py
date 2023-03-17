@@ -4,16 +4,12 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-import os
 import sys
 
 from path import Path
 
-here = Path(__file__).parent.realpath()
-src = here.parent.realpath()
-project = os.environ["PROJECT"] = src.parent.realpath()
+here = Path(__file__).parent
+bot = here.parent / "bot"
 
-for path in here, src:
-    sys.path.insert(0, path)
-
-src.chdir()
+for path in [here, bot]:
+    sys.path.append(str(path))

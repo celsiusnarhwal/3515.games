@@ -29,29 +29,27 @@ import marko
 import pendulum
 import pyperclip
 import semver
+import shrine
+import support
 import tomlkit as toml
 import typer
 from bs4 import BeautifulSoup
 from halo import Halo
+from keyboard import *
 from path import Path
 from pydantic.dataclasses import dataclass
 from rich import print
+from settings import settings
 from yarl import URL
 
-import kurisu.settings
-import shrine
-import support
-from keyboard import *
 from kurisu.docs import get_docs_for_click
-from settings import settings
 
 inflect = ifl.engine()
 
 here = Path(__file__).parent
-project = Path(os.getenv("PROJECT"))
+root = here.parent
 
-app = typer.Typer()
-app.add_typer(kurisu.settings.app, name="settings")
+app = typer.Typer(no_args_is_help=True, rich_markup_mode="rich")
 
 
 class LogSymbols(StrEnum):
@@ -84,7 +82,7 @@ def check():
     @checkmark
     def check_version():
         old = semver.parse_version_info(support.repo().get_latest_release().tag_name)
-        new = semver.parse_version_info(support.poetry()["version"])
+        new = semver.parse_version_info(support.version())
 
         return CheckResult(
             new > old,
@@ -94,13 +92,13 @@ def check():
 
     @checkmark
     def check_changelog():
-        with project:
+        with root:
             with Path("CHANGELOG.md").open() as file:
                 changelog = BeautifulSoup(
                     marko.render(marko.parse(file.read())), "html.parser"
                 )
 
-        version = support.poetry()["version"]
+        version = support.version()
 
         result = bool(
             discord.utils.find(
@@ -129,7 +127,7 @@ def check():
 
     @checkmark
     def check_docker_python():
-        with project:
+        with root:
             result = (
                 Path("Dockerfile").lines()[0].split()[1].split(":")[1]
                 == platform.python_version()
@@ -143,7 +141,7 @@ def check():
 
     @checkmark
     def check_docker_poetry():
-        with project:
+        with root:
             poetry_line = discord.utils.find(
                 lambda line: "ENV POETRY_VERSION" in line, Path("Dockerfile").lines()
             )
@@ -161,7 +159,7 @@ def check():
             f"The Poetry version in the Dockerfile is incorrect. Change it to [cyan]{installed_poetry}[/].",
         )
 
-    with project:
+    with root:
         if git.Repo().active_branch.name != "dev":
             print(
                 "[bold red]You must be on the [cyan]dev[/] branch to use this commmand.[/]"
@@ -227,8 +225,8 @@ def copyright(
         template = torii.get_template("copyright.jinja")
         notice = template.render() + "\n\n"
 
-        with (project, git.Repo() as repo):
-            for file in [f for f in project.walkfiles("*.py") if not repo.ignored(f)]:
+        with root, git.Repo() as repo:
+            for file in [f for f in root.walkfiles("*.py") if not repo.ignored(f)]:
                 ratio = SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio()
 
                 if 0.9 <= ratio < 1:
@@ -283,7 +281,7 @@ def docs(
     typer.launch(sites[site])
 
 
-@app.command(name="document", rich_help_panel="Meta Commands")
+@app.command(name="document")
 def document(
     ctx: typer.Context,
     output: pathlib.Path = typer.Option(
@@ -420,7 +418,7 @@ def licenses(
 
     dependencies = [
         dep["name"]
-        for dep in toml.load((project / "poetry.lock").open())["package"]
+        for dep in toml.load((root / "poetry.lock").open())["package"]
         if dep["category"] == "main"
     ]
 
@@ -459,7 +457,7 @@ def notes():
     """
     Generate release notes.
     """
-    version = support.poetry()["version"]
+    version = support.version()
     changelog = URL(support.repo().get_contents("CHANGELOG.md").html_url)
 
     notes = f"""
