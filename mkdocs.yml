@@ -1,0 +1,124 @@
+# Project information
+site_name: 3515.games
+site_url: https://3515.games
+site_author: celsius narhwal
+
+# Repository
+repo_name: celsiusnarhwal/3515.games
+repo_url: https://github.com/celsiusnarhwal/3515.games
+
+# Configuration
+theme:
+  name: material
+  custom_dir: docs/overrides
+  features:
+    - announce.dismiss
+    - content.code.annotate
+    - content.code.copy
+    - content.tooltips
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - navigation.tabs
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - toc.integrate
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: indigo
+      primary: white
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Dark mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  favicon: assets/favicon.png
+  logo: img/logomark.svg
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+      tip: material/lightbulb-on
+      danger: material/fire
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - social
+
+# Customization
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/celsiusnarhwal
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/celsiusnarhwal
+    - icon: celsius
+      link: https://celsiusnarhwal.dev
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: celsiusnarhwal
+      repo: pekora
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tilde
+  - pymdownx.arithmatex:
+      generic: true
+
+nav:
+  - Home:
+      - Home: index.md
+  - Games:
+      - UNO: games/uno.md
+  - Terms of Service: legal/terms.md
+  - Privacy Policy: legal/privacy.md
+  - Acknowledgements: legal/acknowledgements.md
+
+extra_css:
+  - stylesheets/extra.css
+  - https://cdnjs.cloudflare.com/ajax/libs/cc-icons/1.2.1/css/cc-icons.min.css
