@@ -1,8 +1,6 @@
 *
 
-!src/
+!bot/
 !COPYING
 !poetry.lock
 !pyproject.toml
-
-/src/kurisu/
