@@ -3,7 +3,7 @@ name = "3515.games"
 version = "0.0.0"
 description = ""
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
-packages = [{ include = "src/kurisu" }]
+packages = [{ include = "bot" }]
 
 [tool.poetry.dependencies]
 python = "^3.11.1"
@@ -55,7 +55,7 @@ pillow = "^9.4.0"
 ipython = "^8.11.0"
 
 [tool.poetry.scripts]
-kurisu = "src.kurisu.kurisu:app"
+kurisu = "kurisu.cli:app"
 
 [tool.black]
 line-length = 88
