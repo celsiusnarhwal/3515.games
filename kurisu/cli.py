@@ -59,6 +59,30 @@ class LogSymbols(StrEnum):
     ERROR = "[red]✖[/]"
 
 
+class DocSite(StrEnum):
+    ATTRS = auto()
+    DISCORD = auto()
+    FONTAWESOME = auto()
+    MATERIAL = auto()
+    MATERIAL_ICONS = "icons"
+    NUMPYDOC = auto()
+    PYCORD = auto()
+    PYDANTIC = auto()
+
+    @property
+    def url(self) -> str:
+        return {
+            DocSite.ATTRS: f"https://attrs.org/en/{metadata.version('attrs')}",
+            DocSite.DISCORD: "https://discord.com/developers/docs",
+            DocSite.PYCORD: f"https://docs.pycord.dev/en/v{metadata.version('py-cord')}",
+            DocSite.PYDANTIC: "https://docs.pydantic.dev",
+            DocSite.MATERIAL: "https://squidfunk.github.io/mkdocs-material/getting-started",
+            DocSite.MATERIAL_ICONS: "https://squidfunk.github.io/mkdocs-material/reference/icons-emojis/",
+            DocSite.NUMPYDOC: "https://numpydoc.readthedocs.io/en/latest/format.html",
+            DocSite.FONTAWESOME: "https://fontawesome.com/search",
+        }[self]
+
+
 @app.command(name="check")
 def check():
     """
@@ -252,15 +276,6 @@ def copyright(
         raise typer.Exit(1)
 
 
-class DocSite(StrEnum):
-    ATTRS = auto()
-    DISCORD = auto()
-    PYCORD = auto()
-    PYDANTIC = auto()
-    MATERIAL = auto()
-    NUMPYDOC = auto()
-
-
 @app.command(name="docs", no_args_is_help=True)
 def docs(
     site: DocSite = typer.Argument(
@@ -271,16 +286,7 @@ def docs(
     Open frequently-used documentation sites.
     """
 
-    sites = {
-        DocSite.ATTRS: f"https://attrs.org/en/{metadata.version('attrs')}",
-        DocSite.DISCORD: "https://discord.com/developers/docs",
-        DocSite.PYCORD: f"https://docs.pycord.dev/en/v{metadata.version('py-cord')}",
-        DocSite.PYDANTIC: "https://docs.pydantic.dev",
-        DocSite.MATERIAL: "https://squidfunk.github.io/mkdocs-material/getting-started",
-        DocSite.NUMPYDOC: "https://numpydoc.readthedocs.io/en/latest/format.html",
-    }
-
-    typer.launch(sites[site])
+    typer.launch(site.url)
 
 
 @app.command(name="document")
