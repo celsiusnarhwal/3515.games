@@ -34,22 +34,24 @@ tomlkit = "^0.11.6"
 wonderwords = "^2.2.0"
 
 [tool.poetry.group.dev.dependencies]
-beautifulsoup4 = "^4.11.2"
-doppler-env = "^0.3.0"
-gitpython = "^3.1.29"
-halo = "^0.0.31"
-marko = "^1.3.0"
-pip-licenses = "^4.0.3"
-pyperclip = "^1.8.2"
+doppler-env = "^0.3.1"
 rich-tracebacks = "^1.2.1"
-semver = "^2.13.0"
-typer = { extras = ["all"], version = "^0.7.0" }
 
 [tool.poetry.group.docs.dependencies]
 cairosvg = "^2.6.0"
 mkdocs-git-committers-plugin-2 = "^1.1.1"
 pillow = "^9.4.0"
 mkdocs-material = { git = "https://github.com/squidfunk/mkdocs-material-insiders" }
+
+[tool.poetry.group.kurisu.dependencies]
+beautifulsoup4 = "^4.11.2"
+gitpython = "^3.1.29"
+halo = "^0.0.31"
+marko = "^1.3.0"
+pip-licenses = "^4.0.3"
+pyperclip = "^1.8.2"
+semver = "^2.13.0"
+typer = { extras = ["all"], version = "^0.7.0" }
 
 [tool.poetry.group.repl.dependencies]
 ipython = "^8.11.0"
