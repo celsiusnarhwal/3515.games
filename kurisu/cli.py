@@ -40,14 +40,12 @@ from yarl import URL
 
 import shrine
 import support
+from gps import Routes
 from keyboard import *
 from kurisu.docs import get_docs_for_click
 from settings import settings
 
 inflect = ifl.engine()
-
-here = Path(__file__).parent
-root = here.parent
 
 app = typer.Typer(no_args_is_help=True, rich_markup_mode="rich")
 
@@ -116,7 +114,7 @@ def check():
 
     @checkmark
     def check_changelog():
-        with root:
+        with Routes.root():
             with Path("CHANGELOG.md").open() as file:
                 changelog = BeautifulSoup(
                     marko.render(marko.parse(file.read())), "html.parser"
@@ -151,7 +149,7 @@ def check():
 
     @checkmark
     def check_docker_python():
-        with root:
+        with Routes.root():
             result = (
                 Path("Dockerfile").lines()[0].split()[1].split(":")[1]
                 == platform.python_version()
@@ -165,7 +163,7 @@ def check():
 
     @checkmark
     def check_docker_poetry():
-        with root:
+        with Routes.root():
             poetry_line = discord.utils.find(
                 lambda line: "ENV POETRY_VERSION" in line, Path("Dockerfile").lines()
             )
@@ -183,7 +181,7 @@ def check():
             f"The Poetry version in the Dockerfile is incorrect. Change it to [cyan]{installed_poetry}[/].",
         )
 
-    with root:
+    with Routes.root():
         if git.Repo().active_branch.name != "dev":
             print(
                 "[bold red]You must be on the [cyan]dev[/] branch to use this commmand.[/]"
@@ -249,7 +247,7 @@ def copyright(
         template = torii.get_template("copyright.jinja")
         notice = template.render() + "\n\n"
 
-        with root, git.Repo() as repo:
+        with Routes.root() as root, git.Repo() as repo:
             for file in [f for f in root.walkfiles("*.py") if not repo.ignored(f)]:
                 ratio = SequenceMatcher(None, "".join(file.lines()[:6]), notice).ratio()
 
@@ -293,7 +291,7 @@ def docs(
 def document(
     ctx: typer.Context,
     output: pathlib.Path = typer.Option(
-        here / "README.md",
+        Routes.kurisu() / "README.md",
         "--output",
         show_default=False,
         file_okay=True,
@@ -407,34 +405,35 @@ def licenses():
         "document should be sent to hello@celsiusnarhwal.dev.<hr></hr>\n\n"
     )
 
-    dependencies = [
-        dep["name"]
-        for dep in toml.load((root / "poetry.lock").open())["package"]
-        if dep["category"] == "main"
-    ]
+    with Routes.root() as root:
+        dependencies = [
+            dep["name"]
+            for dep in toml.load((root / "poetry.lock").open())["package"]
+            if dep["category"] == "main"
+        ]
 
-    for doc in documents:
-        if doc["Name"].casefold() in dependencies:
-            license_file += f"## {doc['Name']}\n\n"
+        for doc in documents:
+            if doc["Name"].casefold() in dependencies:
+                license_file += f"## {doc['Name']}\n\n"
 
-            if doc["LicenseText"] != "UNKNOWN":
-                license_file += f"{doc['LicenseText']}\n\n".replace("#", "").replace(
-                    "=", ""
-                )
-            else:
-                for fallback in fallbacks:
-                    if fallback in doc["License"]:
-                        license_file += (
-                            f"{doc['Name']} is licensed under the "
-                            f"[{doc['License']}]({fallbacks[fallback]}).\n\n"
-                        )
+                if doc["LicenseText"] != "UNKNOWN":
+                    license_file += f"{doc['LicenseText']}\n\n".replace(
+                        "#", ""
+                    ).replace("=", "")
+                else:
+                    for fallback in fallbacks:
+                        if fallback in doc["License"]:
+                            license_file += (
+                                f"{doc['Name']} is licensed under the "
+                                f"[{doc['License']}]({fallbacks[fallback]}).\n\n"
+                            )
 
-    with support.Assets.kurisu():
-        license_file += "<hr></hr>\n\n" + Path("acknowledgements.md").read_text()
+        with support.Assets.kurisu():
+            license_file += "<hr></hr>\n\n" + Path("acknowledgements.md").read_text()
 
-    license_file = re.sub(r"-{3,}", "\n\g<0>", license_file)
+        license_file = re.sub(r"-{3,}", "\n\g<0>", license_file)
 
-    (root / "docs" / "legal" / "acknowledgements.md").write_text(license_file)
+        (root / "docs" / "legal" / "acknowledgements.md").write_text(license_file)
 
 
 @app.command(name="notes")

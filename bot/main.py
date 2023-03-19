@@ -16,13 +16,14 @@ import nltk
 from click import secho as print
 from database.models import db
 from path import Path
-from settings import settings
 
 from bot import bot
+from gps import Routes
+from settings import settings
 
 
 def check_current_directory():
-    if Path.getcwd() != Path(__file__).parent:
+    if Path.getcwd() != Routes.bot():
         raise RuntimeError("The current working directory must be /bot.")
 
 
@@ -30,7 +31,7 @@ def configure_logging():
     logger = logging.getLogger("discord")
     logger.setLevel(logging.DEBUG)
     handler = logging.FileHandler(
-        filename=f"../3515.games.log", encoding="utf-8", mode="w"
+        filename=(str(Routes.root() / "3515.games.log")), encoding="utf-8", mode="w"
     )
     handler.setFormatter(
         logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
@@ -67,7 +68,7 @@ def setup():
 
 
 if __name__ == "__main__":
-    print(f"\n{open('../COPYING').read()}\n", fg="magenta")
+    print(f"\n{(Routes.root() / 'COPYING').read_text()}\n", fg="magenta")
 
     print(f"Hello! {settings.bot_name} will be ready in just a moment.")
     setup()

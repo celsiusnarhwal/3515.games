@@ -10,8 +10,10 @@ import inspect
 import operator
 
 import discord
-from keyboard import *
 from path import Path
+
+from gps import Routes
+from keyboard import *
 
 __all__ = ["Color", "Assets", "GamePermissions"]
 
@@ -49,7 +51,7 @@ class Assets(Path):
 
     @classmethod
     def _get(cls, module) -> Self:
-        return cls.joinpath("cogs", module, "assets")
+        return cls.joinpath(Routes.bot(), "cogs", module, "assets")
 
     @classmethod
     def misc(cls) -> Self:
@@ -73,7 +75,7 @@ class Assets(Path):
 
     @classmethod
     def kurisu(cls) -> Self:
-        return cls("kurisu/assets")
+        return cls.joinpath(Routes.kurisu(), "assets")
 
 
 class GamePermissions(discord.Permissions):

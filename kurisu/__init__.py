@@ -6,10 +6,7 @@
 
 import sys
 
-from path import Path
+from gps import Routes
 
-here = Path(__file__).parent
-bot = here.parent / "bot"
-
-for path in [here, bot]:
+for path in [Routes.kurisu(), Routes.bot()]:
     sys.path.append(str(path))
