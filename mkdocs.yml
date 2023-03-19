@@ -142,4 +142,7 @@ nav:
 extra_css:
   - assets/stylesheets/extra.css
   - assets/stylesheets/admonitions.css
-  - https://cdnjs.cloudflare.com/ajax/libs/cc-icons/1.2.1/css/cc-icons.min.css
+
+# JavaScript
+extra_javascript:
+  - https://kit.fontawesome.com/db4694a70a.js
