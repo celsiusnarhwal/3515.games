@@ -1,7 +1,6 @@
 [tool.poetry]
 name = "3515.games"
 version = "0.0.0"
-description = ""
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
 packages = [{ include = "bot" }]
 
@@ -65,6 +64,7 @@ target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
+known_first_party = ["keyboard", "settings", "shrine", "support"]
 
 [tool.poe.tasks]
 format = { shell = "for hook in black prettier isort; do pre-commit run $hook --all-files; done" }

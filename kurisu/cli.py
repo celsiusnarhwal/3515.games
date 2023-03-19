@@ -29,20 +29,20 @@ import marko
 import pendulum
 import pyperclip
 import semver
-import shrine
-import support
 import tomlkit as toml
 import typer
 from bs4 import BeautifulSoup
 from halo import Halo
-from keyboard import *
 from path import Path
 from pydantic.dataclasses import dataclass
 from rich import print
-from settings import settings
 from yarl import URL
 
+import shrine
+import support
+from keyboard import *
 from kurisu.docs import get_docs_for_click
+from settings import settings
 
 inflect = ifl.engine()
 
