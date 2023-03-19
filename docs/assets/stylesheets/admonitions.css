@@ -1,0 +1,42 @@
+:root {
+  --md-admonition-icon--command: url(https://raw.githubusercontent.com/celsiusnarhwal/fontawesome/master/svgs/solid/rectangle-terminal.svg);
+  --md-admonition-icon--guide: url(https://raw.githubusercontent.com/celsiusnarhwal/fontawesome/master/svgs/solid/book-open-cover.svg);
+}
+
+/* Command Admonition */
+
+.md-typeset .admonition.command,
+.md-typeset details.command {
+  border-color: rgb(3, 203, 152);
+}
+
+.md-typeset .command > .admonition-title,
+.md-typeset .command > summary {
+  background-color: rgba(3, 203, 152, 0.1);
+}
+
+.md-typeset .command > .admonition-title::before,
+.md-typeset .command > summary::before {
+  background-color: rgb(3, 203, 152);
+  -webkit-mask-image: var(--md-admonition-icon--command);
+  mask-image: var(--md-admonition-icon--command);
+}
+
+/* Guide Admonition */
+
+.md-typeset .admonition.guide,
+.md-typeset details.guide {
+  border-color: rgb(172, 127, 224);
+}
+
+.md-typeset .guide > .admonition-title,
+.md-typeset .guide > summary {
+  background-color: rgba(143, 0, 143, 0.1);
+}
+
+.md-typeset .guide > .admonition-title::before,
+.md-typeset .guide > summary::before {
+  background-color: rgb(172, 127, 224);
+  -webkit-mask-image: var(--md-admonition-icon--guide);
+  mask-image: var(--md-admonition-icon--guide);
+}

@@ -38,7 +38,6 @@ beautifulsoup4 = "^4.11.2"
 doppler-env = "^0.3.0"
 gitpython = "^3.1.29"
 halo = "^0.0.31"
-inquirerpy = "^0.3.4"
 marko = "^1.3.0"
 pip-licenses = "^4.0.3"
 pyperclip = "^1.8.2"
@@ -48,8 +47,9 @@ typer = { extras = ["all"], version = "^0.7.0" }
 
 [tool.poetry.group.docs.dependencies]
 cairosvg = "^2.6.0"
-mkdocs-material = "^9.1.3"
+mkdocs-git-committers-plugin-2 = "^1.1.1"
 pillow = "^9.4.0"
+mkdocs-material = { git = "https://github.com/squidfunk/mkdocs-material-insiders" }
 
 [tool.poetry.group.repl.dependencies]
 ipython = "^8.11.0"

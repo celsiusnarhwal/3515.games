@@ -205,6 +205,18 @@ tests = ["attrs[tests-no-zope]", "zope.interface"]
 tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy (>=0.971,<0.990)", "mypy (>=0.971,<0.990)", "pympler", "pympler", "pytest (>=4.3.0)", "pytest (>=4.3.0)", "pytest-mypy-plugins", "pytest-mypy-plugins", "pytest-xdist[psutil]", "pytest-xdist[psutil]"]
 
 [[package]]
+name = "babel"
+version = "2.12.1"
+description = "Internationalization utilities"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "Babel-2.12.1-py3-none-any.whl", hash = "sha256:b4246fb7677d3b98f501a39d43396d3cafdc8eadb045f4a31be01863f655c610"},
+    {file = "Babel-2.12.1.tar.gz", hash = "sha256:cc2d99999cd01d44420ae725a21c9e3711b3aadc7976d6147f622d8581963455"},
+]
+
+[[package]]
 name = "backcall"
 version = "0.2.0"
 description = "Specifications for callback functions passed in to an API"
@@ -504,6 +516,18 @@ files = [
 
 [package.extras]
 test = ["flake8 (==3.7.8)", "hypothesis (==3.55.3)"]
+
+[[package]]
+name = "cssselect"
+version = "1.2.0"
+description = "cssselect parses CSS3 Selectors and translates them to XPath 1.0"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "cssselect-1.2.0-py2.py3-none-any.whl", hash = "sha256:da1885f0c10b60c03ed5eccbb6b68d6eff248d91976fcde348f395d54c9fd35e"},
+    {file = "cssselect-1.2.0.tar.gz", hash = "sha256:666b19839cfaddb9ce9d36bfe4c969132c647b92fc9088c4e23f786b30f1b3dc"},
+]
 
 [[package]]
 name = "cssselect2"
@@ -830,25 +854,6 @@ docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "rst.linker
 testing = ["flake8 (<5)", "pygments", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)"]
 
 [[package]]
-name = "inquirerpy"
-version = "0.3.4"
-description = "Python port of Inquirer.js (A collection of common interactive command-line user interfaces)"
-category = "dev"
-optional = false
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "InquirerPy-0.3.4-py3-none-any.whl", hash = "sha256:c65fdfbac1fa00e3ee4fb10679f4d3ed7a012abf4833910e63c295827fe2a7d4"},
-    {file = "InquirerPy-0.3.4.tar.gz", hash = "sha256:89d2ada0111f337483cb41ae31073108b2ec1e618a49d7110b0d7ade89fc197e"},
-]
-
-[package.dependencies]
-pfzy = ">=0.3.1,<0.4.0"
-prompt-toolkit = ">=3.0.1,<4.0.0"
-
-[package.extras]
-docs = ["Sphinx (>=4.1.2,<5.0.0)", "furo (>=2021.8.17-beta.43,<2022.0.0)", "myst-parser (>=0.15.1,<0.16.0)", "sphinx-autobuild (>=2021.3.14,<2022.0.0)", "sphinx-copybutton (>=0.4.0,<0.5.0)"]
-
-[[package]]
 name = "ipython"
 version = "8.11.0"
 description = "IPython: Productive Interactive Computing"
@@ -1087,6 +1092,23 @@ files = [
 testing = ["coverage", "pyyaml"]
 
 [[package]]
+name = "markdown2"
+version = "2.4.8"
+description = "A fast and complete Python implementation of Markdown"
+category = "dev"
+optional = false
+python-versions = ">=3.5, <4"
+files = [
+    {file = "markdown2-2.4.8-py2.py3-none-any.whl", hash = "sha256:7d49ca871d3e0e412c65d7d21fcbc13ae897f7876f3e5f14dd4db3b7fbf27f10"},
+    {file = "markdown2-2.4.8.tar.gz", hash = "sha256:90475aca3d9c8e7df6d70c51de5bbbe9edf7fcf6a380bd1044d321500f5445da"},
+]
+
+[package.extras]
+all = ["pygments (>=2.7.3)", "wavedrom"]
+code-syntax-highlighting = ["pygments (>=2.7.3)"]
+wavedrom = ["wavedrom"]
+
+[[package]]
 name = "marko"
 version = "1.3.0"
 description = "A markdown parser with high extensibility."
@@ -1218,27 +1240,54 @@ i18n = ["babel (>=2.9.0)"]
 min-versions = ["babel (==2.9.0)", "click (==7.0)", "colorama (==0.4)", "ghp-import (==1.0)", "importlib-metadata (==4.3)", "jinja2 (==2.11.1)", "markdown (==3.2.1)", "markupsafe (==2.0.1)", "mergedeep (==1.3.4)", "packaging (==20.5)", "pyyaml (==5.1)", "pyyaml-env-tag (==0.1)", "typing-extensions (==3.10)", "watchdog (==2.0)"]
 
 [[package]]
+name = "mkdocs-git-committers-plugin-2"
+version = "1.1.1"
+description = "An MkDocs plugin to create a list of contributors on the page"
+category = "dev"
+optional = false
+python-versions = ">=2.7"
+files = [
+    {file = "mkdocs-git-committers-plugin-2-1.1.1.tar.gz", hash = "sha256:4f6eb6137f35967dfa444703b6ea293f05bf2fd183506bc51db8fb21b061d5a3"},
+    {file = "mkdocs_git_committers_plugin_2-1.1.1-py3-none-any.whl", hash = "sha256:14d4a89bf8965ab62ca9b8b0cd90f6c9b421bb89bfedca0d91c5119f18791360"},
+]
+
+[package.dependencies]
+beautifulsoup4 = "*"
+gitpython = "*"
+mkdocs = ">=1.0.3"
+requests = "*"
+
+[[package]]
 name = "mkdocs-material"
-version = "9.1.3"
+version = "9.1.3+insiders.4.32.3"
 description = "Documentation that simply works"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
-files = [
-    {file = "mkdocs_material-9.1.3-py3-none-any.whl", hash = "sha256:a8d14d03569008afb0f5a5785c253249b5ff038e3a5509f96a393b8596bf5062"},
-    {file = "mkdocs_material-9.1.3.tar.gz", hash = "sha256:0be1b5d76c00efc9b2ecbd2d71014be950351e710f5947f276264878afc82ca0"},
-]
+files = []
+develop = false
 
 [package.dependencies]
+babel = ">=2.10.3"
 colorama = ">=0.4"
 jinja2 = ">=3.0"
+lxml = ">=4.6"
 markdown = ">=3.2"
 mkdocs = ">=1.4.2"
 mkdocs-material-extensions = ">=1.1"
+paginate = ">=0.5.6"
+pipdeptree = ">=2.3"
 pygments = ">=2.14"
 pymdown-extensions = ">=9.9.1"
+readtime = ">=2.0"
 regex = ">=2022.4.24"
 requests = ">=2.26"
+
+[package.source]
+type = "git"
+url = "https://github.com/squidfunk/mkdocs-material-insiders"
+reference = "HEAD"
+resolved_reference = "7c2c4aee9df11d979ca04aaaff64bac9fef65389"
 
 [[package]]
 name = "mkdocs-material-extensions"
@@ -1468,6 +1517,17 @@ files = [
 ]
 
 [[package]]
+name = "paginate"
+version = "0.5.6"
+description = "Divides large result sets into pages for easier browsing"
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "paginate-0.5.6.tar.gz", hash = "sha256:5e6007b6a9398177a7e1648d04fdd9f8c9766a1a945bceac82f1929e8c78af2d"},
+]
+
+[[package]]
 name = "parso"
 version = "0.8.3"
 description = "A Python Parser"
@@ -1548,21 +1608,6 @@ files = [
 
 [package.dependencies]
 ptyprocess = ">=0.5"
-
-[[package]]
-name = "pfzy"
-version = "0.3.4"
-description = "Python port of the fzy fuzzy string matching algorithm"
-category = "dev"
-optional = false
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "pfzy-0.3.4-py3-none-any.whl", hash = "sha256:5f50d5b2b3207fa72e7ec0ef08372ef652685470974a107d0d4999fc5a903a96"},
-    {file = "pfzy-0.3.4.tar.gz", hash = "sha256:717ea765dd10b63618e7298b2d98efd819e0b30cd5905c9707223dceeb94b3f1"},
-]
-
-[package.extras]
-docs = ["Sphinx (>=4.1.2,<5.0.0)", "furo (>=2021.8.17-beta.43,<2022.0.0)", "myst-parser (>=0.15.1,<0.16.0)", "sphinx-autobuild (>=2021.3.14,<2022.0.0)", "sphinx-copybutton (>=0.4.0,<0.5.0)"]
 
 [[package]]
 name = "pickleshare"
@@ -1696,6 +1741,22 @@ prettytable = ">=2.3.0"
 
 [package.extras]
 test = ["docutils", "mypy", "pytest-cov", "pytest-pycodestyle", "pytest-runner"]
+
+[[package]]
+name = "pipdeptree"
+version = "2.5.2"
+description = "Command line utility to show dependency tree of packages."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pipdeptree-2.5.2-py3-none-any.whl", hash = "sha256:41c9fa55381dedcde3748712536b3d431931090a74f829916cb2264849c1587d"},
+    {file = "pipdeptree-2.5.2.tar.gz", hash = "sha256:787c994f7d2cff9c3d55750590fd212dabc8ff87e4690624eabb449a49dfd41d"},
+]
+
+[package.extras]
+graphviz = ["graphviz (>=0.20.1)"]
+test = ["covdefaults (>=2.2.2)", "diff-cover (>=7.4)", "pip (>=23.0.1)", "pytest (>=7.2.1)", "pytest-cov (>=4)", "pytest-mock (>=3.10)", "virtualenv (>=20.20,<21)"]
 
 [[package]]
 name = "pony"
@@ -1986,6 +2047,25 @@ files = [
 ]
 
 [[package]]
+name = "pyquery"
+version = "2.0.0"
+description = "A jquery-like library for python"
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pyquery-2.0.0-py3-none-any.whl", hash = "sha256:8dfc9b4b7c5f877d619bbae74b1898d5743f6ca248cfd5d72b504dd614da312f"},
+    {file = "pyquery-2.0.0.tar.gz", hash = "sha256:963e8d4e90262ff6d8dec072ea97285dc374a2f69cad7776f4082abcf6a1d8ae"},
+]
+
+[package.dependencies]
+cssselect = ">=1.2.0"
+lxml = ">=2.1"
+
+[package.extras]
+test = ["pytest", "pytest-cov", "requests", "webob", "webtest"]
+
+[[package]]
 name = "python-dateutil"
 version = "2.8.2"
 description = "Extensions to the standard Python datetime module"
@@ -2091,6 +2171,23 @@ files = [
 
 [package.dependencies]
 pyyaml = "*"
+
+[[package]]
+name = "readtime"
+version = "2.0.0"
+description = "Calculates the time some text takes the average human to read, based on Medium's read time forumula"
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "readtime-2.0.0-py3-none-any.whl", hash = "sha256:ddf221ed5b004c97ee350bc782dda1139ea6dfb817a404cdcc251ac33c11aa28"},
+    {file = "readtime-2.0.0.tar.gz", hash = "sha256:0a67e29adfcfb25488b1edd6f08e158de5f832e84fe8e35cf83e639208ce0b97"},
+]
+
+[package.dependencies]
+beautifulsoup4 = ">=4.0.1"
+markdown2 = ">=2.4.3"
+pyquery = ">=1.2"
 
 [[package]]
 name = "regex"
@@ -2837,4 +2934,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.1"
-content-hash = "c0f61e38284d7cb11f6e8369d0837fc10690fa1c0a59a459dc7eeeedce479b60"
+content-hash = "fcd3f7f69813715f023d44501c775c5da4cc6f9422156dec382804d5d7d4e9e4"

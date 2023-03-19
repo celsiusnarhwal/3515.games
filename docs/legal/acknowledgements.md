@@ -5097,3 +5097,20 @@ POSSIBILITY OF SUCH DAMAGE.
    limitations under the License.
 
 
+<hr></hr>
+
+## Other Acknowledgements
+
+Writing from *Cards Against Humanity* © Cards Against Humanity, LLC. This software is in no way affiliated with or
+endorsed by Cards Against Humanity, LLC. Cards Against Humanity is a trademark of Cards Against Humanity, LLC.
+
+Writing from *Cards Against Humanity* is made available under a Creative Commons Attribution-NonCommercial-ShareAlike
+4.0 International License. 3515.games retrieves this data from the internet at runtime. It is not stored on 3515.games'
+servers or included in any source or binary distributions of 3515.games.
+
+*KonoSuba: God's Blessing on this Wonderful World!* © Natsume Akasuki / Kurone Mishima / KADOKAWA / Film KonoSuba
+Production Committee.
+
+*Nichijou* © Keiichi Arawi / KADOKAWA / Kyoto Animation.
+
+UNO is a trademark of Mattel, Inc.
