@@ -1,5 +1,6 @@
 [tool.poetry]
 name = "3515.games"
+description = ""
 version = "0.0.0"
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
 packages = [{ include = "bot" }]
