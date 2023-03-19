@@ -6,5 +6,4 @@
 
 from support.models.commands import *
 from support.models.games import *
-from support.models.pydantic import *
 from support.models.utils import *
