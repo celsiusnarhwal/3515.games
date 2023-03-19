@@ -474,7 +474,6 @@ def main():
     """
 
 
-# FIXME: this entrypoint is currently busted. super low-priority to fix though
 if __name__ == "__main__":
     # Only use when developing Kurisu itself. Otherwise, use the `kurisu` command.
     app()
