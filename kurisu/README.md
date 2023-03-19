@@ -14,26 +14,27 @@ $ kurisu [OPTIONS] COMMAND [ARGS]...
 - `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 - `--help`: Show the help message and exit.
 
+Kurisu © 2023 celsius narhwal. Licensed under the same terms as 3515.games.
+
 **Commands**:
 
-- [`app`](#kurisu-app): Open 3515.games.dev on the Discord Developer Portal.
+- [`check`](#kurisu-check): Check certain release criteria.
 - [`copyright`](#kurisu-copyright): Attach copyright notices to all non-gitignored Python source files.
-- [`docs`](#kurisu-docs): Open the documentation for the Discord API, Pycord, or Numpydoc.
+- [`docs`](#kurisu-docs): Open frequently-used documentation sites.
 - [`document`](#kurisu-document): Generate Kurisu's documentation.
-- [`invite`](#kurisu-invite): Generate an invite link for 3515.games. By default, this generates an invite link for the
-  development instance.
+- [`invite`](#kurisu-invite): Generate an invite link for 3515.games. By default, this generates an invite link for the development instance.
 - [`licenses`](#kurisu-licenses): Create Markdown-formatted documentation of 3515.games' software licenses.
-- [`release`](#kurisu-release): Create a new release. This command is interactive only.
-- [`settings`](#kurisu-settings): Manage settings configurations.
+- [`notes`](#kurisu-notes): Generate release notes.
+- [`portal`](#kurisu-portal): Open 3515.games.dev on the Discord Developer Portal.
 
-## `kurisu app`
+## `kurisu check`
 
-Open 3515.games.dev on the Discord Developer Portal.
+Check certain release criteria.
 
 **Usage**:
 
 ```console
-$ kurisu app [OPTIONS]
+$ kurisu check [OPTIONS]
 ```
 
 **Options**:
@@ -52,6 +53,7 @@ $ kurisu copyright [OPTIONS]
 
 **Options**:
 
+- `-z, --nonzero`: Exit nonzero if files are changed.
 - `-v, --verbose`: Show the name of each changed file.
 - `-q, --quiet`: Suppress all output aside from errors. Overrides -v.
 - `-n, --dry-run`: Run as usual but without actually changing any files.
@@ -59,17 +61,17 @@ $ kurisu copyright [OPTIONS]
 
 ## `kurisu docs`
 
-Open the documentation for the Discord API, Pycord, or Numpydoc.
+Open frequently-used documentation sites.
 
 **Usage**:
 
 ```console
-$ kurisu docs [OPTIONS] SITE:{discord|pycord|numpydoc}
+$ kurisu docs [OPTIONS] SITE:{attrs|discord|pycord|pydantic|material|numpydoc}
 ```
 
 **Arguments**:
 
-- `SITE:{discord|pycord|numpydoc}`: The documentation site to open. [required]
+- `SITE:{attrs|discord|pycord|pydantic|material|numpydoc}`: The documentation site to open. [required]
 
 **Options**:
 
@@ -88,8 +90,7 @@ $ kurisu document [OPTIONS]
 **Options**:
 
 - `--output FILE`: The file to write the documentation to. Defaults to kurisu/README.md.
-- `-o, --override`: Override the the file specified by --output if it already exists. If the file exists and you don't
-  pass this option, you'll be asked if you want to override it.
+- `-o, --override`: Override the the file specified by --output if it already exists. If the file exists and you don't pass this option, you'll be asked if you want to override it.
 - `-c, --copy`: Copy the documentation to the clipboard.
 - `--help`: Show the help message and exit.
 
@@ -122,72 +123,30 @@ $ kurisu licenses [OPTIONS]
 
 **Options**:
 
-- `-o, --output PATH`: The file to write the documentation to. If neither this nor -c are provided, the documentation
-  will be printed to standard output.
-- `-c, --copy`: Copy the documentaton to the clipboard. If neither this nor -o are provided, the documentation will be
-  printed to standard output.
 - `--help`: Show the help message and exit.
 
-## `kurisu release`
+## `kurisu notes`
 
-Create a new release. This command is interactive only.
+Generate release notes.
 
 **Usage**:
 
 ```console
-$ kurisu release [OPTIONS]
-```
-
-**Options**:
-
-- `-n, --dry-run`: Run through the release flow without actually pushing a release or making any repository changes.
-- `--help`: Show the help message and exit.
-
-## `kurisu settings`
-
-Manage settings configurations.
-
-**Usage**:
-
-```console
-$ kurisu settings [OPTIONS] COMMAND [ARGS]...
+$ kurisu notes [OPTIONS]
 ```
 
 **Options**:
 
 - `--help`: Show the help message and exit.
 
-**Commands**:
+## `kurisu portal`
 
-- [`new`](#kurisu-settings-new): Create a new settings configuration.
-- [`sync`](#kurisu-settings-sync): Remove settings configurations that lack a corresponding Doppler configuration.
-
-### `kurisu settings new`
-
-Create a new settings configuration.
+Open 3515.games.dev on the Discord Developer Portal.
 
 **Usage**:
 
 ```console
-$ kurisu settings new [OPTIONS]
-```
-
-**Options**:
-
-- `-c, --config TEXT`: The name of the Doppler configuration to create a settings configuration for. You'll be prompted
-  for this if you don't provide it.
-- `-d, --description TEXT`: The description for the new settings configuration. You'll be prompted for this if you don't
-  provide it.
-- `--help`: Show the help message and exit.
-
-### `kurisu settings sync`
-
-Remove settings configurations that lack a corresponding Doppler configuration.
-
-**Usage**:
-
-```console
-$ kurisu settings sync [OPTIONS]
+$ kurisu portal [OPTIONS]
 ```
 
 **Options**:
