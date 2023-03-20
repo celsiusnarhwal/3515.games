@@ -26,7 +26,7 @@ jobs:
           python-version: 3.11.1
 
       - name: Set Up Poetry
-        run: pipx install poetry==1.4.1 poethepoet
+        run: pipx install poetry==1.4.1 && pipx install poethepoet
 
       - name: Configure Material Credentials
         run: |
