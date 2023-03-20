@@ -181,6 +181,30 @@ def check():
             f"The Poetry version in the Dockerfile is incorrect. Change it to [cyan]{installed_poetry}[/].",
         )
 
+    @checkmark
+    def check_actions_poetry():
+        with Routes.root():
+            action = ".github/workflows/docs.yml"
+
+            poetry_line = discord.utils.find(
+                lambda line: "pipx install poetry" in line,
+                Path(action).lines(),
+            )
+
+            actions_poetry_pattern = re.compile(r"pipx install poetry==(\d+\.\d+\.\d+)")
+            actions_poetry = actions_poetry_pattern.search(poetry_line).group(1)
+
+        version_pattern = re.compile(r"Poetry \(version (\d+\.\d+\.\d+)\)")
+
+        installed_poetry = version_pattern.match(
+            subprocess.run(["poetry", "--version"], capture_output=True).stdout.decode()
+        ).group(1)
+
+        return CheckResult(
+            actions_poetry == installed_poetry,
+            f"The Poetry version in {action} is incorrect. Change it to [cyan]{installed_poetry}[/].",
+        )
+
     with Routes.root():
         if git.Repo().active_branch.name != "dev":
             print(
