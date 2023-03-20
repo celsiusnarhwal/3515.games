@@ -23,7 +23,7 @@ jobs:
         run: |
           mkdir -p next/.github
           mv docs mkdocs.yml pyproject.toml next/
-          mv .github/workflows/docs.yml next/.github/workflows/
+          mv .github/workflows/docs.yml next/.github/workflows/docs.yml
 
       - name: Initialize README
         run: |
