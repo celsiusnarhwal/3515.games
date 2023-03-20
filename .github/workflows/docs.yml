@@ -43,7 +43,7 @@ jobs:
       - name: Build Documentation
         run: poetry install --no-root --only docs && poe fontawesome && poetry run mkdocs build
         env:
-          MKDOCS_GIT_COMMITTERS: true
+          MKDOCS_GIT_COMMITTERS: ${{ github.ref == 'refs/heads/main' && 'true' || 'false' }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
       - name: Upload Artifact (Production)
@@ -59,18 +59,27 @@ jobs:
           path: site
           name: preview
 
-  deploy:
+  deploy-prod:
     name: Deploy Documentation
     runs-on: ubuntu-latest
     needs: build
     permissions:
       pages: write
       id-token: write
-      deployments: write
     steps:
       - name: Deploy to GitHub Pages
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/deploy-pages@v1
+
+  deploy-preview:
+    name: Deploy Preview Documentation
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      deployments: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
       - name: Deploy to Vercel
         if: ${{ github.ref == 'refs/heads/dev' }}
