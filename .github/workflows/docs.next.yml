@@ -30,6 +30,5 @@ jobs:
           source-directory: next
           destination-github-username: celsiusnarhwal
           destination-repository-name: next.3515.games
-          destination-branch: main
           user-name: github-actions[bot]
           user-email: github-actions[bot]@users.noreply.github.com
