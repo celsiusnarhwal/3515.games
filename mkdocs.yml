@@ -21,7 +21,7 @@ nav:
       - Terms of Service: legal/terms.md
       - Privacy Policy: legal/privacy.md
       - Acknowledgements: legal/acknowledgements.md
-      - Documentation License: legal/LICENSE.md
+      - Documentation License: legal/license.md
 
 # Configuration
 theme:
