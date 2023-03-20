@@ -1,4 +1,8 @@
-# Cards Against Humanity
+---
+icon: fontawesome/solid/face-smile-horns
+---
+
+# Cards Against Humanity :fontawesome-solid-face-smile-horns:
 
 Cards Against Humanity is a card game where you earn points by being funny. Every round, you're given fill-in-the-blank
 prompt called a black card, which you get to complete using the words on any of the white cards you happen to be
@@ -17,7 +21,7 @@ holding. The funnnier your answer, the more likely you are to earn points. Easy 
 
 To get started, you'll need to create a Cards Against Humanity game with :command: `/cah create`.
 
-??? command "`/cah create`: Create an CAH game."
+??? command "`/cah create`: Create a CAH game."
 
     <div style="text-align: center;">
 

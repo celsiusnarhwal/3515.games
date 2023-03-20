@@ -1,4 +1,8 @@
-# Chess
+---
+icon: fontawesome/solid/chess
+---
+
+# Chess :fontawesome-solid-chess:
 
 Chess is a board game in which your objective is employ smarts and strategy to checkmate your opponent.
 
@@ -39,7 +43,7 @@ When it's your turn, you can make a move with — you're not gonna believe this 
 
     | **Option** | **Type** | **Description** | **Limited To** | **Required** | **Default** |
     | --- | --- | --- | --- | --- | --- |
-    | `move` | string | Specify a move using algebraic or UCI notation. If you're confused, leave this blank. | ≤4000 characters | No | None |
+    | `move` | text | Specify a move using algebraic or UCI notation. If you're confused, leave this blank. | ≤4000 characters | No | None |
 
     </div>
 

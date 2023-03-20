@@ -1,4 +1,8 @@
-# UNO
+---
+icon: fontawesome/solid/cards-blank
+---
+
+# UNO :fontawesome-solid-cards-blank:
 
 
 UNO is a card game in which your objective is to be the first player to rid themselves of all their cards in a given
@@ -54,22 +58,22 @@ When applicable, the menu will tell you what the last card played was to aid you
     You can use the "Show Playable Cards" button to filter the card selection menu down to only the cards that can be
     played on the current turn. If you don't have any playable cards, you'll be told as much.
 
-??? guide "The different types of UNO cards"
+???+ guide "The different types of UNO cards"
 
     ### Color Cards
 
     Most UNO Cards come in one of four different colors **Red**, **Blue**, **Green**, and **Yellow**. Each of these
     colors comes in 13 differnet suits: 10 suits numbered **0-9** and three special suits: 
-    :fontawesome-solid-clock-rotate-left: **Reverse**, :fontawesome-solid-forward: **Skip**, and :fontawesome-solid-layer-plus: **+2**.
+    :fontawesome-solid-clock-rotate-left: **Reverse**, :fontawesome-solid-forward: **Skip**, and :cards-plus: **+2**.
     
     When it's your turn, you can play any card that matches the color or suit of the last card played. For example,
     if the last card played was a Blue 4, you could play a Red 4, a Blue 5, or a Blue Reverse.
 
-    :fontawesome-solid-clock-rotate-left: **Reverse**, :fontawesome-solid-forward: **Skip**, and :fontawesome-solid-layer-plus: **+2** have special effects when played:
+    :fontawesome-solid-clock-rotate-left: **Reverse**, :fontawesome-solid-forward: **Skip**, and :cards-plus: **+2** have special effects when played:
 
     - :fontawesome-solid-clock-rotate-left: **Reverse**: Reverses the turn order.
     - :fontawesome-solid-forward: **Skip**: Skips the next player's turn.
-    - :fontawesome-solid-layer-plus: **+2**: Forces the next player to draw two cards and forfeit their turn.
+    - :cards-plus: **+2**: Forces the next player to draw two cards and forfeit their turn.
 
     ### Wild Cards
 
@@ -138,7 +142,7 @@ at the end of the round. In the unlikely (but not impossible) event that sum is 
     
     - :fontawesome-solid-wand-magic: **Wild** cards are worth 50 points
     - :fontawesome-solid-wand-magic-sparkles: **Wild +4** cards are also worth 50 points
-    - :fontawesome-solid-clock-rotate-left: **Reverse**, :fontawesome-solid-forward: **Skip**, and :fontawesome-solid-layer-plus: **+2** cards are worth 20 points
+    - :fontawesome-solid-clock-rotate-left: **Reverse**, :fontawesome-solid-forward: **Skip**, and :cards-plus: **+2** cards are worth 20 points
     - :octicons-number-16: **Numbered** cards are worth their face value
 
     </div>

@@ -7,6 +7,22 @@ site_author: celsius narhwal
 repo_name: celsiusnarhwal/3515.games
 repo_url: https://github.com/celsiusnarhwal/3515.games
 
+# Navigation
+nav:
+  - Home:
+      - Home: index.md
+  - Games:
+      - Rock-Paper-Scissors: games/rps.md
+      - UNO: games/uno.md
+      - Chess: games/chess.md
+      - Cards Against Humanity: games/cah.md
+  - Reference: reference.md
+  - Legal:
+      - Terms of Service: legal/terms.md
+      - Privacy Policy: legal/privacy.md
+      - Acknowledgements: legal/acknowledgements.md
+      - Documentation License: legal/LICENSE.md
+
 # Configuration
 theme:
   name: material
@@ -62,6 +78,7 @@ plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - social
+  - typeset
   - git-committers:
       repository: celsiusnarhwal/3515.games
       branch: main
@@ -120,22 +137,6 @@ markdown_extensions:
       alternate_style: true
   - pymdownx.tilde
 
-# Navigation
-nav:
-  - Home:
-      - Home: index.md
-  - Games:
-      - Rock-Paper-Scissors: games/rps.md
-      - UNO: games/uno.md
-      - Chess: games/chess.md
-      - Cards Against Humanity: games/cah.md
-  - Reference: reference.md
-  - Legal:
-      - Terms of Service: legal/terms.md
-      - Privacy Policy: legal/privacy.md
-      - Acknowledgements: legal/acknowledgements.md
-      - Documentation License: legal/LICENSE.md
-
 # CSS
 extra_css:
   - assets/stylesheets/extra.css
@@ -143,4 +144,4 @@ extra_css:
 
 # JavaScript
 extra_javascript:
-  - https://kit.fontawesome.com/db4694a70a.js
+  - "https://kit.fontawesome.com/2273b2767b.js"

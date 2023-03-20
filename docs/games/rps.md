@@ -1,4 +1,8 @@
-# Rock-Paper-Scissors
+---
+icon: fontawesome/solid/hand-back-fist
+---
+
+# Rock-Paper-Scissors :fontawesome-solid-hand-back-fist: :fontawesome-solid-hand: :fontawesome-solid-hand-scissors:
 
 In Rock-Paper-Scissors, your objective is to best your opponent each round by choosing either rock, paper, or scissors,
 and hoping they choose the option that loses to yours. Rock beats scissors, scissors beats paper, and paper beats rock.
