@@ -76,6 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     permissions:
+      contents: write
       deployments: write
     steps:
       - name: Checkout Repository
