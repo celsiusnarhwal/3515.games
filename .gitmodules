@@ -1,6 +1,0 @@
-[submodule "docs/.overrides/.icons/fontawesome"]
-	path = docs/.overrides/.icons/fontawesome
-	url = https://github.com/celsiusnarhwal/fontawesome
-[submodule "docs/.overrides/.icons/--force"]
-	path = docs/.overrides/.icons/--force
-	url = https://github.com/celsiusnarhwal/fontawesome
