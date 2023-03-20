@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Prepare Files
-        run: mv docs mkdocs.yml pyproject.toml .github/workflows/docs.yml next/
+        run: mkdir next && mv docs mkdocs.yml pyproject.toml .github/workflows/docs.yml next/
 
       - name: Push to celsiusnarhwal/next.3515.games
         uses: cpina/github-action-push-to-another-repository@main
