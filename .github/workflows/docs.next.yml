@@ -1,0 +1,35 @@
+name: Publish Preview Documentation
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - pyproject.toml
+      - .github/workflows/docs.yml
+      - .github/workflows/docs.next.yml
+
+jobs:
+  push:
+    name: Push to Preview Repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Prepare Files
+        run: mv docs mkdocs.yml pyproject.toml .github/workflows/docs.yml next/
+
+      - name: Push to celsiusnarhwal/next.3515.games
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+        with:
+          source-directory: next
+          destination-github-username: celsiusnarhwal
+          destination-repository-name: next.3515.games
+          destination-branch: main
+          user-name: github-actions[bot]
+          user-email: github-actions[bot]@users.noreply.github.com
