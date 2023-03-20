@@ -68,8 +68,22 @@ profile = "black"
 known_first_party = ["keyboard", "settings", "shrine", "support"]
 
 [tool.poe.tasks]
-format = { shell = "for hook in black prettier isort; do pre-commit run $hook --all-files; done" }
 docs = { shell = "mkdocs serve" }
+format = { shell = "for hook in black prettier isort; do pre-commit run $hook --all-files; done" }
+
+[tool.poe.tasks.fontawesome]
+shell = """
+npm install --no-save @fortawesome/fontawesome-pro
+mv node_modules/@fortawesome/fontawesome-pro/svgs docs/.overrides/.icons/fontawesome
+rm -rf node_modules
+"""
+
+[tool.poe.tasks.docker]
+shell = """
+docker build . -t 3515.games:latest
+docker run --rm --env-file <(doppler secrets download --no-file --format docker) 3515.games:latest
+"""
+interpreter = "bash"
 
 [build-system]
 requires = ["poetry-core"]
