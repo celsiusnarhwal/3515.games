@@ -20,7 +20,23 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Prepare Files
-        run: mkdir next && mv docs mkdocs.yml pyproject.toml .github/workflows/docs.yml next/
+        run: |
+          mkdir -p next/.github
+          mv docs mkdocs.yml pyproject.toml next/
+          mv .github/workflows/docs.yml next/.github/workflows/
+
+      - name: Initialize README
+        run: |
+          echo "# next.3515.games
+
+          This is the repository for the preview deployment of [www.3515.games](https://www.3515.games), located at
+          [next.3515.games](https://next.3515.games). The contents of this repository or of [next.3515.games](https://next.3515.games)
+          may not be reflective of 3515.games' present or planned functionality.
+
+          If you were looking for 3515.games' main website, head to [3515.games](https://3515.games).
+
+          If you were looking for 3515.games' GitHub repository, head to [3515.games](https://github.com/celsiusnarhwal/3515.games).
+          " > next/README.md
 
       - name: Push to celsiusnarhwal/next.3515.games
         uses: cpina/github-action-push-to-another-repository@main
