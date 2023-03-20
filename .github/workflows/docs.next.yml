@@ -21,9 +21,9 @@ jobs:
 
       - name: Prepare Files
         run: |
-          mkdir -p next/.github
+          mkdir -p next/.github/workflows
           mv docs mkdocs.yml pyproject.toml next/
-          mv .github/workflows/docs.yml next/.github/workflows/docs.yml
+          mv .github/workflows/docs.yml next/.github/workflows/
 
       - name: Initialize README
         run: |
