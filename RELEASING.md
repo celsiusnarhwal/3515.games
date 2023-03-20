@@ -6,7 +6,7 @@
 
 3. Run `kurisu check` and fix anything it complains about.
 
-4. Start 3515.games.dev via [`bot/main.py`](bot/main.py) and then via [`dockerfile.sh`](dockerfile.sh)
+4. Start 3515.games.dev via [`bot/main.py`](bot/main.py) and then via `poe docker`.
    Ensure the bot successfully starts, runs, and responds to user interaction, then stop it.
 
 5. Commit any uncommitted changes to `dev`.
