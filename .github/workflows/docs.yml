@@ -50,53 +50,25 @@ jobs:
         env:
           MKDOCS_GIT_COMMITTERS: ${{ github.ref == 'refs/heads/main' && 'true' || 'false' }}
 
-      - name: Upload Artifact (Production)
-        if: ${{ github.ref == 'refs/heads/main' }}
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: site
-
-      - name: Upload Artifact (Preview)
-        if: ${{ github.ref == 'refs/heads/dev' }}
+      - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
           path: site
           name: site
 
-  deploy-prod:
+  deploy:
     name: Deploy Documentation
-    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      pages: write
-      id-token: write
     steps:
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
-
-  deploy-preview:
-    name: Deploy Preview Documentation
-    if: ${{ github.ref == 'refs/heads/dev' }}
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: write
-      deployments: write
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
       - name: Download Artifact
         uses: actions/download-artifact@v3
         with:
           name: site
           path: site
 
-      - name: Deploy to Vercel
-        uses: s0/git-publish-subdir-action@develop
-        env:
-          REPO: self
-          BRANCH: vercel
-          FOLDER: site
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Vercel CLI
+        run: npm install -g vercel && vercel login --token ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Documentation
+        run: vercel --cwd site ${{ github.ref == 'refs/heads/main' && '--prod' }}

@@ -165,3 +165,6 @@ cython_debug/
 
 # Font Awesome
 fontawesome/
+
+# Vercel
+.vercel
