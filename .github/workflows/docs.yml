@@ -68,7 +68,7 @@ jobs:
           path: site
 
       - name: Install Vercel CLI
-        run: npm install -g vercel && vercel login --token ${{ secrets.VERCEL_TOKEN }}
+        run: npm install -g vercel
 
       - name: Deploy Documentation
-        run: vercel --cwd site ${{ github.ref == 'refs/heads/main' && '--prod' }}
+        run: vercel --cwd site ${{ github.ref == 'refs/heads/main' && '--prod' }} --token ${{ secrets.VERCEL_TOKEN }}
