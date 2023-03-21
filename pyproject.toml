@@ -43,6 +43,9 @@ mkdocs-git-committers-plugin-2 = "^1.1.1"
 pillow = "^9.4.0"
 mkdocs-material = { git = "https://github.com/squidfunk/mkdocs-material-insiders" }
 
+[tool.poetry.group.ci.dependencies]
+poethepoet = "^0.18.1"
+
 [tool.poetry.group.kurisu.dependencies]
 beautifulsoup4 = "^4.11.2"
 gitpython = "^3.1.29"
