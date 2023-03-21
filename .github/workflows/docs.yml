@@ -91,7 +91,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: preview
-          path: site
+
+      - name: Extract Artifact
+        run: tar -xzf artifact.tar -C site
 
       - name: Deploy to Vercel
         uses: s0/git-publish-subdir-action@develop
