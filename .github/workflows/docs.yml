@@ -41,7 +41,7 @@ jobs:
           path: .cache
 
       - name: Install Dependencies
-        run: poetry install --no-root --only docs && poe fontawesome
+        run: poetry install --no-root --only docs && poetry run poe fontawesome
         env:
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
