@@ -58,10 +58,10 @@ jobs:
 
       - name: Upload Artifact (Preview)
         if: ${{ github.ref == 'refs/heads/dev' }}
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           path: site
-          name: preview
+          name: site
 
   deploy-prod:
     name: Deploy Documentation
@@ -90,10 +90,8 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v3
         with:
-          name: preview
-
-      - name: Extract Artifact
-        run: tar -xzf artifact.tar -C site
+          name: site
+          path: site
 
       - name: Deploy to Vercel
         uses: s0/git-publish-subdir-action@develop
