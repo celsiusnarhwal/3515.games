@@ -48,10 +48,10 @@ class Settings(BaseSettings):
 
     # Required
     bot_name: str
-    app_id: int
     database: dict
 
     # Optional
+    app_id: int = Field(..., env="BOT_APP_ID")
     owner_id: int = 170966436125212673
     intents: discord.Intents = discord.Intents.default() + discord.Intents.members
     debug_guilds: list[int] = []
