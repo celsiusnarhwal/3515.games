@@ -1,4 +1,4 @@
-# Project information
+# Metadata
 site_name: 3515.games
 site_url: https://3515.games
 site_author: celsius narhwal
@@ -16,6 +16,13 @@ nav:
       - UNO: games/uno.md
       - Chess: games/chess.md
       - Cards Against Humanity: games/cah.md
+  - Self-Hosting:
+      - "Prologue: Heaven and the Earth": hosting/intro.md
+      - "Chapter I: A Secret to Everybody": hosting/doppler.md
+      - "Chapter II: Environmental Activism": hosting/environment.md
+      - "Chapter III: Late Registration": hosting/registration.md
+      - "Chapter IV: Contain Your Enthusiasm": hosting/docker.md
+      - "Chapter V: All Aboard": hosting/railway.md
   - Reference: reference.md
   - Legal:
       - Terms of Service: legal/terms.md
@@ -23,7 +30,7 @@ nav:
       - Acknowledgements: legal/acknowledgements.md
       - Documentation License: legal/license.md
 
-# Configuration
+# Material for MkDocs
 theme:
   name: material
   custom_dir: docs/.overrides
@@ -31,6 +38,8 @@ theme:
     - announce.dismiss
     - content.code.annotate
     - content.code.copy
+    - content.code.select
+    - content.tabs.link
     - content.tooltips
     - navigation.footer
     - navigation.indexes
@@ -84,16 +93,6 @@ plugins:
       branch: main
       enabled: !ENV [MKDOCS_GIT_COMMITTERS, false]
 
-# Customization
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/celsiusnarhwal
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/celsiusnarhwal
-    - icon: celsius
-      link: https://celsiusnarhwal.dev
-
 # Extensions
 markdown_extensions:
   - abbr
@@ -136,6 +135,22 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tilde
+
+# Additional Settings
+extra:
+  annotate:
+    dockerfile: [.s2]
+    docker: [.s2]
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/celsiusnarhwal
+      name: github.com/celsiusnarhwal
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/celsiusnarhwal
+      name: "@celsiusnarhwal"
+    - icon: celsius
+      link: https://celsiusnarhwal.dev
+      name: celsiusnarhwal.dev
 
 # CSS
 extra_css:
