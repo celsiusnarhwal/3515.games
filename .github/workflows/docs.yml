@@ -26,8 +26,8 @@ jobs:
         with:
           python-version: 3.11.1
 
-      - name: Set Up Poetry
-        run: pipx install poetry==1.4.1 && poetry install --no-root --only ci
+      - name: Install Poetry
+        run: pipx install poetry==1.4.1
 
       - name: Configure Material Credentials
         run: |
@@ -68,7 +68,7 @@ jobs:
           path: site
 
       - name: Deploy Documentation
-        run: npx vercel --cwd site ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token ${{ secrets.VERCEL_TOKEN }} --yes
+        run: npx vercel --yes --cwd site --token ${{ secrets.VERCEL_TOKEN }} ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
