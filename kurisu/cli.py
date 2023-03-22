@@ -489,6 +489,14 @@ def portal():
     )
 
 
+@app.command(name="vercel")
+def vercel():
+    """
+    Open the latest preview deploymet of 3515.games' website.
+    """
+    typer.launch("https://3515-games-celsiusnarhwal.vercel.app/")
+
+
 @app.callback(
     epilog=f"Kurisu © {pendulum.now().year} celsius narhwal. Licensed under the same terms as 3515.games."
 )
