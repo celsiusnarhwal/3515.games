@@ -1,3 +1,8 @@
+---
+hide:
+    - footer
+---
+
 # Self-Hosting 3515.games
 
 # <small>Prologue: Heaven and the Earth</small>

@@ -1,15 +1,11 @@
----
-description: Do whatever you want, but make sure to give credit
----
-
 # Documentation License
 
-This website and its source code (collectively "3515.games' documentation") are licensed under a Creative Commons 
+The contents of this site (collecitvely, "3515.games' website") are licensed under a Creative Commons 
 Attribution 4.0 International License (CC BY 4.0). In summary, this means you can do whatever you want with 3515.games' 
-documentation as long as you give credit to its original author, [celsius narhwal](https://celsiusnarhwal.dev).
+website as long as you give credit to its original author, [celsius narhwal](https://celsiusnarhwal.dev).
 
 !!! warning
-    The CC BY 4.0 license **only** applies to 3515.games' documentation. 3515.games itself is licensed under version 3
+    The CC BY 4.0 license **only** applies to 3515.games' website. 3515.games itself is licensed under version 3
     of the GNU Affero General Public License. You can find 3515.games's license on
     [its GitHub repository](https://github.com/celsiusnarhwal/3515.games/blob/main/LICENSE.md).
 

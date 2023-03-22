@@ -86,7 +86,11 @@ theme:
 plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
-  - social
+  - social:
+      cards_color:
+        fill: "#1e1f22"
+        text: white
+      cards_font: Poppins
   - typeset
   - git-committers:
       repository: celsiusnarhwal/3515.games
