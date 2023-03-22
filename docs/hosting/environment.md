@@ -1,4 +1,4 @@
-# Part II: Environmental Activism
+# Chapter II: Environmental Activism
 
 In this stage, you'll grab a copy of 3515.games' source code and set yourself up a development environment.
 
@@ -66,7 +66,10 @@ skip this section. Otherwise, read on.
 ## :fontawesome-regular-code-fork: Forking the Repository
 
 Forking 3515.games' repository (hereafter referred to as the "canonical repository") creates a full copy of it
-in your own GitHub account that you can then do whatever you want with.
+in your own GitHub account that you can then do whatever you want with. (1)
+{ .annotate }
+
+1. Pursuant to the terms of the [AGPL](https://github.com/celsiusnarhwal/3515.games/blob/main/LICENSE.md), of course.
 
 Head over to [celsiusnarhwal/3515.games](https://github.com/celsiusnarhwal/3515.games) and click the "Fork" button
 in the top-right area of the page. Then follow the prompts and you're done. Pretty easy, right?
@@ -171,9 +174,15 @@ It's finally time for the moment you've been waiting for: actually running the d
     Open `bot/main.py` and press **F5**.
 
 === ":fontawesome-sharp-solid-terminal: Terminal"
-    ```bash
-    poetry run python bot/main.py
-    ```
+    === ":fontawesome-brands-apple: macOS / :fontawesome-brands-linux: Linux"
+        ```bash
+        poetry run python bot/main.py
+        ```
+
+    === ":fontawesome-brands-windows: Windows"
+        ```powershell
+        poetry run py bot/main.py
+        ```
 
 If everything worked, you should see something like this in your console:
 

@@ -1,8 +1,17 @@
-# Welcome to MkDocs
+# :fontawesome-solid-gamepad-modern: 3515.games
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Welcome to 3515.games' perpetually-work-in-progress website. You were probably looking for one of these two things:
 
-!!! tip "Keyboard shortcuts"
+<div class="grid cards" markdown>
+
+- [:fontawesome-solid-gamepad-modern: How to **play the games**](/games/rps)
+- [:fontawesome-solid-code-fork: How to **self-host** the bot](/hosting/prologue)
+
+</div>
+
+If you were looking to invite the bot to your own server, sorry! You can't do that yet. Maybe one day.
+
+??? tip "Keyboard shortcuts"
 
     You can navigate this website using the following keyboard shortcuts:
 
@@ -15,17 +24,3 @@ For full documentation visit [mkdocs.org](https://www.mkdocs.org).
     - **Move between results**: ++arrow-down++ or ++arrow-up++
     - **Close search window**: ++escape++ or ++tab++
     - **Select result**: ++enter++
-
-## Commands
-
-- `mkdocs new [dir-name]` - Create a new project.
-- `mkdocs serve` - Start the live-reloading docs server.
-- `mkdocs build` - Build the documentation site.
-- `mkdocs -h` - Print help message and exit.
-
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.

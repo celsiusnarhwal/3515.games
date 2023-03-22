@@ -1,6 +1,6 @@
-# Part I: A Secret to Everybody
+# Chapter I: A Secret to Everybody
 
-To start, you'll have to create an account with the secrets management platform [Doppler](https://doppler.com).
+First, you'll need to create an account with the secrets management platform [Doppler](https://doppler.com).
 Once you're signed up, create a project for 3515.games. By default, your project will have three environments:
 `dev`, `stg`. and `prd` — short for development, staging, and production, respectively. We'll come back to all this
 later.
@@ -38,7 +38,10 @@ For now, go ahead and install the Doppler CLI.
     ```
 
 === ":fontawesome-sharp-solid-terminal: Shell Script"
-    You should generally prefer one of the other options before resorting to this one.
+    You should generally prefer one of the other options before resorting to this one. This doesn't work on Windows. (1)
+    { .annotate }
+    
+    1. It may work on WSL, but we're not covering that here.
 
     Install [curl](https://curl.se/) and [GnuPG](https://gnupg.org/), then:
 

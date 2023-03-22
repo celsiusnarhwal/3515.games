@@ -17,7 +17,7 @@ nav:
       - Chess: games/chess.md
       - Cards Against Humanity: games/cah.md
   - Self-Hosting:
-      - "Prologue: Heaven and the Earth": hosting/intro.md
+      - "Prologue: Heaven and the Earth": hosting/prologue.md
       - "Chapter I: A Secret to Everybody": hosting/doppler.md
       - "Chapter II: Environmental Activism": hosting/environment.md
       - "Chapter III: Late Registration": hosting/registration.md

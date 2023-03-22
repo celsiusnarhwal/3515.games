@@ -58,7 +58,7 @@ When applicable, the menu will tell you what the last card played was to aid you
     You can use the "Show Playable Cards" button to filter the card selection menu down to only the cards that can be
     played on the current turn. If you don't have any playable cards, you'll be told as much.
 
-???+ guide "The different types of UNO cards"
+??? guide "The different types of UNO cards"
 
     ### Color Cards
 

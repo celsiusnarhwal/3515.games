@@ -1,4 +1,4 @@
-# Part III: Late Registration
+# Chapter III: Late Registration
 
 If you know anything about Discord bot development, you probably expected this guide to start here. Surprise?
 
@@ -98,9 +98,15 @@ Let's try that again, shall we?
     1. Open `bot/main.py` and press **F5**.
 
 === ":fontawesome-sharp-solid-terminal: Terminal"
-    ```bash
-    doppler run -- poetry run python bot/main.py
-    ```
+    === ":fontawesome-brands-apple: macOS / :fontawesome-brands-linux: Linux"
+        ```bash
+        doppler run -- poetry run python bot/main.py
+        ```
+    
+    === ":fontawesome-brands-windows: Windows"
+        ```powershell
+        doppler run -- poetry run py bot/main.py
+        ```
 
 If everything worked, you should see something like this in your console:
 

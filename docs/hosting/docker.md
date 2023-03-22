@@ -1,4 +1,4 @@
-# Part IV: Contain Your Enthusiasm
+# Chapter IV: Contain Your Enthusiasm
 
 To self-host 3515.games in a way that *doesn't* make you want to tear your hair out, you'll need to stuff it and all
 its dependencies into a nice little package that you can run on any operating system with next-to-zero effort.
@@ -91,9 +91,9 @@ every single time.
 Try it out:
 
 ```bash
-docker run --rm -e DOPPLER_TOKEN="$(doppler configs tokens create docker --max-age 1m --plain)" 3515.games:latest
+poe docker
 ```
 
-Pretty cool, right? But how, exactly, are we gonna move this image to your server?
+Pretty cool, right?
 
-## :fontawesome-solid-cubes: The Container Registry
+Now it's time for the final step: taking this image and deploying it to the cloud.
