@@ -1,5 +1,12 @@
-# Redirecting...
+# Games
 
-<meta http-equiv="refresh" content="0; url=rps"/>
+Choose your fighter.
 
-Give us a second while we redirect you to where you probably meant to go.
+<div class="grid cards" markdown>
+
+- [:fontawesome-solid-hand-back-fist: Rock-Paper-Scissors](rps)
+- [:fontawesome-solid-cards-blank: UNO](uno)
+- [:fontawesome-solid-chess: Chess](chess)
+- [:fontawesome-solid-face-smile-horns: Cards Against Humanity](cah)
+
+</div>

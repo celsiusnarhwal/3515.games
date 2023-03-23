@@ -1,3 +1,7 @@
+---
+icon: fontawesome/solid/train-tunnel
+---
+
 # Chapter V: All Aboard
 
 ## Prerequisites

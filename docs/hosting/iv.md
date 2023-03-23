@@ -1,3 +1,7 @@
+---
+icon: fontawesome/solid/box
+---
+
 # Chapter IV: Contain Your Enthusiasm
 
 To self-host 3515.games in a way that *doesn't* make you want to tear your hair out, you'll need to stuff it and all
@@ -18,7 +22,7 @@ Before proceeding, make sure you have the following:
     Make sure Docker is running before proceeding.
 
 There *should* be a `Dockerfile` at the root of your project. If it's somehow missing, create one with the following
-coneents:
+contents:
 
 ```dockerfile
 FROM python:3.11.1 "(1)!"

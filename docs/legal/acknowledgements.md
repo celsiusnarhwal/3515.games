@@ -1,3 +1,8 @@
+---
+hide:
+    - footer
+---
+
 # Acknowledgements
 
 Questions or concerns regarding errors or inconsistencies in this automatically-generated document should be sent to hello@celsiusnarhwal.dev.<hr></hr>

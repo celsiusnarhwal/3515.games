@@ -12,22 +12,24 @@ nav:
   - Home:
       - Home: index.md
   - Games:
+      - Games: games/index.md
       - Rock-Paper-Scissors: games/rps.md
       - UNO: games/uno.md
       - Chess: games/chess.md
       - Cards Against Humanity: games/cah.md
   - Self-Hosting:
+      - Self-Hosting: hosting/index.md
       - "Prologue: Heaven and the Earth": hosting/prologue.md
-      - "Chapter I: A Secret to Everybody": hosting/doppler.md
-      - "Chapter II: Environmental Activism": hosting/environment.md
-      - "Chapter III: Late Registration": hosting/registration.md
-      - "Chapter IV: Contain Your Enthusiasm": hosting/docker.md
-      - "Chapter V: All Aboard": hosting/railway.md
+      - "Chapter I: A Secret to Everybody": hosting/i.md
+      - "Chapter II: Environmental Activism": hosting/ii.md
+      - "Chapter III: Late Registration": hosting/iii.md
+      - "Chapter IV: Contain Your Enthusiasm": hosting/iv.md
+      - "Chapter V: All Aboard": hosting/v.md
   - Legal:
       - Terms of Service: legal/terms.md
       - Privacy Policy: legal/privacy.md
       - Acknowledgements: legal/acknowledgements.md
-      - Documentation License: legal/license.md
+      - Website License: legal/license.md
 
 # Material for MkDocs
 theme:

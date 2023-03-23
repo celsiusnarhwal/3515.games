@@ -1,11 +1,8 @@
 ---
-hide:
-    - footer
+icon: fontawesome/solid/book-sparkles
 ---
 
-# Self-Hosting 3515.games
-
-# <small>Prologue: Heaven and the Earth</small>
+# Prologue: Heaven and the Earth
 
 If you're technically inclined, you can self-host 3515.games. You can go about this however you like, but this guide
 will walk you through doing it how I do it.

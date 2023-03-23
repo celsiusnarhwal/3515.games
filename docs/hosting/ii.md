@@ -1,3 +1,7 @@
+---
+icon: fontawesome/solid/leaf
+---
+
 # Chapter II: Environmental Activism
 
 In this stage, you'll grab a copy of 3515.games' source code and set yourself up a development environment.

@@ -1,3 +1,7 @@
+---
+icon: fontawesome/solid/lock
+---
+
 # Chapter I: A Secret to Everybody
 
 First, you'll need to create an account with the secrets management platform [Doppler](https://doppler.com).

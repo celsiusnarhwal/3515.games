@@ -1,3 +1,7 @@
+---
+icon: fontawesome/solid/door-open
+---
+
 # Chapter III: Late Registration
 
 If you know anything about Discord bot development, you probably expected this guide to start here. Surprise?

@@ -1,3 +1,8 @@
+---
+hide:
+    - footer
+---
+
 # Terms of Service
 
 These terms of service ("Terms") constitute an agreement between you and celsius narhwal ("celsius narhwal", "I", "

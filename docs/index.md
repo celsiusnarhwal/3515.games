@@ -3,14 +3,15 @@ hide:
     - footer
 ---
 
-# :fontawesome-solid-gamepad-modern: 3515.games
+# Home
+
 
 Welcome to 3515.games' perpetually-work-in-progress website. You were probably looking for one of these two things:
 
 <div class="grid cards" markdown>
 
-- [:fontawesome-solid-gamepad-modern: How to **play the games**](/games/rps)
-- [:fontawesome-solid-code-fork: How to **self-host** the bot](/hosting/prologue)
+- [:fontawesome-solid-gamepad-modern: How to **play the games**](/games)
+- [:fontawesome-solid-code-fork: How to **self-host** the bot](/hosting)
 
 </div>
 

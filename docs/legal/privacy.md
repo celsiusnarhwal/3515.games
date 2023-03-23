@@ -1,3 +1,8 @@
+---
+hide:
+    - footer
+---
+
 # Privacy Policy
 
 When you use or share a Discord server ("server") with 3515.games, 3515.games may collect, process, and store various
