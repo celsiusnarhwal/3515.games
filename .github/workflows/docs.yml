@@ -29,11 +29,6 @@ jobs:
       - name: Install Poetry
         run: pipx install poetry==1.4.1
 
-      - name: Configure Material Credentials
-        run: |
-          poetry config repositories.material https://github.com/squidfunk/mkdocs-material-insiders
-          poetry config http-basic.material celsiusnarhwal ${{ secrets.MATERIAL_INSIDERS_TOKEN }}
-
       - name: Save Cache
         uses: actions/cache@v2
         with:
@@ -43,6 +38,9 @@ jobs:
       - name: Install Dependencies
         run: poetry install --no-root --only docs && poetry run poe fontawesome
         env:
+          POETRY_REPOSITORIES_MATERIAL_INSIDERS: https://github.com/squidfunk/mkdocs-material-insiders
+          POETRY_HTTP_BASIC_MATERIAL_INSIDERS_USERNAME: celsiusnarhwal
+          POETRY_HTTP_BASIC_MATERIAL_INSIDERS_PASSWORD: ${{ secrets.MATERIAL_INSIDERS_TOKEN }}
           FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
       - name: Build Documentation
