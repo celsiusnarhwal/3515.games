@@ -23,7 +23,6 @@ nav:
       - "Chapter III: Late Registration": hosting/registration.md
       - "Chapter IV: Contain Your Enthusiasm": hosting/docker.md
       - "Chapter V: All Aboard": hosting/railway.md
-  - Reference: reference.md
   - Legal:
       - Terms of Service: legal/terms.md
       - Privacy Policy: legal/privacy.md
