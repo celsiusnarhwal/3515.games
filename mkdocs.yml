@@ -154,6 +154,8 @@ extra:
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/celsiusnarhwal
       name: "@celsiusnarhwal"
+    - icon: fontawesome/solid/envelope
+      link: mailto:hello@celsiusnarhwal.dev
     - icon: celsius
       link: https://celsiusnarhwal.dev
       name: celsiusnarhwal.dev
