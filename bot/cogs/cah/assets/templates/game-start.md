@@ -11,7 +11,7 @@ The Card Czar then gets to choose the combination they thought was funniest, and
 Awesome Point.
 {% else %}
 Everyone then votes on which combination they thought was funniest, and the person who played the highest-voted
-one gets an Awesome Point.
+one gets a point.
 {% endif %}
 Nice!
 {% endfilter %}
