@@ -91,7 +91,6 @@ plugins:
   - git-committers:
       repository: celsiusnarhwal/3515.games
       branch: main
-      enabled: !ENV [MKDOCS_GIT_COMMITTERS, false]
 
 # Extensions
 markdown_extensions:

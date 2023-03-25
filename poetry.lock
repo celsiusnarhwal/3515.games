@@ -1282,24 +1282,6 @@ i18n = ["babel (>=2.9.0)"]
 min-versions = ["babel (==2.9.0)", "click (==7.0)", "colorama (==0.4)", "ghp-import (==1.0)", "importlib-metadata (==4.3)", "jinja2 (==2.11.1)", "markdown (==3.2.1)", "markupsafe (==2.0.1)", "mergedeep (==1.3.4)", "packaging (==20.5)", "pyyaml (==5.1)", "pyyaml-env-tag (==0.1)", "typing-extensions (==3.10)", "watchdog (==2.0)"]
 
 [[package]]
-name = "mkdocs-git-committers-plugin-2"
-version = "1.1.1"
-description = "An MkDocs plugin to create a list of contributors on the page"
-category = "dev"
-optional = false
-python-versions = ">=2.7"
-files = [
-    {file = "mkdocs-git-committers-plugin-2-1.1.1.tar.gz", hash = "sha256:4f6eb6137f35967dfa444703b6ea293f05bf2fd183506bc51db8fb21b061d5a3"},
-    {file = "mkdocs_git_committers_plugin_2-1.1.1-py3-none-any.whl", hash = "sha256:14d4a89bf8965ab62ca9b8b0cd90f6c9b421bb89bfedca0d91c5119f18791360"},
-]
-
-[package.dependencies]
-beautifulsoup4 = "*"
-gitpython = "*"
-mkdocs = ">=1.0.3"
-requests = "*"
-
-[[package]]
 name = "mkdocs-material"
 version = "9.1.4+insiders.4.32.4"
 description = "Documentation that simply works"
@@ -2995,4 +2977,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.1"
-content-hash = "e2e4818e464f23440ecf387c0275881b2108ae7aad3d7b3d6ad7132d7b3776da"
+content-hash = "68f76b49552c5c3468a6fde5f2d269f618d0d5b7debdfe101a188b65a9792d50"

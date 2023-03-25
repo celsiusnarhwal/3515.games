@@ -1,10 +1,10 @@
 ---
-icon: fontawesome/solid/face-smile-horns
+icon: fontawesome/solid/pencil
 hide:
     - next
 ---
 
-# Cards Against Humanity :fontawesome-solid-face-smile-horns:
+# Cards Against Humanity :fontawesome-solid-pencil:
 
 Cards Against Humanity is a card game where you earn points by being funny. Every round, you're given fill-in-the-blank
 prompt called a black card, which you get to complete using the words on any of the white cards you happen to be

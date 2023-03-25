@@ -13,6 +13,6 @@ Choose your fighter.
 - [:fontawesome-solid-hand-back-fist: Rock-Paper-Scissors](rps/)
 - [:fontawesome-solid-cards-blank: UNO](uno/)
 - [:fontawesome-solid-chess: Chess](chess/)
-- [:fontawesome-solid-face-smile-horns: Cards Against Humanity](cah/)
+- [:fontawesome-solid-pencil: Cards Against Humanity](cah/)
 
 </div>

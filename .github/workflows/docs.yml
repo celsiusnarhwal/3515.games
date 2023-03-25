@@ -46,7 +46,6 @@ jobs:
       - name: Build Documentation
         run: poetry run mkdocs build
         env:
-          MKDOCS_GIT_COMMITTERS: ${{ github.ref == 'refs/heads/main' && 'true' || 'false' }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
