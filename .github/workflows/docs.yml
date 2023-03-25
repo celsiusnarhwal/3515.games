@@ -45,7 +45,6 @@ jobs:
 
       - name: Build Documentation
         run: poetry run mkdocs build
-        env:
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
