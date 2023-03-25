@@ -14,15 +14,18 @@ from importlib import metadata
 import alianator
 import clockworks
 import discord
-import support
-import tomlkit as toml
-from dict_deep import deep_get
 from discord import ButtonStyle
 from discord.commands import application_command
 from discord.ext import commands, pages
 from github import Github as GitHub
+
+import support
 from support.models.commands import Pseudocommand
-from tomlkit import TOMLDocument
+
+# constants
+
+CELSIUSNARHWAL = 170966436125212673
+CLESIUSNORHWALE = 417027940383981568
 
 # decorators
 

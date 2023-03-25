@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import os
 import platform
 import re
 
@@ -14,10 +13,13 @@ import clockworks
 import discord
 import humanize
 import inflect as ifl
-import support
+import pendulum
 from discord import ButtonStyle, Interaction
 from discord.ui import Button
 from discord.ui import button as discord_button
+
+import shrine
+import support
 from support.views import View
 
 inflect = ifl.engine()
@@ -31,24 +33,17 @@ class AboutView(View):
         )
         self.add_item(
             Button(
-                label="Terms",
+                label="Legal",
                 emoji="🏛",
-                url="https://3515.games/legal/terms",
+                url="https://3515.games/legal/",
                 row=1,
             )
         )
         self.add_item(
             Button(
-                label="Privacy",
-                emoji="🔒",
-                url="https://3515.games/legal/privacy",
-                row=1,
-            )
-        )
-        self.add_item(
-            Button(
-                label="Acknowledgements",
-                url="https://3515.games/legal/acknowledgements",
+                label="celsiusnarhwal.dev",
+                emoji=discord.PartialEmoji.from_str("<:celsius:535601639235518465>"),
+                url="https://celsiusnarhwal.dev",
                 row=1,
             )
         )
@@ -61,9 +56,27 @@ class AboutView(View):
                 await AboutView(ctx=self.ctx).present(interaction)
 
         with support.Assets.misc():
-            credits_text = open(os.path.join("pages", "credits.md")).read()
-            embed = discord.Embed(
-                title="Credits", description=credits_text, color=support.Color.mint()
+            embed = (
+                discord.Embed(title="Credits", color=support.Color.mint())
+                .add_field(
+                    name="God Incarnate",
+                    value=f"celsius narhwal ([@celsiusnarhwal](https://twitter.com/celsiusnarhwal))",
+                    inline=False,
+                )
+                .add_field(
+                    name="Super Cool Testers",
+                    value="Frosty (Zander) ([@slyzander](https://twitter.com/slyzander))",
+                    inline=False,
+                )
+                .add_field(
+                    name="Third-Party Software",
+                    value="[A whole lot.](https://3515.games/legal/acknowledgements)",
+                    inline=False,
+                )
+                .add_field(name="Special Thanks", value="You, I suppose")
+                .set_footer(
+                    text=f"3515.games © {pendulum.now().year} celsius narhwal. Thank you kindly for your attention.",
+                )
             )
 
             original_message = await self.ctx.interaction.original_response()
@@ -196,22 +209,19 @@ class AboutView(View):
         )
 
     async def present(self, interaction: Interaction = None):
-        with support.Assets.misc():
-            about_text = open(os.path.join("pages", "main.md")).read()
+        with shrine.Torii.misc() as torii:
+            template = torii.get_template("about.md")
+            about_text = template.render()
 
         about_embed = discord.Embed(
             title="About Me", description=about_text, color=support.Color.mint()
         )
 
         with support.Assets.misc():
-            bot_logo = discord.File("bot_logo.png", filename="bot_logo.png")
-            about_embed.set_image(url="attachment://bot_logo.png")
             if interaction:
                 await interaction.response.defer()
                 await interaction.edit_original_response(
-                    embed=about_embed, file=bot_logo, attachments=[], view=self
+                    embed=about_embed, attachments=[], view=self
                 )
             else:
-                await self.ctx.respond(
-                    embed=about_embed, file=bot_logo, view=self, ephemeral=True
-                )
+                await self.ctx.respond(embed=about_embed, view=self, ephemeral=True)

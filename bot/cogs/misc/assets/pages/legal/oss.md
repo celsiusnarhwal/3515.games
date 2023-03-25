@@ -1,1 +1,0 @@
-Here, you'll find copies of the licenses of the open-source software that helps power me. If you don't feel like flipping through 60+ pages of legalese, a much more nicely-formatted listing of these licenses is available on my [GitHub repository](https://github.com/celsiusnarhwal/3515.games/blob/main/licenses.md).
