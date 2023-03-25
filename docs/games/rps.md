@@ -1,5 +1,7 @@
 ---
 icon: fontawesome/solid/hand-back-fist
+hide:
+    - previous
 ---
 
 # Rock-Paper-Scissors :fontawesome-solid-hand-back-fist: :fontawesome-solid-hand: :fontawesome-solid-hand-scissors:

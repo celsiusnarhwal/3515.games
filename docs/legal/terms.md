@@ -1,4 +1,5 @@
 ---
+icon: fontawesome/solid/memo
 hide:
     - footer
 ---

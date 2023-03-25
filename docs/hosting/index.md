@@ -1,6 +1,13 @@
+---
+icon: fontawesome/solid/code-simple
+hide:
+    - previous
+---
+
 # Self-Hosting
 
 Welcome to 3515.games' official self-hosting guide. Pick a chapter, or start with the prologue.
+
 
 <div class="grid cards" markdown>
 
@@ -12,3 +19,5 @@ Welcome to 3515.games' official self-hosting guide. Pick a chapter, or start wit
 - [:fontawesome-solid-train-tunnel: Chapter V: All Aboard](v)
 
 </div>
+
+<small>Nothing in this guide is guaranteed to be accurate or functional.</small>

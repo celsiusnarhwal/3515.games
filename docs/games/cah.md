@@ -1,5 +1,7 @@
 ---
 icon: fontawesome/solid/face-smile-horns
+hide:
+    - next
 ---
 
 # Cards Against Humanity :fontawesome-solid-face-smile-horns:

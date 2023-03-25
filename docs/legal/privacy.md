@@ -1,4 +1,5 @@
 ---
+icon: user-lock
 hide:
     - footer
 ---

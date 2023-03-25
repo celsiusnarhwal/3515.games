@@ -1,3 +1,9 @@
+---
+icon: fontawesome/solid/gamepad-modern
+hide:
+    - footer
+---
+
 # Games
 
 Choose your fighter.

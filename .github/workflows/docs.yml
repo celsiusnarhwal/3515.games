@@ -30,7 +30,7 @@ jobs:
         run: pipx install poetry==1.4.1
 
       - name: Save Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           key: ${{ github.ref }}
           path: .cache

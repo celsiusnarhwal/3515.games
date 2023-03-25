@@ -26,6 +26,7 @@ nav:
       - "Chapter IV: Contain Your Enthusiasm": hosting/iv.md
       - "Chapter V: All Aboard": hosting/v.md
   - Legal:
+      - Legal: legal/index.md
       - Terms of Service: legal/terms.md
       - Privacy Policy: legal/privacy.md
       - Acknowledgements: legal/acknowledgements.md
