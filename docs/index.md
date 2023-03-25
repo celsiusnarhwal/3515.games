@@ -13,8 +13,8 @@ Welcome to 3515.games' perpetually-work-in-progress website. You were probably l
 
 <div class="grid cards" markdown>
 
-- [:fontawesome-solid-gamepad-modern: How to **play the games**](/games)
-- [:fontawesome-solid-code-simple: How to **self-host the bot**](/hosting)
+- [:fontawesome-solid-gamepad-modern: How to **play the games**](games/)
+- [:fontawesome-solid-code-simple: How to **self-host the bot**](hosting/)
 
 </div>
 
