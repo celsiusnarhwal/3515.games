@@ -22,11 +22,6 @@ from gps import Routes
 from settings import settings
 
 
-def check_current_directory():
-    if Path.getcwd() != Routes.bot():
-        raise RuntimeError("The current working directory must be /bot.")
-
-
 def configure_logging():
     logger = logging.getLogger("discord")
     logger.setLevel(logging.DEBUG)
@@ -59,7 +54,6 @@ def load_extensions():
 
 
 def setup():
-    check_current_directory()
     configure_logging()
     suppress_warnings()
     configure_nltk()
