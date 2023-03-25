@@ -28,6 +28,10 @@ class MiscCog(Cog):
     async def about(self, ctx: discord.ApplicationContext):
         await misc.AboutView(ctx=ctx).present()
 
+    @slash_command(description="Get some.")
+    async def help(self, ctx: discord.ApplicationContext):
+        await misc.HelpView(ctx=ctx).present(ctx)
+
     @slash_command(
         description="See which games I have the necessary permissions to play."
     )

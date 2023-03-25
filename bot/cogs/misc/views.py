@@ -14,6 +14,7 @@ import discord
 import humanize
 import inflect as ifl
 import pendulum
+from cogs import uno
 from discord import ButtonStyle, Interaction
 from discord.ui import Button
 from discord.ui import button as discord_button
@@ -225,3 +226,46 @@ class AboutView(View):
                 )
             else:
                 await self.ctx.respond(embed=about_embed, view=self, ephemeral=True)
+
+
+class HelpView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        def get_help_url(game: str):
+            return f"https://3515.games/games/{game}/"
+
+        self.add_item(
+            Button(
+                url=get_help_url("rps"),
+                label="Rock-Paper-Scissors",
+                emoji="🪨",
+            )
+        )
+
+        self.add_item(
+            Button(
+                url=get_help_url("uno"),
+                label="UNO",
+                emoji=uno.UnoCard(uno.UnoCardColor.WILD).emoji,
+            )
+        )
+
+        self.add_item(
+            Button(
+                url=get_help_url("chess"),
+                label="Chess",
+                emoji="♟️",
+            )
+        )
+
+        self.add_item(
+            Button(
+                url=get_help_url("cah"),
+                label="Cards Against Humanity",
+                emoji="✏️",
+            )
+        )
+
+    async def present(self, ctx: discord.ApplicationContext):
+        await ctx.respond(content="Get help with what?", view=self, ephemeral=True)
