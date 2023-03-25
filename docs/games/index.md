@@ -10,9 +10,9 @@ Choose your fighter.
 
 <div class="grid cards" markdown>
 
-- [:fontawesome-solid-hand-back-fist: Rock-Paper-Scissors](/hosting/rps)
-- [:fontawesome-solid-cards-blank: UNO](/hosting/uno)
-- [:fontawesome-solid-chess: Chess](/hosting/chess)
-- [:fontawesome-solid-face-smile-horns: Cards Against Humanity](/hosting/cah)
+- [:fontawesome-solid-hand-back-fist: Rock-Paper-Scissors](/games/rps)
+- [:fontawesome-solid-cards-blank: UNO](/games/uno)
+- [:fontawesome-solid-chess: Chess](/games/chess)
+- [:fontawesome-solid-face-smile-horns: Cards Against Humanity](/games/cah)
 
 </div>
