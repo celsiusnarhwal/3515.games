@@ -6,7 +6,7 @@ hide:
     - footer
 ---
 
-# Home
+# :fontawesome-solid-house-chimney-blank: Home
 
 
 Welcome to 3515.games' perpetually-work-in-progress website. You were probably looking for one of these two things:

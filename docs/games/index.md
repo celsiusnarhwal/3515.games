@@ -4,7 +4,7 @@ hide:
     - footer
 ---
 
-# Games
+# :fontawesome-solid-gamepad-modern: Games
 
 Choose your fighter.
 

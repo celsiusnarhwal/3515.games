@@ -3,9 +3,9 @@ icon: fontawesome/solid/scale-balanced
 hide: footer
 ---
 
-# Legal
+# :fontawesome-solid-scale-balanced: Legal
 
-Better call Yotsuba.
+I am the law[.](https://youtu.be/awnS7-5wLQg)
 
 <div class="grid cards" markdown>
 

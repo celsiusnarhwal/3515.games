@@ -4,7 +4,7 @@ hide:
     - previous
 ---
 
-# Self-Hosting
+# :fontawesome-solid-code-simple: Self-Hosting
 
 Welcome to 3515.games' official self-hosting guide. Pick a chapter, or start with the prologue.
 

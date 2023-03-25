@@ -56,19 +56,12 @@ theme:
     - toc.follow
     - toc.integrate
   palette:
-    - media: "(prefers-color-scheme)"
+    - scheme: slate
       toggle:
         icon: material/white-balance-sunny
         name: Step into the light
 
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      toggle:
-        icon: material/theme-light-dark
-        name: Use system theme
-
-    - media: "(prefers-color-scheme: light)"
-      scheme: indigo
+    - scheme: indigo
       toggle:
         icon: material/weather-night
         name: Embrace the dark
