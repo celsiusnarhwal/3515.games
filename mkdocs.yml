@@ -62,6 +62,7 @@ theme:
         name: Step into the light
 
     - scheme: indigo
+      primary: white
       toggle:
         icon: material/weather-night
         name: Embrace the dark
