@@ -5,13 +5,17 @@
 ########################################################################################################################
 
 import discord
-import support
+from clockworks import clock
 from cogs import cah, misc, uno
 from cogs.base import Cog
+from discord import Interaction
 from discord.ext import commands
-from support import slash_command
+from discord.ui import InputText, Modal
+from wonderwords import RandomWord
 
+import support
 from bot import bot
+from support import slash_command
 
 
 @bot.register_cog
@@ -120,6 +124,55 @@ class MiscCog(Cog):
                 title="You can't do that here.",
                 description=msg,
                 color=support.Color.error(),
+            )
+
+            await ctx.respond(embed=embed, ephemeral=True)
+
+    @slash_command(description="秘密 だ。")
+    @support.is_celsius_narhwal()
+    async def kurumi(self, ctx: discord.ApplicationContext):
+        wordsmith = RandomWord()
+        passphrase = " ".join(wordsmith.random_words(4))
+
+        class WalnutModal(Modal):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+
+                self.add_item(
+                    InputText(
+                        label="Passphrase",
+                        custom_id="passphrase",
+                        placeholder=passphrase,
+                    )
+                )
+
+            async def callback(this, interaction: Interaction):
+                if this.children[0].value == passphrase:
+                    clock().start_maintenance()
+
+                    await self.bot.change_presence(
+                        activity=discord.Activity(
+                            type=discord.ActivityType.playing,
+                            name="in Maintenance Mode 🚧",
+                        )
+                    )
+
+                    await interaction.response.send_message(
+                        "Maintenance mode started.", ephemeral=True
+                    )
+                else:
+                    await interaction.response.send_message(
+                        "Incorrect passphrase.", ephemeral=True
+                    )
+
+        if not clock().maintenance_start_time:
+            modal = WalnutModal(title="Enter Maintenance Mode")
+            await ctx.send_modal(modal)
+        else:
+            embed = discord.Embed(
+                title="Road work ahead.",
+                description="Maintenance mode is already active.",
+                color=support.Color.orange(),
             )
 
             await ctx.respond(embed=embed, ephemeral=True)
