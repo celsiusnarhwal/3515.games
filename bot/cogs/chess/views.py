@@ -16,13 +16,14 @@ import chess as pychess
 import chess.pgn as pychess_pgn
 import database.models as orm
 import discord
-import support
 from chess import square_name
 from cogs import chess
 from discord import ButtonStyle, Interaction
 from discord.ui import Button, InputText, Modal, Select
 from discord.ui import button as discord_button
 from path import Path
+
+import support
 from support import View
 
 
@@ -839,12 +840,13 @@ class ChessEndgameView(View):
         for header, content in headers.items():
             pgn.headers[header] = content
 
-        if self.game.board.result() == "1-0":
-            result = f"{self.game.white.user.name} wins"
-        elif self.game.board.result() == "0-1":
-            result = f"{self.game.black.user.name} wins"
-        else:
-            result = "Draw"
+        match self.game.board.result():
+            case "1-0":
+                result = f"{self.game.white.user.name} wins"
+            case "0-1":
+                result = f"{self.game.black.user.name} wins"
+            case _:
+                result = "Draw"
 
         with orm.db_session:
             saved_games = orm.ChessGame.get_user_games(interaction.user)
