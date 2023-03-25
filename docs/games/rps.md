@@ -43,4 +43,4 @@ then wait for your opponent to do the same. Once both players have made their mo
 The first player to win a majority of rounds will win the game. In a Best of Three game, this will be the first player
 to win two rounds; in a Best of Five game, the first to win three rounds; in a Best of Nine game, five rounds.
 
-That's all there is to it. Have fun!
+That's all there is to it.

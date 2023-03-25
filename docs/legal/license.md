@@ -12,7 +12,7 @@ website as long as you give credit to its original author, [celsius narhwal](htt
 
 !!! warning
     The CC BY 4.0 license **only** applies to 3515.games' website. 3515.games itself is licensed under version 3
-    of the GNU Affero General Public License. You can find 3515.games's license on
+    of the GNU Affero General Public License. You can find 3515.games license on
     [its GitHub repository](https://github.com/celsiusnarhwal/3515.games/blob/main/LICENSE.md).
 
 The full terms of the license follow. For more information, 
