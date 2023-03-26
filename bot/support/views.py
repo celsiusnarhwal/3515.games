@@ -22,7 +22,11 @@ class View(discord.ui.View):
     """
 
     def __init__(
-        self, ctx: discord.ApplicationContext = None, target_user: discord.User = None
+        self,
+        ctx: discord.ApplicationContext = None,
+        target_user: discord.User = None,
+        *args,
+        **kwargs,
     ):
         """
         The constructor for ``EnhancedView``.
@@ -33,7 +37,7 @@ class View(discord.ui.View):
         :param target_user: A discord.User object. Useful to pass in if the view should restrict interactions to a
             particular user. Optional; defaults to None.
         """
-        super(View, self).__init__()
+        super().__init__(*args, **kwargs)
         self.ctx: discord.ApplicationContext = ctx
         self.target_user: discord.User = target_user
         self.timeout = None
