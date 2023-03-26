@@ -3,7 +3,7 @@ name = "3515.games"
 description = ""
 version = "1.0.0"
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
-packages = [{ include = "bot" }]
+packages = [{ include = "kurisu" }]
 
 [tool.poetry.dependencies]
 python = "^3.11.1"
@@ -38,12 +38,6 @@ doppler-env = "^0.3.1"
 poethepoet = "^0.18.1"
 rich-tracebacks = "^1.2.1"
 
-[tool.poetry.group.docs.dependencies]
-cairosvg = "^2.6.0"
-pillow = "^9.4.0"
-poethepoet = "^0.18.1"
-mkdocs-material = { git = "https://github.com/squidfunk/mkdocs-material-insiders" }
-
 [tool.poetry.group.kurisu.dependencies]
 beautifulsoup4 = "^4.11.2"
 gitpython = "^3.1.29"
@@ -53,6 +47,18 @@ pip-licenses = "^4.0.3"
 pyperclip = "^1.8.2"
 semver = "^2.13.0"
 typer = { extras = ["all"], version = "^0.7.0" }
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+cairosvg = "^2.6.0"
+pillow = "^9.4.0"
+poethepoet = "^0.18.1"
+mkdocs-material = { git = "https://github.com/squidfunk/mkdocs-material-insiders" }
+
+[tool.poetry.group.repl]
+optional = true
 
 [tool.poetry.group.repl.dependencies]
 ipython = "^8.11.0"
