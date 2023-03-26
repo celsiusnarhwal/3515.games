@@ -20,8 +20,6 @@ class Settings(BaseSettings):
         3515.games' application ID.
     database : dict
         Options for 3515.games' database connection. See Pony's documentation[1]_ for supported options.
-    owner_id : int, optional, default: 170966436125212673
-        The user ID of 3515.games' owner. The default corresponds to celsiusnarhwal#3515.
     intents : discord.Intents, optional, default: discord.Intents.default() + discord.Intents.members
         Gateway Intents[2]_. By default, this includes all non-privileged intents plus the GUILD_MEMBERS intent.
     debug_guilds: list[int], optional, default: []
@@ -52,7 +50,6 @@ class Settings(BaseSettings):
 
     # Optional
     app_id: int = Field(..., env="BOT_APP_ID")
-    owner_id: int = 170966436125212673
     intents: discord.Intents = discord.Intents.default() + discord.Intents.members
     debug_guilds: list[int] = []
     extensions: list[str] = []

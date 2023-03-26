@@ -24,7 +24,6 @@ from settings import settings
 class Bot(discord.Bot):
     intents: discord.Intents = settings.intents
     debug_guilds: list[int] = settings.debug_guilds
-    owner_id: int = settings.owner_id
 
     def __attrs_pre_init__(self):
         super().__init__()
