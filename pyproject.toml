@@ -1,35 +1,92 @@
 [tool.poetry]
 name = "3515.games"
-version = "0.0.0"
-description = "3515.games is a Discord bot that lets you enjoy real-time social games with your friends."
-authors = ["celsiusnarhwal <celsius@celsiusnarhwal.dev>"]
+description = ""
+version = "1.0.0"
+authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
+packages = [{ include = "bot" }]
 
 [tool.poetry.dependencies]
-python = "^3.10.2"
-toml = "^0.10.2"
-llist = "^0.8"
-sortedcontainers = "^2.4.0"
-inflect = "^5.4.0"
+python = "^3.11.1"
+alianator = "^4.0.1"
+attrs = "^22.2.0"
 chess = "^1.9.0"
-svglib = "^1.4.1"
-path = "^16.4.0"
-alianator = "^3.0.0"
+dict-deep = "^4.1.2"
+elysia = "^1.0.1"
 humanize = "^4.0.0"
-PyGithub = "^1.55"
-shortuuid = "^1.0.8"
+inflect = "^6.0.2"
+jinja2 = "^3.1.2"
+jinja2-simple-tags = "^0.4.1"
+llist = "^0.7.1"
+nest-asyncio = "^1.5.6"
+nltk = "^3.7"
+ordered-set = "^4.1.0"
+orjson = "^3.8.6"
+path = "^16.4.0"
+pendulum = "^2.1.2"
 pony = "^0.7.16"
 psycopg2 = "^2.9.3"
-jishaku = "^2.5.0"
-nltk = "^3.7"
-fastapi = "^0.79.1"
-uvicorn = "^0.18.2"
 py-cord = "^2.1.1"
+pydantic = "^1.10.2"
+PyGithub = "^1.55"
+sortedcontainers = "^2.4.0"
+svglib = "^1.4.1"
+tomlkit = "^0.11.6"
+wonderwords = "^2.2.0"
 
-[tool.poetry.dev-dependencies]
-pip-licenses = "^3.5.3"
-doppler-env = "^0.3.0"
+[tool.poetry.group.dev.dependencies]
+doppler-env = "^0.3.1"
+poethepoet = "^0.18.1"
+rich-tracebacks = "^1.2.1"
+
+[tool.poetry.group.docs.dependencies]
+cairosvg = "^2.6.0"
+pillow = "^9.4.0"
+poethepoet = "^0.18.1"
+mkdocs-material = { git = "https://github.com/squidfunk/mkdocs-material-insiders" }
+
+[tool.poetry.group.kurisu.dependencies]
+beautifulsoup4 = "^4.11.2"
+gitpython = "^3.1.29"
+halo = "^0.0.31"
+marko = "^1.3.0"
+pip-licenses = "^4.0.3"
 pyperclip = "^1.8.2"
+semver = "^2.13.0"
+typer = { extras = ["all"], version = "^0.7.0" }
+
+[tool.poetry.group.repl.dependencies]
+ipython = "^8.11.0"
+
+[tool.poetry.scripts]
+kurisu = "kurisu.cli:app"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+known_first_party = ["keyboard", "settings", "shrine", "support"]
+
+[tool.poe.tasks]
+clear = "rm -rf site .cache"
+docs = { shell = "mkdocs serve" }
+format = { shell = "for hook in black prettier isort; do pre-commit run $hook --all-files; done" }
+
+[tool.poe.tasks.fontawesome]
+shell = """
+npm install --no-save @celsiusnarhwal/fontawesome
+mv node_modules/@celsiusnarhwal/fontawesome/svgs docs/.overrides/.icons/fontawesome
+rm -rf node_modules
+"""
+
+[tool.poe.tasks.docker]
+shell = """
+docker build . -t 3515.games:latest
+docker run --rm --env-file <(doppler secrets download --no-file --format docker) 3515.games:latest
+"""
+interpreter = "bash"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

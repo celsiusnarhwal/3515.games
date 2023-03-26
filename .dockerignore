@@ -1,0 +1,7 @@
+*
+
+!bot/
+!gps.py
+!COPYING
+!poetry.lock
+!pyproject.toml
