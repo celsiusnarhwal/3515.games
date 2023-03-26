@@ -69,11 +69,6 @@ class AboutView(View):
                     value="Frosty (Zander) ([@slyzander](https://twitter.com/slyzander))",
                     inline=False,
                 )
-                .add_field(
-                    name="Third-Party Software",
-                    value="[A whole lot.](https://3515.games/legal/acknowledgements)",
-                    inline=False,
-                )
                 .add_field(name="Special Thanks", value="You, I suppose")
                 .set_footer(
                     text=f"3515.games © {pendulum.now().year} celsius narhwal. Thank you kindly for your attention.",
