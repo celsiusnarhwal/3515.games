@@ -8,13 +8,14 @@
 Development settings.
 """
 
+from gps import Routes
 from settings.base import Settings
 
 settings = Settings(
     bot_name="3515.games.dev",
     database={
         "provider": "sqlite",
-        "filename": "db.sqlite3",
+        "filename": str(Routes.root() / "db.sqlite3"),
         "create_db": True,
     },
 )

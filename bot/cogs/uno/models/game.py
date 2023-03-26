@@ -12,13 +12,14 @@ import uuid
 
 import discord
 import inflect as ifl
+from attr import define
+from elysia import Fields
+from llist import dllist, dllistnode
+
 import shrine
 import support
-from attr import define
 from cogs import uno
-from elysia import Fields
 from keyboard import *
-from llist import dllist, dllistnode
 from shrine.kami import posessive
 from support import HostedGame
 
@@ -59,6 +60,7 @@ class UnoGame(HostedGame):
     turn_record: list[discord.Embed] = Fields.attr(factory=list)
 
     def __attrs_post_init__(self):
+        super().__attrs_post_init__()
         self.status = uno.UnoStatusTracker(self)
         self.processor = uno.UnoEventProcessor(self)
 

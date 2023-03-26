@@ -1825,10 +1825,14 @@ description = "Pony Object-Relational Mapper"
 category = "main"
 optional = false
 python-versions = "*"
-files = [
-    {file = "pony-0.7.16-py3-none-any.whl", hash = "sha256:608a1c1d662983bad2590e650f2bbc1cd6ed48558894ad8f50da4739ff98f614"},
-    {file = "pony-0.7.16.tar.gz", hash = "sha256:5f45fc67587f4520c560a57148cc573b097d42f82f5cb200d72c957b5708198d"},
-]
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/jspricke/pony"
+reference = "01026c2b043a9d468d88bceff53062ac8f653ba1"
+resolved_reference = "01026c2b043a9d468d88bceff53062ac8f653ba1"
 
 [[package]]
 name = "prettytable"
@@ -2977,4 +2981,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.1"
-content-hash = "68f76b49552c5c3468a6fde5f2d269f618d0d5b7debdfe101a188b65a9792d50"
+content-hash = "81dffdadc7c1d632a28b2c654343149bd4dbeda7112b5a01d89820ff518d1ad8"

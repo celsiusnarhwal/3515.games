@@ -23,7 +23,6 @@ ordered-set = "^4.1.0"
 orjson = "^3.8.6"
 path = "^16.4.0"
 pendulum = "^2.1.2"
-pony = "^0.7.16"
 psycopg2 = "^2.9.3"
 py-cord = "^2.1.1"
 pydantic = "^1.10.2"
@@ -32,6 +31,7 @@ sortedcontainers = "^2.4.0"
 svglib = "^1.4.1"
 tomlkit = "^0.11.6"
 wonderwords = "^2.2.0"
+pony = { git = "https://github.com/jspricke/pony", rev = "01026c2b043a9d468d88bceff53062ac8f653ba1" }
 
 [tool.poetry.group.dev.dependencies]
 doppler-env = "^0.3.1"

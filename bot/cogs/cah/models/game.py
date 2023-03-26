@@ -12,15 +12,16 @@ import uuid
 
 import discord
 import inflect as ifl
+from attrs import define
+from elysia import Fields
+from llist import dllist, dllistnode
+from sortedcontainers import SortedKeyList
+
 import shrine
 import support
-from attrs import define
 from cogs import cah
-from elysia import Fields
 from keyboard import *
-from llist import dllist, dllistnode
 from shrine.kami import posessive
-from sortedcontainers import SortedKeyList
 from support import HostedGame
 
 inflect = ifl.engine()
@@ -36,7 +37,7 @@ class CAHGame(HostedGame):
 
     name: ClassVar = "Cards Against Humanity"
     short_name: ClassVar = "CAH"
-    min_players: ClassVar = 2
+    min_players: ClassVar = 3
 
     deck: cah.CAHDeck
     settings: CAHGameSettings
