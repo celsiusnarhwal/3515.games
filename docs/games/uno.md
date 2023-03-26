@@ -171,13 +171,6 @@ The Game Host chooses how long players have to move during their turns. If you e
 
 If you time out for three turns in a row, **you'll be kicked from the game**.
 
-??? example "The clockworks of the inactivity timer"
-    The inactivity timer always lasts a *little* longer or a *little* shorter than what the host sets it
-    to. This is to prevent players from making a move exactly as the timer runs out and causing, erm...*undesirable*
-    effects.
-    
-    Other games that use inactivity timers work like this, too.
-
 ## Hosting a Game
 
 When you create an UNO game, you become its **Game Host**. This grants you exclusive access to 
@@ -242,7 +235,7 @@ This can happen if:
 time limit.
 2. Specifically, you have eight hours to wrap things up or 3515.games will close the curtain for you.
 
-??? example annotate "Implementation details"
+??? info annotate "Implementation details"
     While 3515.games stays as close to the [official UNO rules](https://service.mattel.com/instruction_sheets/42001pr.pdf)
     as reasonably possible, there are a few notable deviations.
 
