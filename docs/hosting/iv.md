@@ -35,7 +35,7 @@ COPY . /app "(5)!"
 
 WORKDIR /app/bot
 
-RUN curl -sSL https://install.python-poetry.org | python - && poetry install --only main "(6)!"
+RUN curl -sSL https://install.python-poetry.org | python - && poetry install --no-root --only main "(6)!"
 
 ENTRYPOINT ["poetry", "run", "python", "main.py"] "(7)!"
 ```

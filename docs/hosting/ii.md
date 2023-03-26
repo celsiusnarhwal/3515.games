@@ -147,13 +147,12 @@ poetry --version
 Then install 3515.games' dependencies:
 
 ```bash
-poetry install --without docs # (1)!
+poetry install # (1)!
 ```
 
-1. `--without docs` tells Poetry to skip installing the dependencies required to build 3515.games' website (yes,
-    the one you're looking at now). The website is made with the Insiders edition of 
-    [Material for MkDocs](https://squidfunk.github.io/mkdocs-material), which is not free and requires additional
-    configuration to install.
+1.  This will *not* install the dependencies required to build 3515.games' website (yes, the one you're looking at now). 
+    The website is made with the Insiders edition of [Material for MkDocs](https://squidfunk.github.io/mkdocs-material), 
+    which is not free and requires additional configuration to install.
 
     TL;DR: Installing the website's dependencies will cause Poetry to fail, so leave them out.
 
