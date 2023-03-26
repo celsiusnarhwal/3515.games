@@ -72,7 +72,7 @@ in popular vote mode) wins the round and earns a point.
 
 1. Yes, that's the same command. It does something different this time. Promise.
 
-??? example "But what if there's a tie?"
+??? question "But what if there's a tie?"
     
     You didn't ask that, but great question! If there's a vote tie in a popular vote game, 3515.games secretly picks a
     winner from among the tied players. It doesn't tell you that there was a tie or how many votes each player got,
