@@ -2,7 +2,18 @@
 
 [![Code style: black](https://aegis.celsiusnarhwal.dev/badge/black?style=for-the-badge)](https://github.com/psf/black)
 
-This is the source code of 3515.games, a bot that lets you enjoy real-time social games with your friends on Discord.
+3515.games is yet another Discord bot for playing games with other people in text channels. If you're looking for
+its source code, you're in the right place. If you're looking for its website, see [3515.games](https://3515.games).
+
+## Related Projects
+
+A number of different projects were born out of 3515.games' development. You should check them out.
+
+- [alianator](https://github.com/celsiusnarhwal/alianator)
+- [REST Against Humanity](https://restagainsthumanity.com)
+- [Pekora](https://pekora.celsiusnarhwal.dev)
+- [Elysia](https://github.com/celsiusnarhwal/elysia)
+- [poetry-sort](https://github.com/celsiusnarhwal/poetry-sort)
 
 ## License
 
@@ -16,5 +27,3 @@ For more information, see [About 3515.games' License](license-info.md).
 
 - [celsius narhwal](https://github.com/celsiusnarhwal) is exempt from AGPL licensing and may, at his option,
   license any source code authored for 3515.games under terms of his choosing.
-
-  3515.games © celsius narhwal.
