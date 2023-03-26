@@ -100,7 +100,7 @@ def invoked_in_text_channel():
 
 def is_celsius_narhwal(user: discord.User = None):
     """
-    A function that checks if a given user is 3515.games' owner, celsiusnarhwal#3515.
+    A function that checks if a given user is 3515.games' owner.
 
     If the ``user`` parameter is not provided, this function will act as a command decorator and check against
     the invocation context.
@@ -110,7 +110,9 @@ def is_celsius_narhwal(user: discord.User = None):
         if not ctx.bot.is_owner(ctx.user):
             msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
             embed = discord.Embed(
-                title="You can't do that.", description=msg, color=support.Color.error()
+                title="[EXTREMELY LOUD INCORRECT BUZZER]",
+                description="You're not authorized to do that.",
+                color=support.Color.error(),
             )
             await ctx.respond(embed=embed, ephemeral=True)
 
@@ -118,7 +120,7 @@ def is_celsius_narhwal(user: discord.User = None):
 
         return True
 
-    return user.id == 170966436125212673 if user else commands.check(predicate)
+    return user.id == CELSIUSNARHWAL if user else commands.check(predicate)
 
 
 def not_in_maintenance():
