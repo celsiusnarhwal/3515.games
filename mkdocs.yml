@@ -9,8 +9,7 @@ repo_url: https://github.com/celsiusnarhwal/3515.games
 
 # Navigation
 nav:
-  - Home:
-      - Home: index.md
+  - Home: index.md
   - Games:
       - Games: games/index.md
       - Rock-Paper-Scissors: games/rps.md
