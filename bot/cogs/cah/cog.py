@@ -145,8 +145,8 @@ class CAHCog(Cog):
                 await cah_game.add_player(ctx=ctx, user=ctx.user, is_host=True)
 
                 msg = (
-                    f"{ctx.user.mention} created a Cards Against Humanity game! You can join the game by typing "
-                    f"`/cah join` in the game thread."
+                    f"{ctx.user.mention} created a Cards Against Humanity game! You can join the game by using "
+                    f"`/cah ciao` in the game thread."
                 )
                 embed = discord.Embed(
                     title="A Cards Against Humanity game has been created!",
