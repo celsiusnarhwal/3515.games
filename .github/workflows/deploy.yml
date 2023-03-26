@@ -17,6 +17,6 @@ jobs:
           ref: main
 
       - name: Deploy to Railway
-        run: npx railway up
+        run: npx @railway/cli up
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
