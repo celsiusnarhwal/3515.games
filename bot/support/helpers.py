@@ -28,6 +28,7 @@ from support.models.commands import Pseudocommand
 
 CELSIUSNARHWAL = 170966436125212673
 CLESIUSNORHWALE = 417027940383981568
+TESTING_GROUNDS = 392426193581768717
 
 # decorators
 
@@ -102,7 +103,7 @@ def invoked_in_text_channel():
 
 def is_celsius_narhwal(user: discord.User = None):
     """
-    A function that checks if a given user is 3515.games' owner.
+    A function that checks if a given user is celsiusnarhwal#3515 or clesiusnorhwale#8328.
 
     If the ``user`` parameter is not provided, this function will act as a command decorator and check against
     the invocation context.
@@ -121,7 +122,11 @@ def is_celsius_narhwal(user: discord.User = None):
 
         return True
 
-    return user.id == CELSIUSNARHWAL if user else commands.check(predicate)
+    return (
+        user.id in [CELSIUSNARHWAL, CLESIUSNORHWALE]
+        if user
+        else commands.check(predicate)
+    )
 
 
 def not_in_maintenance():

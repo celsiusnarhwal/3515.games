@@ -15,14 +15,15 @@ from contextlib import asynccontextmanager
 
 import chess as pychess
 import discord
-import shrine
-import support
 from attrs import define
 from chess import square_name
 from cogs import chess
 from elysia import Fields
-from keyboard import *
 from pydantic import BaseModel, validate_arguments
+
+import shrine
+import support
+from keyboard import *
 from shrine.kami import posessive
 from support import BasePlayer, ThreadedGame
 
@@ -142,8 +143,6 @@ class ChessGame(ThreadedGame):
             "Your chess game will take place in this thread.\n"
             "\n"
             "When you're ready, type `/chess ready`. When both players are ready, the game will begin.\n"
-            "\n"
-            "You two and server moderators are the only ones who can talk here. (Spectators are welcome, though.)\n"
         )
 
         embed = discord.Embed(
@@ -153,9 +152,7 @@ class ChessGame(ThreadedGame):
         )
 
         if self.saving_enabled:
-            embed.set_footer(
-                text="Game saving is enabled. Please review /about > Privacy."
-            )
+            embed.set_footer(text="Game saving is enabled.")
         else:
             embed.set_footer(text="Game saving is disabled.")
 

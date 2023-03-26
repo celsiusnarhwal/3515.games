@@ -5,14 +5,14 @@
 ########################################################################################################################
 
 import discord
-import support
 from cogs import chess
 from cogs.base import Cog
 from discord import Option
 from discord.ext import commands
-from support import SlashCommandGroup
 
+import support
 from bot import bot
+from support import SlashCommandGroup
 
 
 @bot.register_cog
@@ -396,18 +396,6 @@ class ChessCog(Cog):
         """
         view = chess.ChessReplayMenuView(ctx=ctx)
         await view.initiate_view()
-
-    @commands.Cog.listener(name="on_message")
-    async def delete_non_player_messages(self, message: discord.Message):
-        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(message.channel.id)
-
-        if (
-            chess_game
-            and not chess_game.retrieve_player(message.author)
-            and not message.author.bot
-            and not support.is_celsius_narhwal(message.author)
-        ):
-            await message.delete()
 
     @commands.Cog.listener(name="on_thread_member_remove")
     async def sync_game_thread_removal(self, thread_member: discord.ThreadMember):

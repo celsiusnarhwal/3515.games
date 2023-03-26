@@ -6,16 +6,16 @@
 
 import discord
 import inflect as ifl
-import shrine
-import support
 from cogs import uno
 from cogs.base import Cog
 from discord import Option
 from discord.ext import commands
 from llist import dllistnode
-from support import SlashCommandGroup
 
+import shrine
+import support
 from bot import bot
+from support import SlashCommandGroup
 
 inflect = ifl.engine()
 
@@ -120,7 +120,7 @@ class UnoCog(Cog):
             embed = discord.Embed(
                 title="An UNO game has been created!",
                 description=f"{ctx.user.mention} created an UNO game! You can "
-                f"join the game by typing `/uno join` in the "
+                f"join the game by using `/uno ciao` in the "
                 f"game thread.",
                 color=support.Color.mint(),
             )
