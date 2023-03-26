@@ -9,17 +9,19 @@ from __future__ import annotations
 import os
 import random
 from functools import partial
-from importlib import metadata
 
 import alianator
 import clockworks
 import discord
+import tomlkit as toml
+from dict_deep import deep_get
 from discord import ButtonStyle
 from discord.commands import application_command
 from discord.ext import commands, pages
 from github import Github as GitHub
 
 import support
+from gps import Routes
 from support.models.commands import Pseudocommand
 
 # constants
@@ -108,7 +110,6 @@ def is_celsius_narhwal(user: discord.User = None):
 
     async def predicate(ctx: discord.ApplicationContext):
         if not ctx.bot.is_owner(ctx.user):
-            msg = f"Only my creator can use `/{ctx.command.qualified_name}`."
             embed = discord.Embed(
                 title="[EXTREMELY LOUD INCORRECT BUZZER]",
                 description="You're not authorized to do that.",
@@ -220,7 +221,8 @@ def version() -> str:
     """
     Return 3515.games' version.
     """
-    return metadata.version("3515.games")
+    with Routes.root():
+        return deep_get(toml.load(open("pyproject.toml")), "tool.poetry.version")
 
 
 def mona():
