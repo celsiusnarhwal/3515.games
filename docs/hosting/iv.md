@@ -35,9 +35,12 @@ COPY . /app "(5)!"
 
 WORKDIR /app/bot
 
-RUN curl -sSL https://install.python-poetry.org | python - && poetry install --no-root --only main "(6)!"
+ARG DOPPLER_CLI
+RUN if [ -n "$DOPPLER_CLI" ]; then curl -sSL https://cli.doppler.com/install.sh | sh; fi "(6)!"
 
-ENTRYPOINT ["poetry", "run", "python", "main.py"] "(7)!"
+RUN curl -sSL https://install.python-poetry.org | python - && poetry install --only main "(7)!"
+
+CMD ["poetry", "run", "python", "main.py"] "(8)!"
 ```
 
 1. The version of Python to be used inside the container. This should match the version specified in `pyproject.toml`.
@@ -48,8 +51,9 @@ ENTRYPOINT ["poetry", "run", "python", "main.py"] "(7)!"
 3. Poetry will install to this directory inside the container.
 4. Adds Poetry's executable to the system path.
 5. Copies all files and directories in the project not excluded by `.dockerignore` to the `/app` directory within the container.
-6. Installs Poetry and the dependencies 3515.gamesneeds to run.
-7. Starts 3515.games.
+6. Installs the Doppler CLI if the `DOPPLER_CLI` build argument is set.
+7. Installs Poetry and the dependencies 3515.games needs to run. 
+8. Starts 3515.games.
 
 There *should* also be a `.dockerignore` file at the root of your project. If *that's* somehow missing, create one
 with the following contents:
@@ -78,7 +82,7 @@ with the following contents:
 Open up a terminal and run:
 
 ```bash
-docker build . -t 3515.games:latest
+docker build . -t 3515.games:latest --build-arg DOPPLER_CLI=1
 ```
 
 This will build a **Docker image** of 3515.games. Think of it as an executable that starts 3515.games whenever you run
@@ -87,9 +91,17 @@ every single time.
 
 Try it out:
 
-```bash
-poe docker
-```
+=== ":fontawesome-brands-apple: macOS"
+    
+    ```bash
+    docker run --rm -it -e DOPPLER_TOKEN="$(doppler configs tokens create docker --max-age 1m --plain)" 3515.games:latest
+    ```
+
+=== ":fontawesome-brands-windows: Windows"
+    
+    ```powershell
+    docker run --rm -it -e DOPPLER_TOKEN=(doppler configs tokens create docker --max-age 1m --plain) 3515.games:latest
+    ```
 
 Pretty cool, right?
 
