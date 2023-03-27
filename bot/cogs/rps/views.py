@@ -7,12 +7,13 @@
 from __future__ import annotations
 
 import discord
-import support
-from cogs.rps import rps
 from discord import ButtonStyle, Interaction
 from discord.ext import pages as discord_pages
 from discord.ui import Button
 from discord.ui import button as discord_button
+
+import support
+from cogs.rps import rps
 from support.views import View
 
 

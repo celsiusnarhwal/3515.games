@@ -10,14 +10,13 @@ The program entrypoint.
 import logging
 import warnings
 
-import clockworks
 import nest_asyncio as nest
 import nltk
 from click import secho as print
-from database.models import db
-from path import Path
 
+import clockworks
 from bot import bot
+from database.models import db
 from gps import Routes
 from settings import settings
 

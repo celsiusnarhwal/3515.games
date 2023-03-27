@@ -5,13 +5,13 @@
 ########################################################################################################################
 
 import discord
+from discord import Option
+
 import support
+from bot import bot
 from cogs import rps
 from cogs.base import Cog
-from discord import Option
 from support import SlashCommandGroup
-
-from bot import bot
 
 
 @bot.register_cog

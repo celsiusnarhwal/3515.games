@@ -13,6 +13,7 @@ from __future__ import annotations
 import inflect as ifl
 import pendulum
 from jinja2_simple_tags import StandaloneTag
+
 from shrine import torii
 
 

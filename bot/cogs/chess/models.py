@@ -13,16 +13,16 @@ import uuid
 from collections import Counter
 from contextlib import asynccontextmanager
 
-import chess as pychess
 import discord
 from attrs import define
-from chess import square_name
-from cogs import chess
 from elysia import Fields
 from pydantic import BaseModel, validate_arguments
 
+import chess as pychess
 import shrine
 import support
+from chess import square_name
+from cogs import chess
 from keyboard import *
 from shrine.kami import posessive
 from support import BasePlayer, ThreadedGame

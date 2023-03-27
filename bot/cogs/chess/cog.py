@@ -5,13 +5,13 @@
 ########################################################################################################################
 
 import discord
-from cogs import chess
-from cogs.base import Cog
 from discord import Option
 from discord.ext import commands
 
 import support
 from bot import bot
+from cogs import chess
+from cogs.base import Cog
 from support import SlashCommandGroup
 
 

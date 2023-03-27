@@ -12,18 +12,18 @@ from collections import deque
 from io import StringIO
 from tempfile import TemporaryDirectory
 
-import chess as pychess
-import chess.pgn as pychess_pgn
-import database.models as orm
 import discord
-from chess import square_name
-from cogs import chess
 from discord import ButtonStyle, Interaction
 from discord.ui import Button, InputText, Modal, Select
 from discord.ui import button as discord_button
 from path import Path
 
+import chess as pychess
+import chess.pgn as pychess_pgn
+import database.models as orm
 import support
+from chess import square_name
+from cogs import chess
 from support import View
 
 
