@@ -5,9 +5,6 @@
 ########################################################################################################################
 
 import discord
-from clockworks import clock
-from cogs import cah, misc, uno
-from cogs.base import Cog
 from discord import Interaction
 from discord.ext import commands
 from discord.ui import InputText, Modal
@@ -15,6 +12,9 @@ from wonderwords import RandomWord
 
 import support
 from bot import bot
+from clockworks import clock
+from cogs import cah, misc, uno
+from cogs.base import Cog
 from support import slash_command
 
 
@@ -62,6 +62,10 @@ class MiscCog(Cog):
         )
 
         await ctx.respond(embed=embed, ephemeral=True)
+
+    @slash_command(description="Choose the pronouns I use to refer to you.")
+    async def pronouns(self, ctx: discord.ApplicationContext):
+        await misc.PronounsView(ctx=ctx).present(ctx)
 
     @slash_command(
         description="Create a voice channel for a supported game. You won't be able to delete this channel manually."

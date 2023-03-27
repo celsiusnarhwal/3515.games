@@ -6,4 +6,5 @@
 
 from support.models.commands import *
 from support.models.games import *
+from support.models.pronouns import *
 from support.models.utils import *

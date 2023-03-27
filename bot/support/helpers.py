@@ -11,7 +11,6 @@ import random
 from functools import partial
 
 import alianator
-import clockworks
 import discord
 import tomlkit as toml
 from dict_deep import deep_get
@@ -20,6 +19,7 @@ from discord.commands import application_command
 from discord.ext import commands, pages
 from github import Github as GitHub
 
+import clockworks
 import support
 from gps import Routes
 from support.models.commands import Pseudocommand

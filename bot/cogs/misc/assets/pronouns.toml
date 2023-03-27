@@ -1,0 +1,23 @@
+# Key reference: https://pronoundb.org/docs
+# m = masculine (he/him)
+# f = feminine (she/her)
+# n = neuter (it/its)
+# g = gender-neutral (they/them)
+
+hh = ["m", "m"]
+hi = ["m", "n"]
+hs = ["m", "f"]
+ht = ["h", "g"]
+ih = ["n", "m"]
+ii = ["n", "n"]
+is = ["n", "f"]
+it = ["n", "g"]
+shh = ["f", "m"]
+sh = ["f", "f"]
+si = ["f", "n"]
+st = ["f", "g"]
+th = ["g", "m"]
+ti = ["g", "n"]
+ts = ["g", "f"]
+tt = ["g", "g"]
+any = ["m", "n", "f", "g"]

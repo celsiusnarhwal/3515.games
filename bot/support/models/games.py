@@ -7,15 +7,22 @@
 from __future__ import annotations
 
 import asyncio
+import random
 from abc import ABC, abstractmethod
+from collections import defaultdict
 
+import aiohttp
 import discord
 import inflect as ifl
-import support
+import tomlkit as toml
 from attrs import define
 from discord.ext import commands
 from elysia import Fields
+from pydantic import validate_arguments
+
+import support
 from keyboard import *
+from support.models.pronouns import Pronoun, PronounType
 
 inflect = ifl.engine()
 
@@ -473,6 +480,11 @@ class BasePlayer:
 
     user: discord.Member = Fields.field(frozen=True)
 
+    pronouns: PronounType = Fields.attr(default=PronounType.GENDER_NEUTRAL)
+
+    def __attrs_post_init__(self):
+        self.pronouns = asyncio.run(self._genderfabriken())
+
     @property
     def name(self) -> str:
         """
@@ -508,6 +520,39 @@ class BasePlayer:
         avatar exists.
         """
         return self.user.display_avatar.url
+
+    @validate_arguments
+    def pronoun(self, pronoun: Pronoun) -> str:
+        if pronoun is Pronoun.THEIR:
+            return {
+                PronounType.MASCULINE: "his",
+                PronounType.FEMININE: "her",
+                PronounType.NEUTER: "its",
+                PronounType.GENDER_NEUTRAL: "their",
+            }[self.pronouns]
+
+        genderinator = ifl.engine()
+        genderinator.gender(self.pronouns.value)
+
+        return genderinator.singular_noun(pronoun.value)
+
+    # noinspection PyUnresolvedReferences
+    async def _genderfabriken(self, *_) -> PronounType:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://pronoundb.org/api/v1/lookup",
+                params={"platform": "discord", "id": self.id},
+            ) as resp:
+                pronoun_code = (
+                    "tt" if resp.status != 200 else (await resp.json())["pronouns"]
+                )
+
+        with support.Assets.misc():
+            type_codes = defaultdict(
+                lambda: ["g", "g"], toml.load(open("pronouns.toml"))
+            )[pronoun_code]
+
+        return PronounType(random.choice(type_codes))
 
     def __str__(self):
         return self.name

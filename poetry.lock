@@ -666,14 +666,14 @@ dev = ["check-manifest"]
 
 [[package]]
 name = "elysia"
-version = "1.0.1"
-description = "A better* way of creating attrs fields"
+version = "1.1.1"
+description = "An alternative API for creating attrs fields"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "elysia-1.0.1-py3-none-any.whl", hash = "sha256:feaac988836281115e54bf96363b9272120d6fa065fea01dbc0cecebab3053f1"},
-    {file = "elysia-1.0.1.tar.gz", hash = "sha256:f25f868bd6d4cedaaa23c110c451ab2c6d9e1f716cc27afd4670b26e46f0eb1e"},
+    {file = "elysia-1.1.1-py3-none-any.whl", hash = "sha256:3fc07c5c4e42c3e32fbc3b830a379fc7edea03c825627c1c46a98660fa88fd1d"},
+    {file = "elysia-1.1.1.tar.gz", hash = "sha256:1f45374f994ae86833d59200c960bd0aaccdb5ccc65f5d7a6bbe3fc8376f7976"},
 ]
 
 [package.dependencies]
@@ -2626,14 +2626,14 @@ files = [
 
 [[package]]
 name = "tomlkit"
-version = "0.11.6"
+version = "0.11.7"
 description = "Style preserving TOML library"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "tomlkit-0.11.6-py3-none-any.whl", hash = "sha256:07de26b0d8cfc18f871aec595fda24d95b08fef89d147caa861939f37230bf4b"},
-    {file = "tomlkit-0.11.6.tar.gz", hash = "sha256:71b952e5721688937fb02cf9d354dbcf0785066149d2855e44531ebdd2b65d73"},
+    {file = "tomlkit-0.11.7-py3-none-any.whl", hash = "sha256:5325463a7da2ef0c6bbfefb62a3dc883aebe679984709aee32a317907d0a8d3c"},
+    {file = "tomlkit-0.11.7.tar.gz", hash = "sha256:f392ef70ad87a672f02519f99967d28a4d3047133e2d1df936511465fbb3791d"},
 ]
 
 [[package]]
@@ -2981,4 +2981,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.1"
-content-hash = "c7b026df2e2941f94ac003f30c7038c7e4719f63dba26037ef0e106c25f2c4de"
+content-hash = "6af7068608ae112d4647c3c9d2a35be1ec74894867a2c31253cc4aa4d8ddc75b"
