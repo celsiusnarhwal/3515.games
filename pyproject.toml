@@ -3,7 +3,7 @@ name = "3515.games"
 description = ""
 version = "1.0.0"
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
-packages = [{ include = "kurisu" }]
+packages = [{ include = "bot" }]
 
 [tool.poetry.dependencies]
 python = "^3.11.1"
@@ -85,13 +85,6 @@ npm install --no-save @celsiusnarhwal/fontawesome
 mv node_modules/@celsiusnarhwal/fontawesome/svgs docs/.overrides/.icons/fontawesome
 rm -rf node_modules
 """
-
-[tool.poe.tasks.docker]
-shell = """
-docker build . -t 3515.games:latest
-docker run --rm --env-file <(doppler secrets download --no-file --format docker) 3515.games:latest
-"""
-interpreter = "bash"
 
 [build-system]
 requires = ["poetry-core"]
