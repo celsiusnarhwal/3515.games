@@ -483,7 +483,7 @@ class BasePlayer:
 
     user: discord.Member = Fields.field(frozen=True)
 
-    pronouns: PronounType = Fields.attr()
+    pronouns: list[PronounType] = Fields.attr()
 
     def __attrs_post_init__(self):
         self.pronouns = asyncio.run(self._genderfabriken())
@@ -526,42 +526,46 @@ class BasePlayer:
 
     @validate_arguments
     def pronoun(self, pronoun: Pronoun) -> str:
+        pronoun_type = random.choice(self.pronouns)
+
         if pronoun is Pronoun.THEIR:
             return {
                 PronounType.MASCULINE: "his",
                 PronounType.FEMININE: "her",
                 PronounType.NEUTER: "its",
                 PronounType.GENDER_NEUTRAL: "their",
-            }[self.pronouns]
+            }[pronoun_type]
 
         genderinator = ifl.engine()
-        genderinator.gender(self.pronouns.value)
+        genderinator.gender(pronoun_type.value)
 
         result = genderinator.singular_noun(pronoun.value)
 
         return (
-            genderinator.plural_noun(result) if result.lower() == "themself" else result
+            genderinator.plural_noun(result)
+            if result.casefold() == "themself"
+            else result
         )
 
     # noinspection PyUnresolvedReferences
-    async def _genderfabriken(self) -> PronounType:
+    async def _genderfabriken(self) -> list[PronounType]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://pronoundb.org/api/v1/lookup",
                 params={"platform": "discord", "id": self.id},
             ) as resp:
                 if resp.status != 200:
-                    return PronounType.GENDER_NEUTRAL
+                    return [PronounType.GENDER_NEUTRAL]
 
                 pronoun_code = (await resp.json())["pronouns"]
 
         with support.Assets.misc():
             types = defaultdict(
-                lambda: [PronounType.GENDER_NEUTRAL] * 2,
+                lambda: [PronounType.GENDER_NEUTRAL],
                 toml.load(open("pronouns.toml")),
             )[pronoun_code]
 
-        return PronounType(random.choice(types))
+        return [PronounType(t) for t in types]
 
     def __str__(self):
         return self.name
