@@ -21,7 +21,7 @@ inflect = ifl.engine()
 
 class CAHTerminableView(View):
     """
-    A special that kills itself at the end of the turn of the player who created them.
+    A special view that kills itself at the end of the turn of the player who created it.
     """
 
     def __init__(self, *args, **kwargs):

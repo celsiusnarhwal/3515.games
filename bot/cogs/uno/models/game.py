@@ -365,13 +365,13 @@ class UnoGame(HostedGame):
         winner_rank = self.status.get_player_ranking(round_winner)
 
         msg = (
-            f"Congratulations, {round_winner.user.mention}! You won Round {self.current_round}!\n"
+            f"Congratulations, {round_winner.mention}! You won Round {self.current_round}!\n"
             f"\n"
-            f"Based on the cards everyone else is holding, {round_winner.user.name} has been awarded "
+            f"Based on the cards everyone else is holding, {round_winner.name} has been awarded "
             f"**{awarded_points} points**.\n"
             f"\n"
-            f"{round_winner.user.name} currently has **{round_winner.points} points**, putting them in "
-            f"**{winner_rank} place**"
+            f"{round_winner.name} currently has **{round_winner.points} points**, putting "
+            f"{round_winner.pronoun('them')} in **{winner_rank} place**"
         )
 
         if (point_gap := self.settings.points_to_win - round_winner.points) > 0:
@@ -710,8 +710,8 @@ class UnoEventProcessor:
 
         self.game.turn_record[-1].add_field(
             name="🎬 Take Two!",
-            value=f"**{next_player.user.name}** draws two cards and "
-            f"forfeits their turn.",
+            value=f"**{next_player.name}** draws two cards and "
+            f"forfeits {next_player.pronoun('their')} turn.",
             inline=False,
         )
 
@@ -728,8 +728,8 @@ class UnoEventProcessor:
 
         self.game.turn_record[-1].add_field(
             name="🍀 Four Score!",
-            value=f"**{next_player.user.name}** draws four cards and "
-            f"forfeits their turn.",
+            value=f"**{next_player.name}** draws four cards and "
+            f"forfeits {next_player.pronoun('their')} turn.",
             inline=False,
         )
 
@@ -802,8 +802,8 @@ class UnoEventProcessor:
         player.has_said_uno = True
 
         embed = discord.Embed(
-            title=f"{player.user.name} says UNO!",
-            description=f"**{player.user.mention}** has one card left.",
+            title=f"{player.name} says UNO!",
+            description=f"**{player.mention}** has one card left.",
             color=support.Color.caution(),
         )
 
@@ -818,8 +818,8 @@ class UnoEventProcessor:
         await player.add_cards(1)
 
         embed = discord.Embed(
-            title=f"{player.user.name} timed out.",
-            description=f"{player.user.mention} took too long to move and was forced to draw a card.",
+            title=f"{player.name} timed out.",
+            description=f"{player.mention} took too long to move and was forced to draw a card.",
             color=support.Color.error(),
         )
 
@@ -870,7 +870,10 @@ class UnoEventProcessor:
         else:
             await challenger.add_cards(1)
 
-            field = f"\n\n**The callout fails!** {challenger} draws a card and forfeits their turn."
+            field = (
+                f"\n\n**The callout fails!** {challenger} draws a card and "
+                f"forfeits {challenger.pronoun('their')} turn."
+            )
 
             embed.add_field(name="The callout fails!", value=field)
 

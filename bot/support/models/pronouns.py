@@ -12,7 +12,7 @@ class Pronoun(StrEnum):
 
 
 class PronounType(StrEnum):
-    MASCULINE = "m"
-    FEMININE = "f"
-    NEUTER = "n"
-    GENDER_NEUTRAL = "g"
+    MASCULINE = auto()
+    FEMININE = auto()
+    NEUTER = auto()
+    GENDER_NEUTRAL = "gender-neutral"

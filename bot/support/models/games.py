@@ -31,13 +31,16 @@ inflect = ifl.engine()
 class ThreadedGame(ABC):
     __games__: ClassVar[dict[int, Self]]
 
-    name: ClassVar[str] = ...
-    short_name: ClassVar[str] = name
+    name: ClassVar[str] = None
+    short_name: ClassVar[str] = None
 
     guild: discord.Guild = Fields.field(frozen=True)
     thread: discord.Thread = Fields.field(frozen=True)
 
+    # noinspection PyClassVar
     def __attrs_post_init__(self):
+        self.short_name = self.short_name or self.name
+
         self.__games__[self.thread.id] = self
 
     @classmethod
@@ -480,7 +483,7 @@ class BasePlayer:
 
     user: discord.Member = Fields.field(frozen=True)
 
-    pronouns: PronounType = Fields.attr(default=PronounType.GENDER_NEUTRAL)
+    pronouns: PronounType = Fields.attr()
 
     def __attrs_post_init__(self):
         self.pronouns = asyncio.run(self._genderfabriken())
@@ -534,25 +537,31 @@ class BasePlayer:
         genderinator = ifl.engine()
         genderinator.gender(self.pronouns.value)
 
-        return genderinator.singular_noun(pronoun.value)
+        result = genderinator.singular_noun(pronoun.value)
+
+        return (
+            genderinator.plural_noun(result) if result.lower() == "themself" else result
+        )
 
     # noinspection PyUnresolvedReferences
-    async def _genderfabriken(self, *_) -> PronounType:
+    async def _genderfabriken(self) -> PronounType:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://pronoundb.org/api/v1/lookup",
                 params={"platform": "discord", "id": self.id},
             ) as resp:
-                pronoun_code = (
-                    "tt" if resp.status != 200 else (await resp.json())["pronouns"]
-                )
+                if resp.status != 200:
+                    return PronounType.GENDER_NEUTRAL
+
+                pronoun_code = (await resp.json())["pronouns"]
 
         with support.Assets.misc():
-            type_codes = defaultdict(
-                lambda: ["g", "g"], toml.load(open("pronouns.toml"))
+            types = defaultdict(
+                lambda: [PronounType.GENDER_NEUTRAL] * 2,
+                toml.load(open("pronouns.toml")),
             )[pronoun_code]
 
-        return PronounType(random.choice(type_codes))
+        return PronounType(random.choice(types))
 
     def __str__(self):
         return self.name

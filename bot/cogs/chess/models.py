@@ -475,8 +475,8 @@ class ChessPlayer(BasePlayer):
             self.has_proposed_draw = True
 
             msg = (
-                f"{self.user.mention} proposes a draw. {self.opponent.user.mention} can agree to the proposal "
-                f"by proposing a draw themselves or reject the proposal by doing nothing. "
+                f"{self.mention} proposes a draw. {self.opponent.mention} can agree to the proposal "
+                f"by proposing a draw {self.opponent.pronoun('themselves')} or reject the proposal by doing nothing. "
             )
             embed = discord.Embed(
                 title="Draw Proposed", description=msg, color=support.Color.caution()
@@ -494,7 +494,7 @@ class ChessPlayer(BasePlayer):
     async def rescind_draw(self):
         self.has_proposed_draw = False
 
-        msg = f"{self.user.mention} rescinds their proposal to draw."
+        msg = f"{self.mention} rescinds {self.pronoun('their')} proposal to draw."
         embed = discord.Embed(
             title="Draw Proposal Rescinded",
             description=msg,
