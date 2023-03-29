@@ -134,6 +134,7 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tilde
+  - pymdownx.snippets
 
 # Additional Settings
 extra:
