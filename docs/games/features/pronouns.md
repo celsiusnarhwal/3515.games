@@ -20,7 +20,7 @@ refer to you with they/them pronouns. (1)
 
 ## Limitations
 
-### Pronoun Persistence
+### Midgame Persistence
 
 3515.games queries your pronouns from PronounDB whenever you become a player in a game and remembers only those pronouns
 for the duration of the game. This means that changes you make on PronounDB won't be reflected in any ongoing games
