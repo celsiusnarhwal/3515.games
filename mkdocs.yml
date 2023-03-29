@@ -16,7 +16,6 @@ nav:
       - UNO: games/uno.md
       - Chess: games/chess.md
       - Cards Against Humanity: games/cah.md
-
       - Special Features:
           - Voice Chat: games/features/voice.md
           - Pronouns: games/features/pronouns.md
@@ -161,4 +160,4 @@ extra_css:
 
 # JavaScript
 extra_javascript:
-  - "https://kit.fontawesome.com/2273b2767b.js"
+  - https://kit.fontawesome.com/2273b2767b.js
