@@ -26,17 +26,9 @@ you're in.
 
 ### Unsupported Pronouns
 
-<div class="annotate" markdown>
-
-The following PronounDB options are not supported, and 3515.games will fall back to using they/them if you pick one:
-
 - Other pronouns
 - Ask me my pronouns
 - Avoid pronouns, use my name
-
-</div>
-
-1. This one could *potentially* be supported in the future. The other two are completely off the table, though.
 
 Neopronouns and other things not supported by PronounDB are also not supported by 3515.games.
 
