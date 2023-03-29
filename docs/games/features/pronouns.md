@@ -1,8 +1,7 @@
 ---
 icon: fontawesome/solid/user
 hide:
-
-- next
+    - next
 ---
 
 # Pronouns
