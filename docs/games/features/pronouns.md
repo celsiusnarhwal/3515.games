@@ -26,17 +26,6 @@ refer to you with they/them pronouns. (1)
 for the duration of the game. This means that changes you make on PronounDB won't be reflected in any ongoing games
 you're in.
 
-### Multipronouns
-
-If you use a multipronoun, 3515.games will pick one of your pronouns at random and use that one exclusively. (1)
-{ .annotate }
-
-1. For example, if you set your PronounDB account to **she/they** and then go join an UNO game, 3515.games will refer
-   to you with either she/her or they/them pronouns for the duration of the game, but not both.
-
-If you set your PronounDB account to **Any pronouns**, 3515.games will refer to you with a random choice of he/him,
-she/her, they/them, or it/its pronouns.
-
 ### Unsupported Pronouns
 
 <div class="annotate" markdown>
@@ -45,7 +34,7 @@ The following PronounDB options are not supported, and 3515.games will fall back
 
 - Other pronouns
 - Ask me my pronouns
-- Avoid pronouns, use my name (1)
+- Avoid pronouns, use my name
 
 </div>
 
