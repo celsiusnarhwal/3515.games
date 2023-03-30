@@ -423,11 +423,15 @@ def licenses():
         "Mozilla Public License 2.0": "https://opensource.org/licenses/MPL-2.0",
     }
 
-    license_file = (
-        "# Acknowledgements\n\n"
-        "Questions or concerns regarding errors or inconsistencies in this automatically-generated "
-        "document should be sent to hello@celsiusnarhwal.dev.<hr></hr>\n\n"
-    )
+    front_matter = """
+    ---
+    icon: fontawesome/solid/stars
+    hide:
+        - footer
+    ---
+    """
+
+    license_file = "\n\n# Acknowledgements\n\n## Third-Party Software\n\n"
 
     with Routes.root() as root:
         dependencies = [
@@ -438,7 +442,7 @@ def licenses():
 
         for doc in documents:
             if doc["Name"].casefold() in dependencies:
-                license_file += f"## {doc['Name']}\n\n"
+                license_file += f"### {doc['Name']}\n\n"
 
                 if doc["LicenseText"] != "UNKNOWN":
                     license_file += f"{doc['LicenseText']}\n\n".replace(
@@ -455,7 +459,9 @@ def licenses():
         with support.Assets.kurisu():
             license_file += "<hr></hr>\n\n" + Path("acknowledgements.md").read_text()
 
-        license_file = re.sub(r"-{3,}", "\n\g<0>", license_file)
+        license_file = textwrap.dedent(front_matter).strip() + re.sub(
+            r"-{3,}", "\n\g<0>", license_file
+        )
 
         (root / "docs" / "legal" / "acknowledgements.md").write_text(license_file)
 
