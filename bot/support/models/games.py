@@ -9,7 +9,6 @@ from __future__ import annotations
 import asyncio
 import random
 from abc import ABC, abstractmethod
-from collections import defaultdict
 
 import aiohttp
 import discord
@@ -22,7 +21,7 @@ from pydantic import validate_arguments
 
 import support
 from keyboard import *
-from support.models.pronouns import Pronoun, PronounType
+from support.models.pronouns import Gender, Pronoun
 
 inflect = ifl.engine()
 
@@ -483,10 +482,10 @@ class BasePlayer:
 
     user: discord.Member = Fields.field(frozen=True)
 
-    pronouns: list[PronounType] = Fields.attr()
+    genders: list[Gender] = Fields.attr()
 
     def __attrs_post_init__(self):
-        self.pronouns = asyncio.run(self._genderfabriken())
+        self.genders = asyncio.run(self._genderfabriken())
 
     @property
     def name(self) -> str:
@@ -526,46 +525,25 @@ class BasePlayer:
 
     @validate_arguments
     def pronoun(self, pronoun: Pronoun) -> str:
-        pronoun_type = random.choice(self.pronouns)
+        return pronoun.transform(random.choice(self.genders))
 
-        if pronoun is Pronoun.THEIR:
-            return {
-                PronounType.MASCULINE: "his",
-                PronounType.FEMININE: "her",
-                PronounType.NEUTER: "its",
-                PronounType.GENDER_NEUTRAL: "their",
-            }[pronoun_type]
-
-        genderinator = ifl.engine()
-        genderinator.gender(pronoun_type.value)
-
-        result = genderinator.singular_noun(pronoun.value)
-
-        return (
-            genderinator.plural_noun(result)
-            if result.casefold() == "themself"
-            else result
-        )
-
-    # noinspection PyUnresolvedReferences
-    async def _genderfabriken(self) -> list[PronounType]:
+    async def _genderfabriken(self) -> list[Gender]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://pronoundb.org/api/v1/lookup",
                 params={"platform": "discord", "id": self.id},
             ) as resp:
                 if resp.status != 200:
-                    return [PronounType.GENDER_NEUTRAL]
+                    return [Gender.NEUTRAL]
 
                 pronoun_code = (await resp.json())["pronouns"]
 
         with support.Assets.misc():
-            types = defaultdict(
-                lambda: [PronounType.GENDER_NEUTRAL],
-                toml.load(open("pronouns.toml")),
-            )[pronoun_code]
+            genders = toml.load(open("pronouns.toml")).get(
+                pronoun_code, [Gender.NEUTRAL]
+            )
 
-        return [PronounType(t) for t in types]
+        return [Gender(g) for g in genders]
 
     def __str__(self):
         return self.name
