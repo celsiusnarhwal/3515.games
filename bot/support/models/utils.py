@@ -10,6 +10,7 @@ import inspect
 import operator
 
 import discord
+from natsu import sum
 from path import Path
 
 from gps import Routes
@@ -188,20 +189,13 @@ class GamePermissions(discord.Permissions):
         Returns a :class:`GamePermissions` object with the combined set of all other predefined permission sets in the
         class.
         """
-        permissions = cls.none()
-
-        permsets = [
-            permset
-            for name, permset in inspect.getmembers(cls, inspect.ismethod)
-            if name in cls.__dict__
-            and name
-            != "everything"  # everybody gangsta till the https://youtu.be/CVCTz3Xc__s
-        ]
-
-        for permset in permsets:
-            permissions += permset()
-
-        return permissions
+        return sum(
+            [
+                permset()
+                for name, permset in inspect.getmembers(cls, inspect.ismethod)
+                if name in vars(cls) and name != "everything"
+            ]
+        )
 
     @staticmethod
     def _bitmath(op: Callable):
