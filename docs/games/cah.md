@@ -19,6 +19,10 @@ holding. The funnnier your answer, the more likely you are to earn points. Easy 
     in your Discord server by changing the permissions for the :command: `/cah` command in 
     **Server Settings** > **Integrations** > **3515.games**.
 
+!!! voice "This game supports voice chat"
+
+    Cards Against Humanity supports the creation of special linked voice channels via the :command:`/voice` command. [Learn more.](/games/features/voice)
+
 ## Getting Started
 
 To get started, you'll need to create a Cards Against Humanity game with :command: `/cah create`.

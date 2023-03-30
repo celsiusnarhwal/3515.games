@@ -7,11 +7,12 @@
 from __future__ import annotations
 
 import discord
-import support
 from attr import define
-from cogs import uno
 from discord.ext import pages as discord_pages
 from sortedcontainers import SortedKeyList
+
+import support
+from cogs import uno
 from support import BasePlayer
 
 
@@ -47,6 +48,8 @@ class UnoPlayer(BasePlayer):
     game: uno.UnoGame
 
     def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+
         self.points: int = 0
         self.hand: SortedKeyList[uno.UnoCard] = SortedKeyList(
             key=lambda card: card.sortcode

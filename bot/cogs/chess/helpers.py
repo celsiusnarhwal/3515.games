@@ -10,14 +10,15 @@ import os
 from contextlib import asynccontextmanager
 from tempfile import TemporaryDirectory
 
-import chess.svg as pychess_svg
 import discord
-import support
-from cogs import chess
 from discord.ext import commands
 from path import Path
 from reportlab.graphics import renderPM
 from svglib.svglib import svg2rlg
+
+import chess.svg as pychess_svg
+import support
+from cogs import chess
 
 # decorators
 

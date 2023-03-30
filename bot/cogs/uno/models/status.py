@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import discord
 from attr import define
+from elysia import Fields
+from sortedcontainers import SortedKeyList
+
 from cogs import uno
 from cogs.uno.models import inflect
-from elysia import Fields
 from keyboard import *
-from sortedcontainers import SortedKeyList
 
 
 @define

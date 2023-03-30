@@ -9,18 +9,18 @@ from __future__ import annotations
 import platform
 import re
 
-import clockworks
 import discord
 import humanize
 import inflect as ifl
 import pendulum
-from cogs import uno
 from discord import ButtonStyle, Interaction
 from discord.ui import Button
 from discord.ui import button as discord_button
 
+import clockworks
 import shrine
 import support
+from cogs import uno
 from support.views import View
 
 inflect = ifl.engine()
@@ -264,3 +264,44 @@ class HelpView(View):
 
     async def present(self, ctx: discord.ApplicationContext):
         await ctx.respond(content="Get help with what?", view=self, ephemeral=True)
+
+
+class PronounsView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.add_item(
+            Button(
+                url="https://pronoundb.org/register",
+                label="Create PronounDB Account",
+            )
+        )
+
+        self.add_item(
+            Button(
+                url="https://pronoundb.org/me",
+                label="View PronounDB Account",
+            )
+        )
+
+        self.add_item(
+            Button(
+                url="https://3515.games/games/features/pronouns",
+                label="Learn More",
+            )
+        )
+
+    async def present(self, ctx: discord.ApplicationContext):
+        msg = (
+            "You can choose the pronouns I use to refer to you by creating a [PronounDB](https://pronoundb.org) "
+            "account and linking your Discord account to it. If you've already done that, you're good to go. "
+            "Otherwise, you can get started with the buttons below.\n"
+            "\n"
+            "I'll try my best to refer to you with the pronouns you've set on PronounDB (or with they/them pronouns "
+            "if you haven't set any)."
+        )
+
+        embed = discord.Embed(
+            title="Pronouns", description=msg, color=support.Color.mint()
+        ).set_footer(text='Limitations apply; see "Learn More" for details.')
+        await ctx.respond(embed=embed, view=self, ephemeral=True)

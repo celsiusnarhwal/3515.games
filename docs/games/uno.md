@@ -9,6 +9,10 @@ UNO is a card game in which your objective is to be the first player to rid them
 round. This is accomplished by playing cards that match the color or suit of the previous card played, and repeating
 this ad infinitum until you have no cards left.
 
+!!! voice "This game supports voice chat"
+
+    UNO supports the creation of special linked voice channels via the :command:`/voice` command. [Learn more.](/games/features/voice)
+
 ## Getting Started
 
 To get started, you'll need to create an UNO game with :command: `/uno create`.

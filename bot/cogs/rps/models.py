@@ -10,10 +10,11 @@ import os
 import random
 
 import discord
-import support
 from attrs import define
-from cogs import rps
 from elysia import Fields
+
+import support
+from cogs import rps
 from support import BasePlayer
 
 

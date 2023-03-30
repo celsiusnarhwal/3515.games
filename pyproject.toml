@@ -3,7 +3,7 @@ name = "3515.games"
 description = ""
 version = "1.0.0"
 authors = ["celsiusnarhwal <hello@celsiusnarhwal.dev>"]
-packages = [{ include = "kurisu" }]
+packages = [{ include = "bot" }]
 
 [tool.poetry.dependencies]
 python = "^3.11.1"
@@ -11,7 +11,7 @@ alianator = "^4.0.1"
 attrs = "^22.2.0"
 chess = "^1.9.0"
 dict-deep = "^4.1.2"
-elysia = "^1.0.1"
+elysia = "^1.1.1"
 humanize = "^4.0.0"
 inflect = "^6.0.2"
 jinja2 = "^3.1.2"
@@ -72,7 +72,7 @@ target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
-known_first_party = ["keyboard", "settings", "shrine", "support"]
+src_paths = ["./**"]
 
 [tool.poe.tasks]
 clear = "rm -rf site .cache"
@@ -81,17 +81,10 @@ format = { shell = "for hook in black prettier isort; do pre-commit run $hook --
 
 [tool.poe.tasks.fontawesome]
 shell = """
-npm install --no-save @celsiusnarhwal/fontawesome
+npm i --no-save @celsiusnarhwal/fontawesome
 mv node_modules/@celsiusnarhwal/fontawesome/svgs docs/.overrides/.icons/fontawesome
 rm -rf node_modules
 """
-
-[tool.poe.tasks.docker]
-shell = """
-docker build . -t 3515.games:latest
-docker run --rm --env-file <(doppler secrets download --no-file --format docker) 3515.games:latest
-"""
-interpreter = "bash"
 
 [build-system]
 requires = ["poetry-core"]

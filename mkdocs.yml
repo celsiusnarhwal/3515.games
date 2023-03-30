@@ -16,6 +16,9 @@ nav:
       - UNO: games/uno.md
       - Chess: games/chess.md
       - Cards Against Humanity: games/cah.md
+      - Special Features:
+          - Voice Chat: games/features/voice.md
+          - Pronouns: games/features/pronouns.md
   - Self-Hosting:
       - Self-Hosting: hosting/index.md
       - "Prologue: Heaven and the Earth": hosting/prologue.md
@@ -130,6 +133,7 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tilde
+  - pymdownx.snippets
 
 # Additional Settings
 extra:
@@ -156,4 +160,4 @@ extra_css:
 
 # JavaScript
 extra_javascript:
-  - "https://kit.fontawesome.com/2273b2767b.js"
+  - https://kit.fontawesome.com/2273b2767b.js

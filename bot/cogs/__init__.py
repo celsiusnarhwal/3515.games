@@ -6,8 +6,9 @@
 
 import importlib
 
-from cogs.base import Cog
 from path import Path
+
+from cogs.base import Cog
 
 # my day be so fine and then BOOM! circular import
 for pkg in [d for d in Path(__file__).parent.dirs() if (d / "__init__.py").exists()]:

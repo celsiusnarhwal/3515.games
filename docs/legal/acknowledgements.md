@@ -6,9 +6,9 @@ hide:
 
 # Acknowledgements
 
-Questions or concerns regarding errors or inconsistencies in this automatically-generated document should be sent to hello@celsiusnarhwal.dev.<hr></hr>
+## Third-Party Software
 
-## aiohttp
+### aiohttp
 
    Copyright aio-libs contributors.
 
@@ -25,7 +25,7 @@ Questions or concerns regarding errors or inconsistencies in this automatically-
    limitations under the License.
 
 
-## aiosignal
+### aiosignal
 
 Apache License
                            Version 2.0, January 2004
@@ -230,7 +230,7 @@ Apache License
    limitations under the License.
 
 
-## alianator
+### alianator
 
  The MIT License (MIT)
 
@@ -258,7 +258,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 
-## async-timeout
+### async-timeout
 
 Copyright 2016-2020 aio-libs collaboration.
 
@@ -275,7 +275,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
-## attrs
+### attrs
 
 The MIT License (MIT)
 
@@ -300,7 +300,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-## certifi
+### certifi
 
 This package contains a modified version of ca-bundle.crt:
 
@@ -325,7 +325,7 @@ one at http://mozilla.org/MPL/2.0/.
 @() $RCSfile: certdata.txt,v $ $Revision: 1.80 $ $Date: 2011/11/03 15:11:58 $
 
 
-## cffi
+### cffi
 
 
 Except when otherwise stated (look for LICENSE files in directories or
@@ -355,7 +355,7 @@ documentation is licensed as follows:
 
 
 
-## charset-normalizer
+### charset-normalizer
 
 MIT License
 
@@ -379,7 +379,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## chess
+### chess
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -1057,7 +1057,7 @@ Public License instead of this License.  But first, please read
 <http://www.gnu.org/philosophy/why-not-lgpl.html>.
 
 
-## click
+### click
 
 Copyright 2014 Pallets
 
@@ -1089,7 +1089,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## colorama
+### colorama
 
 Copyright (c) 2010 Jonathan Hartley
 All rights reserved.
@@ -1120,7 +1120,17 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## cssselect2
+### cryptography
+
+This software is made available under the terms of *either* of the licenses
+found in LICENSE.APACHE or LICENSE.BSD. Contributions to cryptography are made
+under the terms of *both* these licenses.
+
+The code used in the OS random engine is derived from CPython, and is licensed
+under the terms of the PSF License Agreement.
+
+
+### cssselect2
 
 BSD 3-Clause License
 
@@ -1153,7 +1163,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## Deprecated
+### Deprecated
 
 The MIT License (MIT)
 
@@ -1177,7 +1187,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## dict-deep
+### dict-deep
 
 MIT License
 
@@ -1202,7 +1212,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-## elysia
+### elysia
 
  The MIT License (MIT)
 
@@ -1230,7 +1240,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 
-## frozenlist
+### frozenlist
 
 Apache License
                            Version 2.0, January 2004
@@ -1435,7 +1445,7 @@ Apache License
    limitations under the License.
 
 
-## humanize
+### humanize
 
 Copyright (c) 2010-2020 Jason Moiron and Contributors
 
@@ -1459,7 +1469,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-## idna
+### idna
 
 BSD 3-Clause License
 
@@ -1492,7 +1502,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## inflect
+### inflect
 
 Copyright Jason R. Coombs
 
@@ -1515,7 +1525,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 
 
-## Jinja2
+### Jinja2
 
 Copyright 2007 Pallets
 
@@ -1547,7 +1557,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## jinja2-simple-tags
+### jinja2-simple-tags
 
 BSD 3-Clause License
 
@@ -1580,7 +1590,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## joblib
+### joblib
 
 BSD 3-Clause License
 
@@ -1613,7 +1623,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## llist
+### llist
 
 Copyright (c) 2011-2018 Adam Jakubek, Rafał Gałczyński
 
@@ -1637,7 +1647,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-## lxml
+### lxml
 
 Copyright (c) 2004 Infrae. All rights reserved.
 
@@ -1670,7 +1680,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## MarkupSafe
+### MarkupSafe
 
 Copyright 2010 Pallets
 
@@ -1702,7 +1712,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## multidict
+### multidict
 
    Copyright 2016-2021 Andrew Svetlov and aio-libs team
 
@@ -1719,7 +1729,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    limitations under the License.
 
 
-## multimethod
+### multimethod
 
 Copyright 2022 Aric Coady
 
@@ -1736,7 +1746,7 @@ Copyright 2022 Aric Coady
    limitations under the License.
 
 
-## nest-asyncio
+### nest-asyncio
 
 BSD 2-Clause License
 
@@ -1765,7 +1775,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## nltk
+### nltk
 
 
                                  Apache License
@@ -1971,11 +1981,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    limitations under the License.
 
 
-## ordered-set
+### ordered-set
 
 ordered-set is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
-## orjson
+### orjson
 
                               Apache License
                         Version 2.0, January 2004
@@ -2180,7 +2190,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
-## path
+### path
 
 Copyright Jason R. Coombs
 
@@ -2203,7 +2213,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 
 
-## pendulum
+### pendulum
 
 Copyright (c) 2015 Sébastien Eustace
 
@@ -2227,7 +2237,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-## Pillow
+### Pillow
 
 The Python Imaging Library (PIL) is
 
@@ -2973,7 +2983,7 @@ the file ChangeLog history information documenting your changes.  Please read
 the FAQ for more information on the distribution of modified source versions.
 
 
-## pony
+### pony
 
 
                                  Apache License
@@ -3156,7 +3166,7 @@ the FAQ for more information on the distribution of modified source versions.
    Copyright 2016 Alexander Kozlovsky, Alexey Malashkevich
 
 
-## psycopg2
+### psycopg2
 
 psycopg2 and the LGPL
 
@@ -3211,7 +3221,7 @@ the pattern ``psycopg/adapter*.{h,c}`` and ``psycopg/microprotocol*.{h,c}``:
  3. This notice may not be removed or altered from any source distribution.
 
 
-## py-cord
+### py-cord
 
 The MIT License (MIT)
 
@@ -3237,7 +3247,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 
-## pycparser
+### pycparser
 
 pycparser -- A C parser in Python
 
@@ -3268,7 +3278,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## pydantic
+### pydantic
 
 The MIT License (MIT)
 
@@ -3293,7 +3303,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-## PyGithub
+### PyGithub
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -3971,7 +3981,7 @@ Public License instead of this License.  But first, please read
 <http://www.gnu.org/philosophy/why-not-lgpl.html>.
 
 
-## PyJWT
+### PyJWT
 
 The MIT License (MIT)
 
@@ -3996,7 +4006,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-## PyNaCl
+### PyNaCl
 
                               Apache License
                         Version 2.0, January 2004
@@ -4174,7 +4184,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
    of your accepting any such warranty or additional liability.
 
 
-## python-dateutil
+### python-dateutil
 
 Copyright 2017- Paul Ganssle <paul@ganssle.io>
 Copyright 2017- dateutil contributors (see AUTHORS file)
@@ -4232,7 +4242,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 The above BSD License Applies to all code, even that also covered by Apache 2.0.
 
-## pytzdata
+### pytzdata
 
 Copyright (c) 2015 Sébastien Eustace
 
@@ -4256,7 +4266,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-## regex
+### regex
 
 This work was derived from the 're' module of CPython 2.6 and CPython 3.1,
 copyright (c) 1998-2001 by Secret Labs AB and licensed under CNRI's Python 1.6
@@ -4468,7 +4478,7 @@ All additions and alterations are licensed under the Apache 2.0 License.
    limitations under the License.
 
 
-## reportlab
+### reportlab
 
 
 
@@ -4501,7 +4511,7 @@ All additions and alterations are licensed under the Apache 2.0 License.
 
 
 
-## requests
+### requests
 
 
                                  Apache License
@@ -4680,7 +4690,7 @@ All additions and alterations are licensed under the Apache 2.0 License.
       of your accepting any such warranty or additional liability.
 
 
-## six
+### six
 
 Copyright (c) 2010-2020 Benjamin Peterson
 
@@ -4702,7 +4712,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-## sortedcontainers
+### sortedcontainers
 
 Copyright 2014-2019 Grant Jenks
 
@@ -4719,7 +4729,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
-## svglib
+### svglib
 
 		   GNU LESSER GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -4888,7 +4898,7 @@ permanent authorization for you to choose that version for the
 Library.
 
 
-## tinycss2
+### tinycss2
 
 BSD 3-Clause License
 
@@ -4921,11 +4931,11 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-## titlecase
+### titlecase
 
 titlecase is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
-## tomlkit
+### tomlkit
 
 Copyright (c) 2018 Sébastien Eustace
 
@@ -4949,7 +4959,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-## tqdm
+### tqdm
 
 `tqdm` is a product of collaborative work.
 Unless otherwise stated, all authors (see commit logs) retain copyright
@@ -5004,7 +5014,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-## urllib3
+### urllib3
 
 MIT License
 
@@ -5029,11 +5039,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-## webencodings
+### webencodings
 
 webencodings is licensed under the [BSD License](https://opensource.org/licenses/BSD-3-Clause).
 
-## wonderwords
+### wonderwords
 
 MIT License
 
@@ -5058,7 +5068,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-## wrapt
+### wrapt
 
 Copyright (c) 2013-2023, Graham Dumpleton
 All rights reserved.
@@ -5086,7 +5096,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
 
-## yarl
+### yarl
 
    Copyright 2016-2021, Andrew Svetlov and aio-libs team
 
@@ -5105,18 +5115,27 @@ POSSIBILITY OF SUCH DAMAGE.
 
 <hr></hr>
 
+## Special Thanks
+
+3515.games' developer would like to specially acknowledge the following open source projects and the people behind them:
+
+- [:simple-poetry: Poetry](https://python-poetry.org) (Sébastien Eustace et al.)
+- [:fontawesome-brands-docker: Docker](https://www.docker.com) (Docker, Inc.)
+- [:simple-vercel: Vercel](https://vercel.com) (Vercel Inc.)
+- [:fontawesome-brands-font-awesome: Font Awesome](https://fontawesome.com) (Fonticons, Inc.)
+
 ## Other Acknowledgements
 
-Writing from *Cards Against Humanity* © Cards Against Humanity, LLC. This software is in no way affiliated with or
+Writing from _Cards Against Humanity_ © Cards Against Humanity, LLC. This software is in no way affiliated with or
 endorsed by Cards Against Humanity, LLC. Cards Against Humanity is a trademark of Cards Against Humanity, LLC.
 
-Writing from *Cards Against Humanity* is made available under a Creative Commons Attribution-NonCommercial-ShareAlike
+Writing from _Cards Against Humanity_ is made available under a Creative Commons Attribution-NonCommercial-ShareAlike
 4.0 International License. 3515.games retrieves this data from the internet at runtime. It is not stored on 3515.games'
 servers or included in any source or binary distributions of 3515.games.
 
-*KonoSuba: God's Blessing on this Wonderful World!* © Natsume Akasuki / Kurone Mishima / KADOKAWA / Film KonoSuba
+_KonoSuba: God's Blessing on this Wonderful World!_ © Natsume Akasuki / Kurone Mishima / KADOKAWA / Film KonoSuba
 Production Committee.
 
-*Nichijou* © Keiichi Arawi / KADOKAWA / Kyoto Animation.
+_Nichijou_ © Keiichi Arawi / KADOKAWA / Kyoto Animation.
 
 UNO is a trademark of Mattel, Inc.

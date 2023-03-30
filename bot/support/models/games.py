@@ -7,15 +7,21 @@
 from __future__ import annotations
 
 import asyncio
+import random
 from abc import ABC, abstractmethod
 
+import aiohttp
 import discord
 import inflect as ifl
-import support
+import tomlkit as toml
 from attrs import define
 from discord.ext import commands
 from elysia import Fields
+from pydantic import validate_arguments
+
+import support
 from keyboard import *
+from support.models.pronouns import Gender, Pronoun
 
 inflect = ifl.engine()
 
@@ -24,13 +30,16 @@ inflect = ifl.engine()
 class ThreadedGame(ABC):
     __games__: ClassVar[dict[int, Self]]
 
-    name: ClassVar[str] = ...
-    short_name: ClassVar[str] = name
+    name: ClassVar[str] = None
+    short_name: ClassVar[str] = None
 
     guild: discord.Guild = Fields.field(frozen=True)
     thread: discord.Thread = Fields.field(frozen=True)
 
+    # noinspection PyClassVar
     def __attrs_post_init__(self):
+        self.short_name = self.short_name or self.name
+
         self.__games__[self.thread.id] = self
 
     @classmethod
@@ -473,6 +482,11 @@ class BasePlayer:
 
     user: discord.Member = Fields.field(frozen=True)
 
+    genders: list[Gender] = Fields.attr()
+
+    def __attrs_post_init__(self):
+        self.genders = asyncio.run(self._genderfabriken())
+
     @property
     def name(self) -> str:
         """
@@ -508,6 +522,28 @@ class BasePlayer:
         avatar exists.
         """
         return self.user.display_avatar.url
+
+    @validate_arguments
+    def pronoun(self, pronoun: Pronoun) -> str:
+        return pronoun.transform(random.choice(self.genders))
+
+    async def _genderfabriken(self) -> list[Gender]:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://pronoundb.org/api/v1/lookup",
+                params={"platform": "discord", "id": self.id},
+            ) as resp:
+                if resp.status != 200:
+                    return [Gender.NEUTRAL]
+
+                pronoun_code = (await resp.json())["pronouns"]
+
+        with support.Assets.misc():
+            genders = toml.load(open("pronouns.toml")).get(
+                pronoun_code, [Gender.NEUTRAL]
+            )
+
+        return [Gender(g) for g in genders]
 
     def __str__(self):
         return self.name

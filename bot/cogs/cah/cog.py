@@ -6,7 +6,6 @@
 
 import discord
 import inflect as ifl
-from cogs import Cog, cah
 from discord import Option
 from discord.ext import commands
 from llist import dllistnode
@@ -14,6 +13,7 @@ from llist import dllistnode
 import shrine
 import support
 from bot import bot
+from cogs import Cog, cah
 from support import SlashCommandGroup
 
 inflect = ifl.engine()

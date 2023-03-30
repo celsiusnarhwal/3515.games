@@ -8,6 +8,8 @@ COPY . /app
 
 WORKDIR /app/bot
 
-RUN curl -sSL https://install.python-poetry.org | python - && poetry install --no-root --only main
+RUN curl -sSL https://cli.doppler.com/install.sh | sh &&  \
+    curl -sSL https://install.python-poetry.org | python - &&  \
+    poetry install --only main
 
-ENTRYPOINT ["poetry", "run", "python", "main.py"]
+CMD ["doppler", "run", "--", "poetry", "run", "python", "main.py"]

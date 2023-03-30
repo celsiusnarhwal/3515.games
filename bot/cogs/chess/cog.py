@@ -5,13 +5,13 @@
 ########################################################################################################################
 
 import discord
-from cogs import chess
-from cogs.base import Cog
 from discord import Option
 from discord.ext import commands
 
 import support
 from bot import bot
+from cogs import chess
+from cogs.base import Cog
 from support import SlashCommandGroup
 
 
@@ -108,7 +108,7 @@ class ChessCog(Cog):
                 f"editing or deleting the thread until the game is over (trust me, I've got this).\n"
                 f"\n"
                 f"**Anyone can spectate.** Anyone who can both see and talk in this channel can spectate your "
-                f"game. However, only you and your opponent will be able to talk in the game thread.\n"
+                f"game."
                 f"\n"
                 f"**I'm watching for inactivity.** If I determine either you or your opponent to have gone AFK, "
                 f"I can forfeit the game on your behalves. Watch out.\n"
@@ -343,7 +343,7 @@ class ChessCog(Cog):
             else:
                 msg = (
                     f"If you think it's time to wrap things up, you can propose a draw. If "
-                    f"{player.opponent.user.mention} accepts, the game will end in a draw, with neither player "
+                    f"{player.opponent.mention} accepts, the game will end in a draw, with neither player "
                     f"being declared the winner.\n"
                     "\n"
                     "If you change your mind before your opponent accepts your proposal, you can rescind your "

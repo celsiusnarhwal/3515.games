@@ -12,18 +12,18 @@ from collections import deque
 from io import StringIO
 from tempfile import TemporaryDirectory
 
-import chess as pychess
-import chess.pgn as pychess_pgn
-import database.models as orm
 import discord
-from chess import square_name
-from cogs import chess
 from discord import ButtonStyle, Interaction
 from discord.ui import Button, InputText, Modal, Select
 from discord.ui import button as discord_button
 from path import Path
 
+import chess as pychess
+import chess.pgn as pychess_pgn
+import database.models as orm
 import support
+from chess import square_name
+from cogs import chess
 from support import View
 
 
@@ -38,7 +38,7 @@ class ChessSelect(Select):
             super().add_option(**kwargs)
 
 
-# tw // eldritch horror
+# Contrary to popular belief, stupid things that work are, in fact, still stupid.
 class ChessMoveView(View):
     """
     Provides a user interface for a player to move a piece.
@@ -46,14 +46,13 @@ class ChessMoveView(View):
 
     # Stages
     # 0: Select piece type
-    # 1: Select piece (if muliple)
+    # 1: Select piece (if multiple)
     # 2: Select destination square
     # 3: Select promotion piece (if applicable)
     # 4: Confirm move
 
     PIECE_SELECTION, ORIGIN, DESTINATION, PROMOTION, CONFIRMATION = range(5)
 
-    # holy hell this is baaaaaaaaad
     def __init__(self, player: chess.ChessPlayer, **kwargs):
         super().__init__(**kwargs)
         self.player = player
