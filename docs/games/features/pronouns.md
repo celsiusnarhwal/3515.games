@@ -32,6 +32,4 @@ you're in.
 
 Neopronouns and other things not supported by PronounDB are also not supported by 3515.games.
 
-[^1]: PronounDB is developed by @cyyynthia and licensed under
-the [BSD 3-Clause License](https://github.com/cyyynthia/pronoundb.org/blob/mistress/LICENSE). 3515.games is not
-affiliated with PronounDB or its developer.
+[^1]: 3515.games is not affiliated with PronounDB or its developer.
