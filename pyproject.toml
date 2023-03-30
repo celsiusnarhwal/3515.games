@@ -81,7 +81,7 @@ format = { shell = "for hook in black prettier isort; do pre-commit run $hook --
 
 [tool.poe.tasks.fontawesome]
 shell = """
-npm install --no-save @celsiusnarhwal/fontawesome
+npm i --no-save @celsiusnarhwal/fontawesome
 mv node_modules/@celsiusnarhwal/fontawesome/svgs docs/.overrides/.icons/fontawesome
 rm -rf node_modules
 """
