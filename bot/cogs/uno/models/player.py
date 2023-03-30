@@ -13,11 +13,11 @@ from sortedcontainers import SortedKeyList
 
 import support
 from cogs import uno
-from support import BasePlayer
+from support import BasePlayer, PlayerVoiceMixin
 
 
 @define(slots=False)
-class UnoPlayer(BasePlayer):
+class UnoPlayer(PlayerVoiceMixin, BasePlayer):
     """
     A player in an UNO game.
 
@@ -296,29 +296,6 @@ class UnoPlayer(BasePlayer):
         self.has_said_uno = False
 
         return new_cards
-
-    def voice_overwrites(self) -> discord.Permissions:
-        """
-        Returns the voice channel permission overwrites for the player.
-        """
-        if self.game.host == self.user:
-            overwrites = {
-                "allow": support.GamePermissions.vc(),
-                "deny": discord.Permissions.none(),
-            }
-        else:
-            overwrites = {
-                "allow": discord.Permissions(
-                    connect=True, speak=True, use_voice_activation=True
-                ),
-                "deny": discord.Permissions.none(),
-            }
-
-        overwrites["allow"] += discord.Permissions(
-            view_channel=True, read_message_history=True
-        )
-
-        return discord.PermissionOverwrite.from_pair(**overwrites)
 
     async def reset_timeouts(self):
         """
