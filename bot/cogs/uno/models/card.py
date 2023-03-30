@@ -112,6 +112,16 @@ class UnoCardColor(UnoCardAttr):
     # Special
     WILD = "wild"
 
+    @property
+    def embed_color(self) -> support.Color:
+        return {
+            self.RED: support.Color.brand_red(),
+            self.BLUE: support.Color.blue(),
+            self.GREEN: support.Color.green(),
+            self.YELLOW: support.Color.yellow(),
+            self.WILD: support.Color.black(),
+        }[self]
+
 
 class UnoCardSuit(UnoCardAttr):
     """
@@ -244,16 +254,7 @@ class UnoCard:
         """
         The card's corresponding embed color.
         """
-
-        embed_colors = {
-            UnoCardColor.RED: support.Color.brand_red(),
-            UnoCardColor.BLUE: support.Color.blue(),
-            UnoCardColor.GREEN: support.Color.green(),
-            UnoCardColor.YELLOW: support.Color.yellow(),
-            UnoCardColor.WILD: support.Color.black(),
-        }
-
-        return embed_colors[self.color]
+        return self.color.embed_color
 
     @property
     def transformation_embed_color(self) -> support.Color:
@@ -270,14 +271,7 @@ class UnoCard:
                 "transformation must be set before transformation_embed_color can be accessed"
             )
 
-        embed_colors = {
-            UnoCardColor.RED: support.Color.brand_red(),
-            UnoCardColor.BLUE: support.Color.blue(),
-            UnoCardColor.GREEN: support.Color.green(),
-            UnoCardColor.YELLOW: support.Color.yellow(),
-        }
-
-        return embed_colors[self.transformation]
+        return self.transformation.embed_color
 
     @property
     def sortcode(self) -> int:
