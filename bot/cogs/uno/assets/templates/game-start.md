@@ -13,5 +13,9 @@ time with `/uno status`.
 {% endfilter %}
 
 {% filter deline %}
+Remember: `/help` is always there when you need it.
+{% endfilter %}
+
+{% filter deline %}
 Let's play!
 {% endfilter %}

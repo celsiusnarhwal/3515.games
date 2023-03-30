@@ -7,8 +7,8 @@ Every round, you'll be given a fill-in-the-blank prompt in the form of a black c
 (sometimes two!) of the white cards you've been dealt to fill that blank in what you think is the funniest way possible.
 
 {% if settings.use_czar %}
-The Card Czar then gets to choose the combination they thought was funniest, and the person who played it gets an
-Awesome Point.
+The Card Czar then gets to choose the combination they thought was funniest, and the person who played it gets a
+point.
 {% else %}
 Everyone then votes on which combination they thought was funniest, and the person who played the highest-voted
 one gets a point.
@@ -17,7 +17,11 @@ Nice!
 {% endfilter %}
 
 {% filter deline %}
-The first player to reach **{{ settings.points_to_win }}** Awesome Points wins the game!
+The first player to reach **{{ settings.points_to_win }}** points wins the game!
+{% endfilter %}
+
+{% filter deline %}
+Remember: `/help` is always there when you need it.
 {% endfilter %}
 
 {% filter deline %}

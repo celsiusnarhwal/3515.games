@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: I have another issue
+    about: If you have a feature request, general support inquiry, or other issue, start a discussion.
+    url: https://github.com/celsiusnarhwal/3515.games/discussions

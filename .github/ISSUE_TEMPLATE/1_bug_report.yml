@@ -1,0 +1,38 @@
+name: Bug Report
+title: "bug: "
+description: Report a bug in 3515.games.
+labels: [bug]
+
+body:
+  - type: checkboxes
+    id: compliance
+    attributes:
+      label: Initial Checks
+      description: Please confirm these things before submitting a bug report.
+      options:
+        - label: I've searched GitHub for duplicate issues and I'm sure this is something new.
+          required: true
+        - label: I've read the [documentation](https://3515.games/games/) and am still sure this is a bug.
+          required: true
+        - label: Neither the [Discord API](https://discordstatus.com/) and [Railway](https://status.railway.app/) have experienced any issues within the past 24 hours.
+          required: true
+
+  - type: textarea
+    id: behavior
+    attributes:
+      label: The Issue On The Table
+      description: Describe the bug. The clearer your description, the easier it will be for me to diagnose and fix the issue.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: If practicable, provide step-by-step instructions to reproduce the issue.
+      placeholder: |
+        1. Do X
+        2. Do Y
+        3. Observe Z
+    validations:
+      required: true

@@ -5115,15 +5115,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 <hr></hr>
 
-## Special Thanks
-
-3515.games' developer would like to specially acknowledge the following open source projects and the people behind them:
-
-- [:simple-poetry: Poetry](https://python-poetry.org) (Sébastien Eustace et al.)
-- [:fontawesome-brands-docker: Docker](https://www.docker.com) (Docker, Inc.)
-- [:simple-vercel: Vercel](https://vercel.com) (Vercel Inc.)
-- [:fontawesome-brands-font-awesome: Font Awesome](https://fontawesome.com) (Fonticons, Inc.)
-
 ## Other Acknowledgements
 
 Writing from _Cards Against Humanity_ © Cards Against Humanity, LLC. This software is in no way affiliated with or

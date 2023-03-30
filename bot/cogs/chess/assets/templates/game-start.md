@@ -17,6 +17,10 @@ You'll have two minutes to move when it's your turn. Take too long, and I'll for
 {% endfilter %}
 
 {% filter deline %}
+Remember: `/help` is always there when you need it.
+{% endfilter %}
+
+{% filter deline %}
 Ready?
 {% endfilter %}
 
