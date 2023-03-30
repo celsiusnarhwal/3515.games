@@ -1422,6 +1422,18 @@ files = [
 ]
 
 [[package]]
+name = "natsu"
+version = "1.0.1"
+description = "Use sum() with objects of any class"
+category = "main"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "natsu-1.0.1-py3-none-any.whl", hash = "sha256:31ccb91916d0f79616e96e62e69c20dc5aff07f5be213b43017e7ce61ce81e72"},
+    {file = "natsu-1.0.1.tar.gz", hash = "sha256:0e1dfec02d604736a544e55d4b25ae8aa919bf1fb810ac52e438c994022737e5"},
+]
+
+[[package]]
 name = "nest-asyncio"
 version = "1.5.6"
 description = "Patch asyncio to allow nested event loops"
@@ -2981,4 +2993,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.1"
-content-hash = "6af7068608ae112d4647c3c9d2a35be1ec74894867a2c31253cc4aa4d8ddc75b"
+content-hash = "65366d3bd214d00625f8ced8a622c36f16a8a57c7a0499b6968bb5054266fbf4"
