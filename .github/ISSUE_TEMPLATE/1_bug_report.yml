@@ -14,7 +14,7 @@ body:
           required: true
         - label: I've read the [documentation](https://3515.games/games/) and am still sure this is a bug.
           required: true
-        - label: Neither the [Discord API](https://discordstatus.com/) and [Railway](https://status.railway.app/) have experienced any issues within the past 24 hours.
+        - label: Neither the [Discord API](https://discordstatus.com/) nor [Railway](https://status.railway.app/) have experienced any issues within the past 24 hours.
           required: true
 
   - type: textarea
