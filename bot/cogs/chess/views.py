@@ -855,7 +855,9 @@ class ChessEndgameView(View):
             orm.ChessGame(
                 user_id=str(interaction.user.id),
                 white=self.game.white.user.name,
+                white_id=str(self.game.white.id),
                 black=self.game.black.user.name,
+                black_id=str(self.game.black.id),
                 server=self.game.guild.name,
                 result=result,
                 date=self.game.thread.created_at,
@@ -888,7 +890,25 @@ class ChessReplayMenuView(View):
         for button in [child for child in self.children if isinstance(child, Button)]:
             button.disabled = False
 
-        await interaction.response.edit_message(view=self)
+        with orm.db_session:
+            game: orm.ChessGame = orm.ChessGame.get(id=int(menu.values[0]))
+
+        embed = (
+            discord.Embed(
+                title=f"{game.white} vs. {game.black}", color=support.Color.mint()
+            )
+            .add_field(name="Date", value=game.date.strftime("%Y-%m-%d"), inline=False)
+            .add_field(name="Server", value=game.server, inline=False)
+            .add_field(
+                name="White", value=f"{game.white} (<@{game.white_id}>)", inline=False
+            )
+            .add_field(
+                name="Black", value=f"{game.black} (<@{game.black_id}>)", inline=False
+            )
+            .add_field(name="Result", value=game.result, inline=False)
+        )
+
+        await interaction.response.edit_message(embed=embed, view=self)
 
     @orm.db_session
     def get_menu(self) -> Select:
@@ -905,7 +925,7 @@ class ChessReplayMenuView(View):
         for game in orm.ChessGame.get_user_games(self.ctx.user):
             menu.add_option(
                 label=f"{game.white} vs. {game.black}",
-                description=f"{game.server} / {game.result} / {game.date.strftime('%Y.%m.%d')}",
+                description=f"{game.server} / {game.date.strftime('%Y.%m.%d')}",
                 value=str(game.id),
             )
 
@@ -948,7 +968,7 @@ class ChessReplayMenuView(View):
         with orm.db_session:
             game = orm.ChessGame.get(id=game_id)
 
-        with (TemporaryDirectory() as tmp, Path(tmp)):
+        with TemporaryDirectory() as tmp, Path(tmp):
             filename = (
                 f"({game.server}) {game.white} vs. {game.black} [{game.date}].pgn"
             )
