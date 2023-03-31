@@ -1746,6 +1746,34 @@ Copyright 2022 Aric Coady
    limitations under the License.
 
 
+### natsu
+
+ The MIT License (MIT)
+
+Copyright © 2023-present celsius narhwal
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the “Software”), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+
 ### nest-asyncio
 
 BSD 2-Clause License
@@ -5117,6 +5145,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 ## Other Acknowledgements
 
+
 Writing from _Cards Against Humanity_ © Cards Against Humanity, LLC. This software is in no way affiliated with or
 endorsed by Cards Against Humanity, LLC. Cards Against Humanity is a trademark of Cards Against Humanity, LLC.
 
@@ -5130,3 +5159,10 @@ Production Committee.
 _Nichijou_ © Keiichi Arawi / KADOKAWA / Kyoto Animation.
 
 UNO is a trademark of Mattel, Inc.
+
+Much of the iconography on this site is provided by
+[:fontawesome-brands-font-awesome: Font Awesome](https://fontawesome.com/),
+[:simple-simpleicons: Simple Icons](https://simpleicons.org/), and
+[:simple-googlefonts: Google Fonts](https://fonts.google.com/icons).
+
+:material-dark-mode:
