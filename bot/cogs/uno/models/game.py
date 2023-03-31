@@ -270,7 +270,7 @@ class UnoGame(HostedGame):
             await player.user.move_to(None)
             await self.voice_channel.set_permissions(target=player.user, overwrite=None)
 
-    async def walk_players(
+    def walk_players(
         self, player_node: dllistnode, steps: int, *, use_value=False
     ) -> dllistnode | uno.UnoPlayer:
         """
@@ -313,7 +313,7 @@ class UnoGame(HostedGame):
 
         for player in self.players.itervalues():
             player.hand.clear()  # clear that motherfucker out
-            await player.add_cards(7)
+            await player.add_cards(2)
 
         msg = f"Round {self.current_round} has begun!"
         if self.current_round == 1:
@@ -396,10 +396,10 @@ class UnoGame(HostedGame):
         if self.current_player is None:
             self.current_player = self.players.first
         elif self.skip_next_player:
-            self.current_player = await self.walk_players(self.current_player, 2)
+            self.current_player = self.walk_players(self.current_player, 2)
             self.skip_next_player = False
         else:
-            self.current_player = await self.walk_players(self.current_player, 1)
+            self.current_player = self.walk_players(self.current_player, 1)
 
         embed = discord.Embed(
             title="New Turn",
@@ -694,7 +694,7 @@ class UnoEventProcessor:
         """
         self.game.skip_next_player = True
 
-        next_player: uno.UnoPlayer = await self.game.walk_players(
+        next_player: uno.UnoPlayer = self.game.walk_players(
             self.game.current_player, 1, use_value=True
         )
         await next_player.add_cards(2)
@@ -712,7 +712,7 @@ class UnoEventProcessor:
         """
         self.game.skip_next_player = True
 
-        next_player: uno.UnoPlayer = await self.game.walk_players(
+        next_player: uno.UnoPlayer = self.game.walk_players(
             self.game.current_player, 1, use_value=True
         )
         await next_player.add_cards(4)
@@ -730,7 +730,7 @@ class UnoEventProcessor:
         """
         self.game.skip_next_player = True
 
-        skipped_player = await self.game.walk_players(
+        skipped_player = self.game.walk_players(
             self.game.current_player, 1, use_value=True
         )
 
@@ -843,14 +843,14 @@ class UnoEventProcessor:
         embed = discord.Embed(
             title=f"📢 {challenger.user.name} calls out {target}!",
             description=msg,
-            color=support.Color.nitro_pink(),
+            color=support.Color.violet(),
         )
 
         if callout_success:
             await target.add_cards(2)
 
             field = (
-                f"\n\n**The callout succeeds!** {target} draws two cards.\n"
+                f"{target} draws two cards.\n"
                 f"\n"
                 f"It's still {challenger.mention}'s turn."
             )
@@ -862,7 +862,7 @@ class UnoEventProcessor:
             await challenger.add_cards(1)
 
             field = (
-                f"\n\n**The callout fails!** {challenger} draws a card and "
+                f"{challenger} draws a card and "
                 f"forfeits {challenger.pronoun('their')} turn."
             )
 
