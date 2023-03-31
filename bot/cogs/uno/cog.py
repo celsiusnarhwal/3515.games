@@ -178,8 +178,8 @@ class UnoCog(Cog):
         # users can't join games they're already in
         if uno_game.retrieve_player(ctx.user):
             msg = (
-                "You can't join an UNO game you're already a player in. If you meant to leave, use `/uno leave` "
-                "instead."
+                "You can't join an UNO game you're already a player in. If you meant to leave, use "
+                "`/uno ciao > Leave Game` instead."
             )
             embed = discord.Embed(
                 title="You're already in this game.",
