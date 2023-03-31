@@ -65,6 +65,9 @@ class ThreadedGame(ABC):
         """
         type(self).__games__.pop(self.thread.id)
 
+    async def game_timer(self, *, hours: int = 4):
+        await asyncio.sleep(60 * 60 * hours)
+
     @abstractmethod
     async def force_close(self, *args, **kwargs):
         ...
@@ -173,6 +176,12 @@ class HostedGame(ThreadedGame, ABC):
                 return False
 
         return commands.check(predicate)
+
+    async def game_timer(self, *, hours: int = 4):
+        await super().game_timer(hours=hours)
+
+        if self.retrieve_game(self.thread.id):
+            await self.force_close("time_limit")
 
     async def transfer_host(self, new_host: discord.User):
         """

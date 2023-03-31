@@ -48,13 +48,13 @@ class ChessGame(ThreadedGame):
 
         self.board: ChessBoard = ChessBoard()
         self.processor = ChessEventProcessor(self)
-        self.players = [ChessPlayer(player, self) for player in self.players]
+        self.players = [ChessPlayer(player, game=self) for player in self.players]
 
         for player in self.players:
             player.set_opponent()
 
-    async def game_timer(self):
-        await asyncio.sleep(60**2 * 8)
+    async def game_timer(self, *, hours: int = 4):
+        await super().game_timer(hours=hours)
 
         if self.retrieve_game(self.thread.id):
             await self.force_close("time_limit")

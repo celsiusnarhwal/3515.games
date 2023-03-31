@@ -157,6 +157,8 @@ class CAHCog(Cog):
                 await ctx.send(
                     embed=embed, view=support.GameThreadURLView(thread=game_thread)
                 )
+
+                await cah_game.game_timer()
             else:
                 msg = (
                     f"You canceled the creation of this Cards Against Humanity game. You can create a new game "

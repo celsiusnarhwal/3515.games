@@ -185,7 +185,7 @@ the :command: `/uno manage` command.
 
     | **Option** | **Type** | **Description** | **Limited To** | **Required** | **Default** |
     | --- | --- | --- | --- | --- | --- |
-    | `action` | choice | The action you want to perform. | <ul><li>Start Game</li><li>End Game</li><li>Kick Player</li><li>Transfer Host Powers</li> | Yes | N/A |
+        | `action` | choice | The action you want to perform. | <ul><li>Start Game</li><li>End Game</li><li>Kick Player</li><li>Transfer Host Powers</li></ul> | Yes | N/A |
 
     </div>
 
@@ -237,7 +237,7 @@ This can happen if:
 
 1. This happens if the game completes a full cycle through the turn order during which *no one* moves within the 
 time limit.
-2. Specifically, you have eight hours to wrap things up or 3515.games will close the curtain for you.
+2. Specifically, you have four hours to wrap things up or 3515.games will close the curtain for you.
 
 ??? info annotate "Implementation details"
     While 3515.games stays as close to the [official UNO rules](https://service.mattel.com/instruction_sheets/42001pr.pdf)

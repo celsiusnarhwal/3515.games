@@ -81,15 +81,6 @@ class UnoGame(HostedGame):
         else:
             return ""
 
-    async def game_timer(self):
-        """
-        Imposes an eight-hour time limit within which an UNO game must be completed.
-        """
-        await asyncio.sleep(60**2 * 8)
-
-        if self.retrieve_game(self.thread.id):
-            await self.force_close(reason="time_limit")
-
     def retrieve_player(
         self, user: discord.Member, *, return_node=False
     ) -> uno.UnoPlayer | dllistnode:
