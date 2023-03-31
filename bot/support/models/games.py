@@ -13,10 +13,10 @@ from abc import ABC, abstractmethod
 import aiohttp
 import discord
 import inflect as ifl
-import tomlkit as toml
 from attrs import define
 from discord.ext import commands
 from elysia import Fields
+from ordered_set import OrderedSet
 from pydantic import validate_arguments
 
 import support
@@ -482,10 +482,10 @@ class BasePlayer:
 
     user: discord.Member = Fields.field(frozen=True)
 
-    genders: list[Gender] = Fields.attr()
+    genders: OrderedSet[Gender] = Fields.attr()
 
     def __attrs_post_init__(self):
-        self.genders = asyncio.run(self._genderfabriken())
+        self.genders = asyncio.run(self._identeitei_meltdown())
 
     @property
     def name(self) -> str:
@@ -527,7 +527,7 @@ class BasePlayer:
     def pronoun(self, pronoun: Pronoun) -> str:
         return pronoun.transform(random.choice(self.genders))
 
-    async def _genderfabriken(self) -> list[Gender]:
+    async def _identeitei_meltdown(self) -> list[Gender]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://pronoundb.org/api/v1/lookup",
@@ -536,14 +536,7 @@ class BasePlayer:
                 if resp.status != 200:
                     return [Gender.NEUTRAL]
 
-                pronoun_code = (await resp.json())["pronouns"]
-
-        with support.Assets.misc():
-            genders = toml.load(open("pronouns.toml")).get(
-                pronoun_code, [Gender.NEUTRAL]
-            )
-
-        return [Gender(g) for g in genders]
+                return Gender.decode((await resp.json())["pronouns"])
 
     def __str__(self):
         return self.name
