@@ -494,23 +494,6 @@ class CAHCog(Cog):
 
         await cah_game.transfer_host(player.user)
 
-    @commands.Cog.listener(name="on_thread_member_remove")
-    async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
-        """
-        A listener that runs whenever a user is removed from a thread. This runs whenever *any* user is removed from
-        *any* thread in the server, regardless of whether they're playing an CAH game or being removed from an CAH game
-        thread. The purpose of this listener is to enable the automatic removal of CAH players from games when they
-        leave associated game threads.
-
-        :param thread_member: A discord.ThreadMember object representing the removed user.
-        """
-        cah_game = cah.CAHGame.retrieve_game(thread_member.thread_id)
-        player_node = cah_game.retrieve_player(thread_member, return_node=True)
-
-        # only call remove_player() if the thread is an CAH game thread AND the user is a player in that game
-        if player_node:
-            await cah_game.remove_player(player_node=player_node)
-
     @commands.Cog.listener(name="on_raw_thread_delete")
     async def on_raw_thread_delete(self, thread: discord.RawThreadDeleteEvent):
         cah_game: cah.CAHGame = cah.CAHGame.retrieve_game(thread.thread_id)

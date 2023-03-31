@@ -205,7 +205,6 @@ class UserSelectionView(View, ABC):
         self.max_users = max_users
         self.placeholder = placeholder
 
-    def __attrs_post_init__(self):
         select = discord.ui.Select(
             select_type=discord.ComponentType.user_select,
             min_values=self.min_users,

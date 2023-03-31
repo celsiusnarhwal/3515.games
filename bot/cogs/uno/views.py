@@ -586,19 +586,21 @@ class UnoStatusCenterView(View):
         """
         players = self.status.get_player_list()
 
-        embed = discord.Embed(title="👥 Players", color=support.Color.mint())
-
-        embed.add_field(
-            name="Game Host",
-            value=f"{self.game.host.name} ({self.game.host.mention})",
+        embed = (
+            discord.Embed(title="👥 Players", color=support.Color.mint())
+            .add_field(
+                name="Game Host",
+                value=f"{self.game.host.name} ({self.game.host.mention})",
+            )
+            .add_field(
+                name="Players",
+                value="\n".join(
+                    [f"- {player.name} ({player.mention})" for player in players]
+                ),
+            )
         )
 
-        embed.add_field(
-            name="Players",
-            value="\n".join(
-                [f"- {player.name} ({player.mention})" for player in players]
-            ),
-        )
+        return [embed]
 
     async def turn_order(self):
         """
