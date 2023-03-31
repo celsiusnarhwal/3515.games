@@ -47,7 +47,7 @@ class Clock:
         if not self.maintenance_start_time:
             raise RuntimeError("3515.games is not in maintenance mode.")
 
-        return self.maintenance_start_time + pendulum.duration(hours=8)
+        return self.maintenance_start_time + pendulum.duration(hours=4)
 
 
 def start_clock():
