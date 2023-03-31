@@ -60,13 +60,13 @@ theme:
   palette:
     - scheme: slate
       toggle:
-        icon: material/white-balance-sunny
+        icon: light-mode
         name: Step into the light
 
     - scheme: indigo
       primary: white
       toggle:
-        icon: material/weather-night
+        icon: dark-mode
         name: Embrace the dark
   font:
     text: Roboto
