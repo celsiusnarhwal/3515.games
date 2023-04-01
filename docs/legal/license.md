@@ -21,5 +21,5 @@ visit [Creative Commons](https://creativecommons.org/licenses/by/4.0/).
 <hr>
 
 --8<--
-docs/.licenses/CC BY-4.0.md:2
+docs/.licenses/CC-BY-4.0.md:2
 --8<--
