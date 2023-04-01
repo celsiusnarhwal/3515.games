@@ -8,6 +8,7 @@ body:
       options:
         - label: I'm @celsiusnarhwal or he asked me directly to create an issue here. I understand that my issue will be closed without comment if neither of these things are true.
           required: true
+
   - type: textarea
     id: content
     attributes:
