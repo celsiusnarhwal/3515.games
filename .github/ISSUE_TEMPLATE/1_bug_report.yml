@@ -5,7 +5,7 @@ labels: [bug]
 
 body:
   - type: checkboxes
-    id: compliance
+    id: checks
     attributes:
       label: Initial Checks
       description: Please confirm these things before submitting a bug report.
