@@ -89,10 +89,6 @@ When applicable, the menu will tell you what the last card played was to aid you
 
 ### Drawing Cards
 
-!!! tip inline end
-    You have a perfectly equal chance of drawing any given card. This means cards with <b>special effects</b> can appear
-    more often than you may be predisposed to expect.
-
 If it's your turn and you don't have any playable cards, you can draw one with :command: `/uno play > Draw Card`. When you draw
 a card, you have two options: either you can a) draw the card and keep it, or b) draw the card and, if possible
 play it on the same turn.
