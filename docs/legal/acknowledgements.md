@@ -5145,7 +5145,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 ## Other Acknowledgements
 
-
 Writing from _Cards Against Humanity_ © Cards Against Humanity, LLC. This software is in no way affiliated with or
 endorsed by Cards Against Humanity, LLC. Cards Against Humanity is a trademark of Cards Against Humanity, LLC.
 
@@ -5164,5 +5163,3 @@ Much of the iconography on this site is provided by
 [:fontawesome-brands-font-awesome: Font Awesome](https://fontawesome.com/),
 [:simple-simpleicons: Simple Icons](https://simpleicons.org/), and
 [:simple-googlefonts: Google Fonts](https://fonts.google.com/icons).
-
-:material-dark-mode:
