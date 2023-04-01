@@ -5158,8 +5158,3 @@ Production Committee.
 _Nichijou_ © Keiichi Arawi / KADOKAWA / Kyoto Animation.
 
 UNO is a trademark of Mattel, Inc.
-
-Much of the iconography on this site is provided by
-[:fontawesome-brands-font-awesome: Font Awesome](https://fontawesome.com/),
-[:simple-simpleicons: Simple Icons](https://simpleicons.org/), and
-[:simple-googlefonts: Google Fonts](https://fonts.google.com/icons).
