@@ -40,12 +40,22 @@ class AboutView(View):
                 row=1,
             )
         )
+
+        self.add_item(
+            Button(
+                label="Report a Bug",
+                emoji="🐞",
+                url="https://complain.3515.games",
+                row=1,
+            )
+        )
+
         self.add_item(
             Button(
                 label="celsiusnarhwal.dev",
                 emoji=discord.PartialEmoji.from_str("<:celsius:535601639235518465>"),
                 url="https://celsiusnarhwal.dev",
-                row=1,
+                row=2,
             )
         )
 
@@ -85,7 +95,7 @@ class AboutView(View):
                 embed=embed, attachments=[], view=CreditsView(ctx=self.ctx)
             )
 
-    @discord_button(label="Technical Data", emoji="💻", style=ButtonStyle.gray)
+    @discord_button(label="Technical Data", emoji="💻", style=ButtonStyle.gray, row=1)
     async def technical(self, _, interaction: Interaction):
         class TechnicalView(View):
             class TechnialDefinitionsView(View):

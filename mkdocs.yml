@@ -150,6 +150,9 @@ extra:
       name: "@celsiusnarhwal"
     - icon: fontawesome/solid/envelope
       link: mailto:hello@celsiusnarhwal.dev
+    - icon: fontawesome/solid/bug
+      link: https://complain.3515.games
+      name: Report a Bug
     - icon: celsius
       link: https://celsiusnarhwal.dev
       name: celsiusnarhwal.dev
