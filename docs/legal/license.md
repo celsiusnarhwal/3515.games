@@ -4,7 +4,7 @@ hide:
     - footer
 ---
 
-# Website License <small>:fontawesome-brands-creative-commons: :fontawesome-brands-creative-commons-by:</small>
+# Website License
 
 The contents of this site (collecitvely, "3515.games' website") are licensed under a Creative Commons 
 Attribution 4.0 International License (CC BY 4.0). In summary, this means you can do whatever you want with 3515.games' 
