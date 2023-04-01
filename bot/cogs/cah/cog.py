@@ -75,7 +75,6 @@ class CAHCog(Cog):
             default="Card Czar",
         ),
     ):
-
         msg = (
             "Cards Against Humanity is a pretty vulgar game. You're likely to see content that may gross you out, "
             "offend you, or violate your server's rules. Are you cool with that?"
@@ -349,7 +348,7 @@ class CAHCog(Cog):
     @cah.verify_context(level="thread", verify_host=True)
     async def start_game(self, ctx: discord.ApplicationContext):
         """
-        Start an UNO game.
+        Start a CAH game.
 
         Parameters
         ----------
@@ -374,10 +373,7 @@ class CAHCog(Cog):
             await ctx.respond(embed=embed, ephemeral=True)
 
         # the host can't start a game that too few players have joined
-        elif (
-            len(cah_game.players) < cah_game.min_players
-            and ctx.guild_id != support.TESTING_GROUNDS
-        ):
+        elif len(cah_game.players) < cah_game.min_players:
             embed = discord.Embed(
                 title="You need more players.",
                 description=f"You can't start this game until at least "
@@ -480,7 +476,6 @@ class CAHCog(Cog):
         self,
         ctx: discord.ApplicationContext,
     ):
-
         """
         Transfer host powers to another player.
 

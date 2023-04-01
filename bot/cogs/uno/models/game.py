@@ -14,7 +14,7 @@ import discord
 import inflect as ifl
 from attr import define
 from elysia import Fields
-from llist import dllist, dllistnode
+from llist import dllistnode
 
 import shrine
 import support
@@ -50,7 +50,6 @@ class UnoGame(HostedGame):
 
     settings: UnoGameSettings
 
-    players: dllist = Fields.attr(factory=dllist)
     current_round: int = Fields.attr(default=0)
     current_player: dllistnode = Fields.attr(default=None)
     skip_next_player: bool = Fields.attr(default=False)
@@ -111,12 +110,6 @@ class UnoGame(HostedGame):
                 lambda player: player.user.id == user.id, self.players.itervalues()
             )
 
-    async def force_close(self, reason):
-        if self.voice_channel:
-            await self.voice_channel.delete()
-
-        await super().force_close(reason)
-
     async def open_lobby(self):
         """
         Sends an introductory message at the creation of an UNO game thread and pins said message to that thread.
@@ -137,8 +130,12 @@ class UnoGame(HostedGame):
             color=support.Color.mint(),
         )
 
+        link_button = discord.ui.Button(
+            label="How to Play", emoji="📖", url="https://3515.games/games/uno"
+        )
+
         self.lobby_intro_msg = await self.thread.send(
-            embeds=[intro_embed, settings_embed]
+            embeds=[intro_embed, settings_embed], view=discord.ui.View(link_button)
         )
         await self.lobby_intro_msg.pin()
 
@@ -440,7 +437,7 @@ class UnoGame(HostedGame):
         End the game. This is only called when a player meets the win condition, and should not be confused
         with force closing the game.
         """
-        self.kill()
+        await self.kill()
 
         with shrine.Torii.uno() as torii:
             template = torii.get_template("game-over.md")

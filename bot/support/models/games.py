@@ -16,6 +16,7 @@ import inflect as ifl
 from attrs import define
 from discord.ext import commands
 from elysia import Fields
+from llist import dllist
 from ordered_set import OrderedSet
 from pydantic import validate_arguments
 
@@ -59,7 +60,7 @@ class ThreadedGame(ABC):
         """
         return cls.__games__.get(thread_id)
 
-    def kill(self):
+    async def kill(self):
         """
         Remove the game from :attr:`__games__`.
         """
@@ -112,6 +113,7 @@ class HostedGame(ThreadedGame, ABC):
 
     host: discord.Member
 
+    players: dllist = Fields.attr(factory=dllist)
     is_joinable: bool = Fields.attr(default=True)
     lobby_intro_msg: discord.Message = Fields.attr(default=None)
     voice_channel: discord.VoiceChannel = Fields.attr(default=None)
@@ -177,6 +179,12 @@ class HostedGame(ThreadedGame, ABC):
 
         return commands.check(predicate)
 
+    async def kill(self):
+        if self.voice_channel:
+            await self.voice_channel.delete()
+
+        await super().kill()
+
     async def game_timer(self, *, hours: int = 4):
         await super().game_timer(hours=hours)
 
@@ -220,7 +228,10 @@ class HostedGame(ThreadedGame, ABC):
         :param reason: The reason why the game is being closed ("host_abortion, "thread_deletion", "channel_deletion",
         "host_left", "insufficient_players", "inactivity", or "time_limit").
         """
-        self.kill()
+        if self.voice_channel:
+            await self.voice_channel.delete()
+
+        await self.kill()
 
         async def host_abortion():
             """
@@ -456,6 +467,11 @@ class HostedGame(ThreadedGame, ABC):
         self.voice_channel = await my_category.create_voice_channel(
             f"{self.short_name} with {self.host.name}!", overwrites=overwrites
         )
+
+        for player in self.players.itervalues():
+            await self.voice_channel.set_permissions(
+                target=player.user, overwrite=player.voice_overwrites()
+            )
 
         embed = discord.Embed(
             title="Nothing to see (or say) here.",
