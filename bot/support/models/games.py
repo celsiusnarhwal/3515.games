@@ -536,7 +536,7 @@ class BasePlayer:
     def pronoun(self, pronoun: Pronoun) -> str:
         return pronoun.transform(random.choice(self.genders))
 
-    async def _identeitei_meltdown(self) -> list[Gender]:
+    async def _identeitei_meltdown(self) -> OrderedSet[Gender]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://pronoundb.org/api/v1/lookup",
