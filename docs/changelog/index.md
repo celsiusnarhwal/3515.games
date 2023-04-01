@@ -1,5 +1,7 @@
 ---
 icon: fontawesome/solid/clock-rotate-left
+hide:
+    - footer
 ---
 
 --8<--
