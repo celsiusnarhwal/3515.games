@@ -2,7 +2,7 @@ name: Privileged
 description: Choose this if you're @celsiusnarhwal or he asked you directly to create an issue here.
 body:
   - type: checkboxes
-    id: privileged
+    id: checks
     attributes:
       label: Confirmation
       options:
