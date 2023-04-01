@@ -8,6 +8,7 @@ import discord
 from discord import Option
 from discord.ext import commands
 
+import shrine
 import support
 from bot import bot
 from cogs import chess
@@ -98,23 +99,9 @@ class ChessCog(Cog):
         else:
             # confirm with the challenger (i.e. the invoker of /chess challenge) that they want to issue the challenge
 
-            msg = (
-                f"You're about to challenge {opponent.mention} to a game of chess. There are a few important "
-                f"things you need to know:\n"
-                f"\n"
-                f"**Chess games are contained within [threads]"
-                f"(https://support.discord.com/hc/en-us/articles/4403205878423-Threads-FAQ).** I'll handle the "
-                f"creation and management of the thread for you. If you can `Manage Threads`, please refrain from "
-                f"editing or deleting the thread until the game is over (trust me, I've got this).\n"
-                f"\n"
-                f"**Anyone can spectate.** Anyone who can both see and talk in this channel can spectate your "
-                f"game."
-                f"\n"
-                f"**I'm watching for inactivity.** If I determine either you or your opponent to have gone AFK, "
-                f"I can forfeit the game on your behalves. Watch out.\n"
-                f"\n"
-                f"Challenge {opponent.mention} to a game of chess?"
-            )
+            with shrine.Torii.chess() as torii:
+                template = torii.get_template("create-game.md")
+                msg = template.render(opponent=opponent)
 
             embed = discord.Embed(
                 title="Creating a Chess Game",

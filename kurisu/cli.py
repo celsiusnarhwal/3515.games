@@ -401,7 +401,7 @@ def invite(
 @app.command(name="licenses")
 def licenses():
     """
-    Create Markdown-formatted documentation of 3515.games' software licenses.
+    Generate the Markdown source for https://3515.games/legal/acknowledgements/.
     """
     documents = json.loads(
         subprocess.run(
@@ -504,7 +504,7 @@ def vercel():
 
 
 @app.callback(
-    epilog=f"Kurisu © {pendulum.now().year} celsius narhwal. Licensed under the same terms as 3515.games."
+    epilog=f"Kurisu © {pendulum.now().year} celsius narhwal. Thank you kindly for your attention."
 )
 def main():
     """

@@ -37,6 +37,10 @@ class Color(discord.Color):
         return cls(0x000000)
 
     @classmethod
+    def violet(cls) -> Self:
+        return cls(0xAC7FE0)
+
+    @classmethod
     def caution(cls) -> Self:
         return cls.orange()
 

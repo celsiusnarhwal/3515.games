@@ -178,8 +178,8 @@ class UnoCog(Cog):
         # users can't join games they're already in
         if uno_game.retrieve_player(ctx.user):
             msg = (
-                "You can't join an UNO game you're already a player in. If you meant to leave, use `/uno leave` "
-                "instead."
+                "You can't join an UNO game you're already a player in. If you meant to leave, use "
+                "`/uno ciao > Leave Game` instead."
             )
             embed = discord.Embed(
                 title="You're already in this game.",
@@ -228,8 +228,8 @@ class UnoCog(Cog):
             if ctx.user == uno_game.host:
                 msg = (
                     "You're the Game Host, so your departure will end the game for everyone else - "
-                    "consider transferring your host powers to another player with `/uno host transfer` "
-                    "beforehand."
+                    "consider transferring your host powers to another player with "
+                    "`/uno manage > Transfer Host Powers` beforehand."
                 )
             else:
                 if uno_game.is_joinable:
@@ -579,28 +579,6 @@ class UnoCog(Cog):
         player = await uno.UnoTransferHostView(ctx=ctx).present()
 
         await uno_game.transfer_host(player.user)
-
-    @commands.Cog.listener()
-    async def on_thread_member_remove(self, thread_member: discord.ThreadMember):
-        """
-        A listener that runs whenever a user is removed from a thread.
-
-        Parameters
-        ----------
-        thread_member : discord.ThreadMember
-            The user that was removed from the thread.
-
-        Notes
-        -----
-        The purpose of this listener is to enable the automatic removal of UNO players from games when they
-        leave associated game threads.
-        """
-        uno_game = uno.UnoGame.retrieve_game(thread_member.thread_id)
-        player_node = uno_game.retrieve_player(thread_member, return_node=True)
-
-        # only call remove_player() if the thread is an UNO game thread AND the user is a player in that game
-        if player_node:
-            await uno_game.remove_player(player_node=player_node)
 
     @commands.Cog.listener()
     async def on_raw_thread_delete(self, thread: discord.RawThreadDeleteEvent):

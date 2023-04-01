@@ -77,8 +77,24 @@ src_paths = ["./**"]
 
 [tool.poe.tasks]
 clear = "rm -rf site .cache"
-docs = { shell = "mkdocs serve" }
+#docs = { shell = "mkdocs serve"}
 format = { shell = "for hook in black prettier isort; do pre-commit run $hook --all-files; done" }
+
+[tool.poe.tasks.docs]
+shell = """
+if $vercel; then
+    mkdocs build && vercel dev --cwd site
+else
+    mkdocs serve
+fi
+"""
+env = { VERCEL_ORG_ID = "${VERCEL_ORG_ID}", VERCEL_PROJECT_ID = "${VERCEL_PROJECT_ID}" }
+
+    [[tool.poe.tasks.docs.args]]
+    name = "vercel"
+    options = ["--vercel"]
+    type = "boolean"
+    default = false
 
 [tool.poe.tasks.fontawesome]
 shell = """

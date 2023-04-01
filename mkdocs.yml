@@ -19,6 +19,7 @@ nav:
       - Special Features:
           - Voice Chat: games/features/voice.md
           - Pronouns: games/features/pronouns.md
+  - Changelog: changelog/index.md
   - Self-Hosting:
       - Self-Hosting: hosting/index.md
       - "Prologue: Heaven and the Earth": hosting/prologue.md
@@ -60,13 +61,13 @@ theme:
   palette:
     - scheme: slate
       toggle:
-        icon: material/white-balance-sunny
+        icon: light-mode
         name: Step into the light
 
     - scheme: indigo
       primary: white
       toggle:
-        icon: material/weather-night
+        icon: dark-mode
         name: Embrace the dark
   font:
     text: Roboto

@@ -134,9 +134,7 @@ If you don't want to be the Game Host anymore, you can transfer your powers to a
 you and onto whoever you select.
 
 !!! danger "Better keep your head in the game"
-    If you're the Game Host, you leaving the game will end it for all other players. Keep in mind that :command:
-    `/cah ciao` isn't the only way to leave a game — leaving the game thread will also kick you out, and being the 
-    Game Host **does not** exempt you from being kicked for inactivity.
+    If you're the Game Host, you leaving the game will end it for all other players.
 
 <small>The déjà vu is getting weird now, please send help.</small>
 
@@ -159,6 +157,6 @@ This can happen if:
 
 1. This happens if the game completes a full cycle through the turn order during which *no one* moves within the 
 time limit.
-2. Specifically, you have eight hours to wrap things up or 3515.games will close the curtain for you.
+2. Specifically, you have four hours to wrap things up or 3515.games will close the curtain for you.
 
 

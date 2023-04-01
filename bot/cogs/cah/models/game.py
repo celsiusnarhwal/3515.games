@@ -14,7 +14,7 @@ import discord
 import inflect as ifl
 from attrs import define
 from elysia import Fields
-from llist import dllist, dllistnode
+from llist import dllistnode
 from sortedcontainers import SortedKeyList
 
 import shrine
@@ -42,8 +42,6 @@ class CAHGame(HostedGame):
     deck: cah.CAHDeck
     settings: CAHGameSettings
 
-    players: dllist = Fields.attr(factory=dllist)
-    banned_users: set[discord.User] = Fields.attr(factory=set)
     card_czar: dllistnode = Fields.attr(factory=dllistnode)
     is_voting: bool = Fields.attr(default=False)
     turn_uuid: uuid.UUID = Fields.attr(default=None)
@@ -53,14 +51,12 @@ class CAHGame(HostedGame):
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
 
+        if self.guild.id == support.TESTING_GROUNDS:
+            # noinspection PyClassVar
+            self.min_players = 2
+
         if not self.settings.use_czar:
             self.__class__ = CAHPopularVoteGame
-
-    async def force_close(self, reason):
-        if self.voice_channel:
-            await self.voice_channel.delete()
-
-        await super().force_close(reason)
 
     def retrieve_player(
         self, user: discord.User, return_node: bool = False
@@ -107,8 +103,14 @@ class CAHGame(HostedGame):
             color=support.Color.mint(),
         )
 
+        link_button = discord.ui.Button(
+            label="How to Play",
+            emoji="📖",
+            url="https://3515.games/games/cah",
+        )
+
         self.lobby_intro_msg = await self.thread.send(
-            embeds=[intro_embed, settings_embed]
+            embeds=[intro_embed, settings_embed], view=discord.ui.View(link_button)
         )
         await self.lobby_intro_msg.pin()
 
@@ -277,10 +279,6 @@ class CAHGame(HostedGame):
             description=msg,
             color=support.Color.mint(),
         )
-        embed.set_footer(
-            text="Legal: Writing from Cards Against Humanity is licensed under CC BY-NC-SA 4.0. "
-            "3515.games is not affiliated with or endorsed by Cards Against Humanity, LLC."
-        )
 
         with support.Assets.cah():
             cah_logo = discord.File("cah_logo.png", filename="cah_logo.png")
@@ -406,18 +404,18 @@ class CAHGame(HostedGame):
             f"The {'Card Czar has ' if self.settings.use_czar else 'players have '} "
             f"chosen {posessive(victor.mention)} submission.\n"
             f"\n"
-            f"**{victor.name}** now has {inflect.no('Awesome Point', victor.points)}, "
-            f"putting them in {victor_rank} place."
+            f"**{victor.name}** now has {inflect.no('point', victor.points)}, "
+            f"putting {victor.pronoun('them')} in {victor_rank} place."
         )
 
         if (point_gap := self.settings.points_to_win - victor.points) > 0:
             msg = (
                 msg[:-1]
-                + f"—**{inflect.no('Awesome Point', point_gap)}** away from winning the game."
+                + f"—**{inflect.no('point', point_gap)}** away from winning the game."
             )
 
         embed = discord.Embed(
-            title=f"{victor.user.name} gains a Awesome Point!",
+            title=f"{victor.user.name} gains a point!",
             description=msg,
             color=support.Color.mint(),
         )
@@ -448,7 +446,7 @@ class CAHGame(HostedGame):
         This method is only triggered when a player meets the win condition; other game-ending scenarios are
         handled by :meth:`force_close`.
         """
-        self.__games__.pop(self.thread.id)
+        await self.kill()
 
         msg = (
             f"Congratulations, {game_winner.user.mention}! You won Cards Against Humanity!\n"
@@ -753,7 +751,7 @@ class CAHPopularVoteGame(CAHGame):
             await play_callback() if not self.is_voting else await vote_callback()
 
 
-@define(frozen=True)
+@define(frozen=False)
 class CAHGameSettings:
     """
     Settings for a Cards Against Humanity game.
@@ -773,7 +771,7 @@ class CAHGameSettings:
 
         points_str = (
             f"__**Points to Win**: {self.points_to_win}__\n"
-            f"The first player to reach {self.points_to_win} Awesome Points will win the game."
+            f"The first player to reach {self.points_to_win} points will win the game."
         )
 
         timeout_str = (

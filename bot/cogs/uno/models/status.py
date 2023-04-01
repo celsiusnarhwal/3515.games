@@ -41,7 +41,7 @@ class UnoStatusTracker:
         """
         return self.game.players.itervalues()
 
-    async def get_turn_order(self) -> list[uno.UnoPlayer]:
+    def get_turn_order(self) -> list[uno.UnoPlayer]:
         """
         Return an iterator players in the game in turn order.
 
@@ -52,7 +52,7 @@ class UnoStatusTracker:
         turn_order = [self.game.current_player]
 
         for _ in range(len(self.game.players) - 1):
-            turn_order.append(await self.game.walk_players(turn_order[-1], 1))
+            turn_order.append(self.game.walk_players(turn_order[-1], 1))
 
         return [player.value for player in turn_order]
 

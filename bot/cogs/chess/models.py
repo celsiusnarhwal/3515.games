@@ -48,13 +48,13 @@ class ChessGame(ThreadedGame):
 
         self.board: ChessBoard = ChessBoard()
         self.processor = ChessEventProcessor(self)
-        self.players = [ChessPlayer(player, self) for player in self.players]
+        self.players = [ChessPlayer(player, game=self) for player in self.players]
 
         for player in self.players:
             player.set_opponent()
 
-    async def game_timer(self):
-        await asyncio.sleep(60**2 * 8)
+    async def game_timer(self, *, hours: int = 4):
+        await super().game_timer(hours=hours)
 
         if self.retrieve_game(self.thread.id):
             await self.force_close("time_limit")
@@ -74,7 +74,7 @@ class ChessGame(ThreadedGame):
         )
 
     async def force_close(self, reason: str):
-        self.kill()
+        await self.kill()
 
         async def thread_deletion():
             for player in self.players:
@@ -156,7 +156,13 @@ class ChessGame(ThreadedGame):
         else:
             embed.set_footer(text="Game saving is disabled.")
 
-        intro = await self.thread.send(embed=embed)
+        link_button = discord.ui.Button(
+            label="How to Play",
+            emoji="📖",
+            url="https://3515.games/games/chess",
+        )
+
+        intro = await self.thread.send(embed=embed, view=discord.ui.View(link_button))
         await intro.pin()
 
     async def check_ready_players(self):
@@ -260,7 +266,7 @@ class ChessGame(ThreadedGame):
                 await self.end_game(reason="timeout", player=self.current_player)
 
     async def end_game(self, reason: str, **kwargs):
-        self.kill()
+        await self.kill()
 
         async def forfeit():
             forfeiter: ChessPlayer = kwargs.get("player")

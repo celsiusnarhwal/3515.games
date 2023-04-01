@@ -469,16 +469,16 @@ class UnoStatusCenterView(View):
         choice = status_menu.values[0]
 
         options = {
-            "settings": self.game_settings(),
-            "players": self.player_list(),
-            "turn": await self.turn_order(),
-            "leaderboard": self.leaderboard(),
-            "last": self.last_turn(),
-            "mystats": self.player_stats(),
+            "settings": self.game_settings,
+            "players": self.player_list,
+            "turn": self.turn_order,
+            "leaderboard": self.leaderboard,
+            "last": self.last_turn,
+            "mystats": self.player_stats,
         }
 
         # get embeds from the appropriate method based on the user's choice
-        embeds = options[choice]
+        embeds = options[choice]()
         embeds[0].set_author(
             name="UNO Status Center", icon_url=self.ctx.me.display_avatar.url
         )
@@ -586,25 +586,33 @@ class UnoStatusCenterView(View):
         """
         players = self.status.get_player_list()
 
-        embed = discord.Embed(title="👥 Players", color=support.Color.mint())
-
-        embed.add_field(
-            name="Game Host",
-            value=f"{self.game.host.name} ({self.game.host.mention})",
+        embed = (
+            discord.Embed(title="👥 Players", color=support.Color.mint())
+            .add_field(
+                name="Game Host",
+                value=f"{self.game.host.name} ({self.game.host.mention})",
+                inline=False,
+            )
+            .add_field(
+                name="Other Players",
+                value="\n".join(
+                    [
+                        f"- {player.name} ({player.mention})"
+                        for player in players
+                        if player is not self.game.host
+                    ],
+                ),
+                inline=False,
+            )
         )
 
-        embed.add_field(
-            name="Players",
-            value="\n".join(
-                [f"- {player.name} ({player.mention})" for player in players]
-            ),
-        )
+        return [embed]
 
-    async def turn_order(self):
+    def turn_order(self):
         """
         Returns an embed containing a string representation of the turn order.
         """
-        turn_order = await self.status.get_turn_order()
+        turn_order = self.status.get_turn_order()
 
         embed = discord.Embed(title="🕒 Turn Order", color=support.Color.mint())
 

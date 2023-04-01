@@ -13,10 +13,11 @@ from abc import ABC, abstractmethod
 import aiohttp
 import discord
 import inflect as ifl
-import tomlkit as toml
 from attrs import define
 from discord.ext import commands
 from elysia import Fields
+from llist import dllist
+from ordered_set import OrderedSet
 from pydantic import validate_arguments
 
 import support
@@ -59,11 +60,14 @@ class ThreadedGame(ABC):
         """
         return cls.__games__.get(thread_id)
 
-    def kill(self):
+    async def kill(self):
         """
         Remove the game from :attr:`__games__`.
         """
         type(self).__games__.pop(self.thread.id)
+
+    async def game_timer(self, *, hours: int = 4):
+        await asyncio.sleep(60 * 60 * hours)
 
     @abstractmethod
     async def force_close(self, *args, **kwargs):
@@ -109,6 +113,7 @@ class HostedGame(ThreadedGame, ABC):
 
     host: discord.Member
 
+    players: dllist = Fields.attr(factory=dllist)
     is_joinable: bool = Fields.attr(default=True)
     lobby_intro_msg: discord.Message = Fields.attr(default=None)
     voice_channel: discord.VoiceChannel = Fields.attr(default=None)
@@ -174,6 +179,18 @@ class HostedGame(ThreadedGame, ABC):
 
         return commands.check(predicate)
 
+    async def kill(self):
+        if self.voice_channel:
+            await self.voice_channel.delete()
+
+        await super().kill()
+
+    async def game_timer(self, *, hours: int = 4):
+        await super().game_timer(hours=hours)
+
+        if self.retrieve_game(self.thread.id):
+            await self.force_close("time_limit")
+
     async def transfer_host(self, new_host: discord.User):
         """
         Transfers Game Host privileges from one user to another.
@@ -211,7 +228,10 @@ class HostedGame(ThreadedGame, ABC):
         :param reason: The reason why the game is being closed ("host_abortion, "thread_deletion", "channel_deletion",
         "host_left", "insufficient_players", "inactivity", or "time_limit").
         """
-        self.kill()
+        if self.voice_channel:
+            await self.voice_channel.delete()
+
+        await self.kill()
 
         async def host_abortion():
             """
@@ -448,6 +468,11 @@ class HostedGame(ThreadedGame, ABC):
             f"{self.short_name} with {self.host.name}!", overwrites=overwrites
         )
 
+        for player in self.players.itervalues():
+            await self.voice_channel.set_permissions(
+                target=player.user, overwrite=player.voice_overwrites()
+            )
+
         embed = discord.Embed(
             title="Nothing to see (or say) here.",
             description="You should head to the game thread instead.",
@@ -482,10 +507,10 @@ class BasePlayer:
 
     user: discord.Member = Fields.field(frozen=True)
 
-    genders: list[Gender] = Fields.attr()
+    genders: OrderedSet[Gender] = Fields.attr()
 
     def __attrs_post_init__(self):
-        self.genders = asyncio.run(self._genderfabriken())
+        self.genders = asyncio.run(self._identeitei_meltdown())
 
     @property
     def name(self) -> str:
@@ -527,7 +552,7 @@ class BasePlayer:
     def pronoun(self, pronoun: Pronoun) -> str:
         return pronoun.transform(random.choice(self.genders))
 
-    async def _genderfabriken(self) -> list[Gender]:
+    async def _identeitei_meltdown(self) -> OrderedSet[Gender]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://pronoundb.org/api/v1/lookup",
@@ -536,14 +561,7 @@ class BasePlayer:
                 if resp.status != 200:
                     return [Gender.NEUTRAL]
 
-                pronoun_code = (await resp.json())["pronouns"]
-
-        with support.Assets.misc():
-            genders = toml.load(open("pronouns.toml")).get(
-                pronoun_code, [Gender.NEUTRAL]
-            )
-
-        return [Gender(g) for g in genders]
+                return Gender.decode((await resp.json())["pronouns"])
 
     def __str__(self):
         return self.name

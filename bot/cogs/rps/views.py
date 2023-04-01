@@ -31,7 +31,7 @@ class RPSChooseMoveView(View):
         :param players: A list of players in the match.
         """
         super().__init__(**kwargs)
-        self.ready_players = set()
+        self.ready_players = []
         self.players = players
         self.challenger = players[0].user
         self.opponent = players[1].user
@@ -75,7 +75,7 @@ class RPSChooseMoveView(View):
         )
         interacting_player.selected_move = "Rock"
 
-        self.ready_players.add(interacting_player)
+        self.ready_players.append(interacting_player)
 
         await interaction.response.send_message(
             f"You chose **🪨 Rock**. "
@@ -95,7 +95,7 @@ class RPSChooseMoveView(View):
         )
         interacting_player.selected_move = "Paper"
 
-        self.ready_players.add(interacting_player)
+        self.ready_players.append(interacting_player)
 
         await interaction.response.send_message(
             f"You chose **📄 Paper**. "
@@ -114,7 +114,7 @@ class RPSChooseMoveView(View):
             player for player in self.players if player.user == interaction.user
         )
         interacting_player.selected_move = "Scissors"
-        self.ready_players.add(interacting_player)
+        self.ready_players.append(interacting_player)
 
         await interaction.response.send_message(
             f"You chose **✂ Scissors**. "

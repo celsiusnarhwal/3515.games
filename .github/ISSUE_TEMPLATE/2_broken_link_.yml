@@ -1,0 +1,31 @@
+name: Broken Internal Link
+title: "broken link: "
+description: Report a broken internal link on 3515.games' website.
+labels: [broken link]
+
+body:
+  - type: checkboxes
+    id: compliance
+    attributes:
+      label: Initial Checks
+      description: Please confirm these things before submitting a bug report.
+      options:
+        - label: The link I'm reporting was not manually typed into my browser or given to me by someone else.
+          required: true
+        - label: I've searched GitHub for duplicate issues and I'm sure this is something new.
+          required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Link
+      description: Paste the broken link here.
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Origin
+      description: Describe where on 3515.games' website you found the broken link.
+    validations:
+      required: true

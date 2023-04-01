@@ -14,7 +14,7 @@ import discord
 import inflect as ifl
 from attr import define
 from elysia import Fields
-from llist import dllist, dllistnode
+from llist import dllistnode
 
 import shrine
 import support
@@ -50,7 +50,6 @@ class UnoGame(HostedGame):
 
     settings: UnoGameSettings
 
-    players: dllist = Fields.attr(factory=dllist)
     current_round: int = Fields.attr(default=0)
     current_player: dllistnode = Fields.attr(default=None)
     skip_next_player: bool = Fields.attr(default=False)
@@ -80,15 +79,6 @@ class UnoGame(HostedGame):
             return last_move
         else:
             return ""
-
-    async def game_timer(self):
-        """
-        Imposes an eight-hour time limit within which an UNO game must be completed.
-        """
-        await asyncio.sleep(60**2 * 8)
-
-        if self.retrieve_game(self.thread.id):
-            await self.force_close(reason="time_limit")
 
     def retrieve_player(
         self, user: discord.Member, *, return_node=False
@@ -120,12 +110,6 @@ class UnoGame(HostedGame):
                 lambda player: player.user.id == user.id, self.players.itervalues()
             )
 
-    async def force_close(self, reason):
-        if self.voice_channel:
-            await self.voice_channel.delete()
-
-        await super().force_close(reason)
-
     async def open_lobby(self):
         """
         Sends an introductory message at the creation of an UNO game thread and pins said message to that thread.
@@ -146,8 +130,12 @@ class UnoGame(HostedGame):
             color=support.Color.mint(),
         )
 
+        link_button = discord.ui.Button(
+            label="How to Play", emoji="📖", url="https://3515.games/games/uno"
+        )
+
         self.lobby_intro_msg = await self.thread.send(
-            embeds=[intro_embed, settings_embed]
+            embeds=[intro_embed, settings_embed], view=discord.ui.View(link_button)
         )
         await self.lobby_intro_msg.pin()
 
@@ -279,7 +267,7 @@ class UnoGame(HostedGame):
             await player.user.move_to(None)
             await self.voice_channel.set_permissions(target=player.user, overwrite=None)
 
-    async def walk_players(
+    def walk_players(
         self, player_node: dllistnode, steps: int, *, use_value=False
     ) -> dllistnode | uno.UnoPlayer:
         """
@@ -322,7 +310,7 @@ class UnoGame(HostedGame):
 
         for player in self.players.itervalues():
             player.hand.clear()  # clear that motherfucker out
-            await player.add_cards(7)
+            await player.add_cards(2)
 
         msg = f"Round {self.current_round} has begun!"
         if self.current_round == 1:
@@ -405,10 +393,10 @@ class UnoGame(HostedGame):
         if self.current_player is None:
             self.current_player = self.players.first
         elif self.skip_next_player:
-            self.current_player = await self.walk_players(self.current_player, 2)
+            self.current_player = self.walk_players(self.current_player, 2)
             self.skip_next_player = False
         else:
-            self.current_player = await self.walk_players(self.current_player, 1)
+            self.current_player = self.walk_players(self.current_player, 1)
 
         embed = discord.Embed(
             title="New Turn",
@@ -449,7 +437,7 @@ class UnoGame(HostedGame):
         End the game. This is only called when a player meets the win condition, and should not be confused
         with force closing the game.
         """
-        self.kill()
+        await self.kill()
 
         with shrine.Torii.uno() as torii:
             template = torii.get_template("game-over.md")
@@ -703,7 +691,7 @@ class UnoEventProcessor:
         """
         self.game.skip_next_player = True
 
-        next_player: uno.UnoPlayer = await self.game.walk_players(
+        next_player: uno.UnoPlayer = self.game.walk_players(
             self.game.current_player, 1, use_value=True
         )
         await next_player.add_cards(2)
@@ -721,7 +709,7 @@ class UnoEventProcessor:
         """
         self.game.skip_next_player = True
 
-        next_player: uno.UnoPlayer = await self.game.walk_players(
+        next_player: uno.UnoPlayer = self.game.walk_players(
             self.game.current_player, 1, use_value=True
         )
         await next_player.add_cards(4)
@@ -739,7 +727,7 @@ class UnoEventProcessor:
         """
         self.game.skip_next_player = True
 
-        skipped_player = await self.game.walk_players(
+        skipped_player = self.game.walk_players(
             self.game.current_player, 1, use_value=True
         )
 
@@ -852,14 +840,14 @@ class UnoEventProcessor:
         embed = discord.Embed(
             title=f"📢 {challenger.user.name} calls out {target}!",
             description=msg,
-            color=support.Color.nitro_pink(),
+            color=support.Color.violet(),
         )
 
         if callout_success:
             await target.add_cards(2)
 
             field = (
-                f"\n\n**The callout succeeds!** {target} draws two cards.\n"
+                f"{target} draws two cards.\n"
                 f"\n"
                 f"It's still {challenger.mention}'s turn."
             )
@@ -871,7 +859,7 @@ class UnoEventProcessor:
             await challenger.add_cards(1)
 
             field = (
-                f"\n\n**The callout fails!** {challenger} draws a card and "
+                f"{challenger} draws a card and "
                 f"forfeits {challenger.pronoun('their')} turn."
             )
 

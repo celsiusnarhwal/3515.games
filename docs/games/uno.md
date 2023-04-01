@@ -89,10 +89,6 @@ When applicable, the menu will tell you what the last card played was to aid you
 
 ### Drawing Cards
 
-!!! tip inline end
-    You have a perfectly equal chance of drawing any given card. This means cards with <b>special effects</b> can appear
-    more often than you may be predisposed to expect.
-
 If it's your turn and you don't have any playable cards, you can draw one with :command: `/uno play > Draw Card`. When you draw
 a card, you have two options: either you can a) draw the card and keep it, or b) draw the card and, if possible
 play it on the same turn.
@@ -185,7 +181,7 @@ the :command: `/uno manage` command.
 
     | **Option** | **Type** | **Description** | **Limited To** | **Required** | **Default** |
     | --- | --- | --- | --- | --- | --- |
-    | `action` | choice | The action you want to perform. | <ul><li>Start Game</li><li>End Game</li><li>Kick Player</li><li>Transfer Host Powers</li> | Yes | N/A |
+        | `action` | choice | The action you want to perform. | <ul><li>Start Game</li><li>End Game</li><li>Kick Player</li><li>Transfer Host Powers</li></ul> | Yes | N/A |
 
     </div>
 
@@ -214,9 +210,7 @@ If you don't want to be the Game Host anymore, you can transfer your powers to a
 you and onto whoever you select.
 
 !!! danger "Better keep your head in the game"
-    If you're the Game Host, you leaving the game will end it for all other players. Keep in mind that :command:
-    `/uno ciao` isn't the only way to leave a game — leaving the game thread will also kick you out, and being the 
-    Game Host **does not** exempt you from being kicked for inactivity.
+    If you're the Game Host, you leaving the game will end it for all other players.
 
 ## Bad Endings
 
@@ -237,7 +231,7 @@ This can happen if:
 
 1. This happens if the game completes a full cycle through the turn order during which *no one* moves within the 
 time limit.
-2. Specifically, you have eight hours to wrap things up or 3515.games will close the curtain for you.
+2. Specifically, you have four hours to wrap things up or 3515.games will close the curtain for you.
 
 ??? info annotate "Implementation details"
     While 3515.games stays as close to the [official UNO rules](https://service.mattel.com/instruction_sheets/42001pr.pdf)
