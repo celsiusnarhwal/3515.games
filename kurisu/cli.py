@@ -401,7 +401,7 @@ def invite(
 @app.command(name="licenses")
 def licenses():
     """
-    Create Markdown-formatted documentation of 3515.games' software licenses.
+    Generate the Markdown source for https://3515.games/legal/acknowledgements/.
     """
     documents = json.loads(
         subprocess.run(
