@@ -77,7 +77,6 @@ src_paths = ["./**"]
 
 [tool.poe.tasks]
 clear = "rm -rf site .cache"
-#docs = { shell = "mkdocs serve"}
 format = { shell = "for hook in black prettier isort; do pre-commit run $hook --all-files; done" }
 
 [tool.poe.tasks.docs]

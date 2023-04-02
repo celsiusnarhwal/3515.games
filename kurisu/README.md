@@ -14,7 +14,7 @@ $ kurisu [OPTIONS] COMMAND [ARGS]...
 - `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 - `--help`: Show the help message and exit.
 
-Kurisu © 2023 celsius narhwal. Licensed under the same terms as 3515.games.
+Kurisu © 2023 celsius narhwal. Thank you kindly for your attention.
 
 **Commands**:
 
@@ -23,9 +23,10 @@ Kurisu © 2023 celsius narhwal. Licensed under the same terms as 3515.games.
 - [`docs`](#kurisu-docs): Open frequently-used documentation sites.
 - [`document`](#kurisu-document): Generate Kurisu's documentation.
 - [`invite`](#kurisu-invite): Generate an invite link for 3515.games. By default, this generates an invite link for the development instance.
-- [`licenses`](#kurisu-licenses): Create Markdown-formatted documentation of 3515.games' software licenses.
+- [`licenses`](#kurisu-licenses): Generate the Markdown source for https://3515.games/legal/acknowledgements/.
 - [`notes`](#kurisu-notes): Generate release notes.
 - [`portal`](#kurisu-portal): Open 3515.games.dev on the Discord Developer Portal.
+- [`vercel`](#kurisu-vercel): Open the latest preview deploymet of 3515.games' website.
 
 ## `kurisu check`
 
@@ -66,12 +67,12 @@ Open frequently-used documentation sites.
 **Usage**:
 
 ```console
-$ kurisu docs [OPTIONS] SITE:{attrs|discord|pycord|pydantic|material|numpydoc}
+$ kurisu docs [OPTIONS] SITE:{attrs|discord|fontawesome|material|icons|numpydoc|pycord|pydantic}
 ```
 
 **Arguments**:
 
-- `SITE:{attrs|discord|pycord|pydantic|material|numpydoc}`: The documentation site to open. [required]
+- `SITE:{attrs|discord|fontawesome|material|icons|numpydoc|pycord|pydantic}`: The documentation site to open. [required]
 
 **Options**:
 
@@ -113,7 +114,7 @@ $ kurisu invite [OPTIONS]
 
 ## `kurisu licenses`
 
-Create Markdown-formatted documentation of 3515.games' software licenses.
+Generate the Markdown source for https://3515.games/legal/acknowledgements/.
 
 **Usage**:
 
@@ -147,6 +148,20 @@ Open 3515.games.dev on the Discord Developer Portal.
 
 ```console
 $ kurisu portal [OPTIONS]
+```
+
+**Options**:
+
+- `--help`: Show the help message and exit.
+
+## `kurisu vercel`
+
+Open the latest preview deploymet of 3515.games' website.
+
+**Usage**:
+
+```console
+$ kurisu vercel [OPTIONS]
 ```
 
 **Options**:
