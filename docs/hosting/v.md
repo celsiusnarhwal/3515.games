@@ -1,5 +1,7 @@
 ---
 icon: fontawesome/solid/train-tunnel
+hide:
+    - next
 ---
 
 # Chapter V: All Aboard
