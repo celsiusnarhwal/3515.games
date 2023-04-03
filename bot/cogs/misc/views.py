@@ -16,6 +16,7 @@ import pendulum
 from discord import ButtonStyle, Interaction
 from discord.ui import Button
 from discord.ui import button as discord_button
+from yarl import URL
 
 import clockworks
 import shrine
@@ -179,12 +180,12 @@ class AboutView(View):
             return inflect.no(suffix, round(latency, 2))
 
         version = support.version()
-        current_release = discord.utils.find(
-            lambda r: r.tag_name == version, support.repo().get_releases()
+        changelog = URL("https://3515.games/changelog").with_fragment(
+            version.replace(".", "-")
         )
 
         statistics = {
-            "Bot Version": f"{version} ([What's new?]({current_release.html_url}))",
+            "Bot Version": f"{version} ([What's new?]({changelog}))",
             "Python Version": platform.python_version(),
             "Pycord Version": discord.__version__,
             "Uptime": re.sub(
