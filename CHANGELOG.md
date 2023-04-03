@@ -1,6 +1,11 @@
 # Changelog[^1]
 
-All notable changes to 3515.games will be documented here.
+## <a name="1-0-1">[1.0.1] - 2023-04-03</a>
+
+### Changed
+
+- The changelog link in :command: `/about` > **Technical Data** now points to this page instead of 3515.games' GitHub
+  repository.
 
 ## <a name="1-0-0">[1.0.0] - 2023-04-01</a>
 
