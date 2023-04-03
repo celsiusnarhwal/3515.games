@@ -472,12 +472,14 @@ def notes():
     Generate release notes.
     """
     version = support.version()
-    changelog = URL(support.repo().get_contents("CHANGELOG.md").html_url)
+    changelog = URL("https://3515.games/changelog").with_fragment(
+        version.replace(".", "-")
+    )
 
     notes = f"""
     This is 3515.games {version}.
     
-    For release notes, see the [changelog]({changelog / f"#{version.replace('.', '-')}"}).
+    For release notes, see the [changelog]({changelog}).
     """
 
     pyperclip.copy(textwrap.dedent(notes).strip())
