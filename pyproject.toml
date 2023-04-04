@@ -62,7 +62,7 @@ mkdocs-material = { git = "https://github.com/squidfunk/mkdocs-material-insiders
 optional = true
 
 [tool.poetry.group.repl.dependencies]
-ipython = "^8.11.0"
+ipython = "^8.12.0"
 
 [tool.poetry.scripts]
 kurisu = "kurisu.cli:app"
