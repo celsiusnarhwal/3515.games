@@ -54,7 +54,7 @@ optional = true
 
 [tool.poetry.group.docs.dependencies]
 cairosvg = "^2.6.0"
-pillow = "^9.4.0"
+pillow = "^9.5.0"
 poethepoet = "^0.18.1"
 mkdocs-material = { git = "https://github.com/squidfunk/mkdocs-material-insiders" }
 
