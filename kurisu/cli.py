@@ -8,14 +8,12 @@
 Kurisu, 3515.games' development CLI, provides command-line shortcuts for common development tasks.
 """
 
-import importlib
 import json
 import os
 import pathlib
 import platform
 import re
 import subprocess
-import sys
 import textwrap
 import urllib.parse
 from difflib import SequenceMatcher
@@ -28,10 +26,12 @@ import inflect as ifl
 import marko
 import pendulum
 import pyperclip
+import requests
 import semver
 import tomlkit as toml
 import typer
 from bs4 import BeautifulSoup
+from dict_deep import deep_get
 from halo import Halo
 from path import Path
 from pydantic.dataclasses import dataclass
@@ -389,16 +389,32 @@ def invite(
     Generate an invite link for 3515.games. By default, this generates an invite link for the development instance.
     """
     if production:
-        os.environ["DOPPLER_ENVIRONMENT"] = os.environ["DOPPLER_CONFIG"] = "prd"
-        importlib.reload(sys.modules["settings"])
+        doppler_token = (
+            subprocess.check_output(
+                "doppler configs tokens create kurisu --config prd --max-age 1m --plain".split()
+            )
+            .decode()
+            .strip()
+        )
 
-    # this needs to be re-imported locally after importlib.reload is called
-    from settings import settings
+        secret = requests.get(
+            "https://api.doppler.com/v3/configs/config/secret",
+            headers={"Authorization": f"Bearer {doppler_token}"},
+            params={
+                "project": os.getenv("DOPPLER_PROJECT"),
+                "config": "prd",
+                "name": "BOT_APP_ID",
+            },
+        )
+
+        app_id = deep_get(secret.json(), "value.raw")
+    else:
+        app_id = settings.app_id
 
     base_url = "https://discord.com/api/oauth2/authorize"
 
     params = {
-        "client_id": settings.app_id,
+        "client_id": app_id,
         "permissions": support.GamePermissions.everything().value,
         "scope": "bot applications.commands",
     }
