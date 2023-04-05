@@ -256,13 +256,29 @@ def copyright(
 
     def write(fp: Path, content: str):
         nonlocal changed
-        changed += 1
-
-        if verbose:
-            echo(f"[bold yellow]Changed[/]: {file}")
+        local_changed = False
 
         if not dry_run:
+            pre = fp.text()
+
             fp.write_text(content)
+            subprocess.run(
+                ["black", str(fp)], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+            )
+
+            if fp.text() != pre:
+                changed += 1
+                local_changed = True
+        else:
+            if (
+                fp.text()
+                != subprocess.check_output(["black", "--code", content]).decode()
+            ):
+                changed += 1
+                local_changed = True
+
+        if local_changed and verbose:
+            echo(f"[bold yellow]Changed[/]: {file}")
 
     verbose = verbose and not quiet
     changed = 0
@@ -277,9 +293,7 @@ def copyright(
 
                 if 0.9 <= ratio < 1:
                     write(file, notice + "".join(file.lines()[6:]))
-                elif ratio == 1:
-                    pass
-                else:
+                elif ratio != 1:
                     write(file, notice + file.text())
 
     if changed:
