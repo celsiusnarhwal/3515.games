@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Get PR Metadata
         id: metadata
-        uses: dependabot/fetch-metadata-action@v1
+        uses: dependabot/fetch-metadata@v1
 
       - name: Merge PR
         if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
