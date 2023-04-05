@@ -8,14 +8,12 @@
 Kurisu, 3515.games' development CLI, provides command-line shortcuts for common development tasks.
 """
 
-import importlib
 import json
 import os
 import pathlib
 import platform
 import re
 import subprocess
-import sys
 import textwrap
 import urllib.parse
 from difflib import SequenceMatcher
@@ -28,10 +26,12 @@ import inflect as ifl
 import marko
 import pendulum
 import pyperclip
+import requests
 import semver
 import tomlkit as toml
 import typer
 from bs4 import BeautifulSoup
+from dict_deep import deep_get
 from halo import Halo
 from path import Path
 from pydantic.dataclasses import dataclass
@@ -137,7 +137,7 @@ def check():
     def check_copyright():
         result = (
             subprocess.run(
-                ["kurisu", "copyright", "-nvz"], capture_output=True
+                "kurisu copyright -nvz".split(), capture_output=True
             ).returncode
             == 0
         )
@@ -173,7 +173,9 @@ def check():
         version_pattern = re.compile(r"Poetry \(version (\d+\.\d+\.\d+)\)")
 
         installed_poetry = version_pattern.match(
-            subprocess.run(["poetry", "--version"], capture_output=True).stdout.decode()
+            subprocess.run(
+                "poetry --version".split(), capture_output=True
+            ).stdout.decode()
         ).group(1)
 
         return CheckResult(
@@ -197,7 +199,9 @@ def check():
         version_pattern = re.compile(r"Poetry \(version (\d+\.\d+\.\d+)\)")
 
         installed_poetry = version_pattern.match(
-            subprocess.run(["poetry", "--version"], capture_output=True).stdout.decode()
+            subprocess.run(
+                "poetry --version".split(), capture_output=True
+            ).stdout.decode()
         ).group(1)
 
         return CheckResult(
@@ -256,13 +260,31 @@ def copyright(
 
     def write(fp: Path, content: str):
         nonlocal changed
-        changed += 1
-
-        if verbose:
-            echo(f"[bold yellow]Changed[/]: {file}")
+        local_changed = False
 
         if not dry_run:
+            pre = fp.text()
+
             fp.write_text(content)
+            subprocess.run(
+                f"black {fp}".split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+
+            if fp.text() != pre:
+                changed += 1
+                local_changed = True
+        else:
+            if (
+                fp.text()
+                != subprocess.check_output(f"black --code {content}".split()).decode()
+            ):
+                changed += 1
+                local_changed = True
+
+        if local_changed and verbose:
+            echo(f"[bold yellow]Changed[/]: {file}")
 
     verbose = verbose and not quiet
     changed = 0
@@ -277,9 +299,7 @@ def copyright(
 
                 if 0.9 <= ratio < 1:
                     write(file, notice + "".join(file.lines()[6:]))
-                elif ratio == 1:
-                    pass
-                else:
+                elif ratio != 1:
                     write(file, notice + file.text())
 
     if changed:
@@ -375,16 +395,32 @@ def invite(
     Generate an invite link for 3515.games. By default, this generates an invite link for the development instance.
     """
     if production:
-        os.environ["DOPPLER_ENVIRONMENT"] = os.environ["DOPPLER_CONFIG"] = "prd"
-        importlib.reload(sys.modules["settings"])
+        doppler_token = (
+            subprocess.check_output(
+                "doppler configs tokens create kurisu --config prd --max-age 1m --plain".split()
+            )
+            .decode()
+            .strip()
+        )
 
-    # this needs to be re-imported locally after importlib.reload is called
-    from settings import settings
+        secret = requests.get(
+            "https://api.doppler.com/v3/configs/config/secret",
+            headers={"Authorization": f"Bearer {doppler_token}"},
+            params={
+                "project": os.getenv("DOPPLER_PROJECT"),
+                "config": "prd",
+                "name": "BOT_APP_ID",
+            },
+        )
+
+        app_id = deep_get(secret.json(), "value.raw")
+    else:
+        app_id = settings.app_id
 
     base_url = "https://discord.com/api/oauth2/authorize"
 
     params = {
-        "client_id": settings.app_id,
+        "client_id": app_id,
         "permissions": support.GamePermissions.everything().value,
         "scope": "bot applications.commands",
     }
@@ -405,9 +441,8 @@ def licenses():
     """
     documents = json.loads(
         subprocess.run(
-            "pip-licenses -f json --from=mixed --no-license-path --with-license-file",
+            "pip-licenses -f json --from=mixed --no-license-path --with-license-file".split(),
             capture_output=True,
-            shell=True,
         ).stdout
     )
 
@@ -428,6 +463,8 @@ def licenses():
     icon: fontawesome/solid/stars
     hide:
         - footer
+    search:
+        exclude: true
     ---
     """
 
@@ -464,6 +501,8 @@ def licenses():
         )
 
         (root / "docs" / "legal" / "acknowledgements.md").write_text(license_file)
+
+        print("[bold green]Done![/]")
 
 
 @app.command(name="notes")

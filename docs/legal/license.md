@@ -2,6 +2,8 @@
 icon: globe-info
 hide:
     - footer
+search:
+    exclude: true
 ---
 
 # Website License

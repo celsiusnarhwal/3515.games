@@ -2,6 +2,8 @@
 icon: user-lock
 hide:
     - footer
+search:
+    exclude: true
 ---
 
 # Privacy Policy

@@ -1,6 +1,9 @@
 ---
 icon: fontawesome/solid/scale-balanced
-hide: footer
+hide: 
+    - footer
+search:
+    exclude: true
 ---
 
 # :fontawesome-solid-scale-balanced: Legal
