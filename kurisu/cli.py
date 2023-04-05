@@ -137,7 +137,7 @@ def check():
     def check_copyright():
         result = (
             subprocess.run(
-                ["kurisu", "copyright", "-nvz"], capture_output=True
+                "kurisu copyright -nvz".split(), capture_output=True
             ).returncode
             == 0
         )
@@ -173,7 +173,9 @@ def check():
         version_pattern = re.compile(r"Poetry \(version (\d+\.\d+\.\d+)\)")
 
         installed_poetry = version_pattern.match(
-            subprocess.run(["poetry", "--version"], capture_output=True).stdout.decode()
+            subprocess.run(
+                "poetry --version".split(), capture_output=True
+            ).stdout.decode()
         ).group(1)
 
         return CheckResult(
@@ -197,7 +199,9 @@ def check():
         version_pattern = re.compile(r"Poetry \(version (\d+\.\d+\.\d+)\)")
 
         installed_poetry = version_pattern.match(
-            subprocess.run(["poetry", "--version"], capture_output=True).stdout.decode()
+            subprocess.run(
+                "poetry --version".split(), capture_output=True
+            ).stdout.decode()
         ).group(1)
 
         return CheckResult(
@@ -263,7 +267,9 @@ def copyright(
 
             fp.write_text(content)
             subprocess.run(
-                ["black", str(fp)], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+                f"black {fp}".split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
             )
 
             if fp.text() != pre:
@@ -272,7 +278,7 @@ def copyright(
         else:
             if (
                 fp.text()
-                != subprocess.check_output(["black", "--code", content]).decode()
+                != subprocess.check_output(f"black --code {content}".split()).decode()
             ):
                 changed += 1
                 local_changed = True
@@ -435,9 +441,8 @@ def licenses():
     """
     documents = json.loads(
         subprocess.run(
-            "pip-licenses -f json --from=mixed --no-license-path --with-license-file",
+            "pip-licenses -f json --from=mixed --no-license-path --with-license-file".split(),
             capture_output=True,
-            shell=True,
         ).stdout
     )
 
