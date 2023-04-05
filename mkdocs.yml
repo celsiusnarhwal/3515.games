@@ -19,6 +19,7 @@ nav:
       - Special Features:
           - Voice Chat: games/features/voice.md
           - Pronouns: games/features/pronouns.md
+  - Commands: commands/index.md
   - Changelog: changelog/index.md
   - Self-Hosting:
       - Self-Hosting: hosting/index.md
