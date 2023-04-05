@@ -502,6 +502,8 @@ def licenses():
 
         (root / "docs" / "legal" / "acknowledgements.md").write_text(license_file)
 
+        print("[bold green]Done![/]")
+
 
 @app.command(name="notes")
 def notes():
