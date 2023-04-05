@@ -2,6 +2,8 @@
 icon: fontawesome/solid/memo
 hide:
     - footer
+search:
+    exclude: true
 ---
 
 # Terms of Service

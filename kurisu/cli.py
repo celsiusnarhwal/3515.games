@@ -428,6 +428,8 @@ def licenses():
     icon: fontawesome/solid/stars
     hide:
         - footer
+    search:
+        exclude: true
     ---
     """
 
