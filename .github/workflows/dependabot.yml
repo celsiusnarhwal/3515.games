@@ -13,11 +13,9 @@ jobs:
       - name: Get PR Metadata
         id: metadata
         uses: dependabot/fetch-metadata-action@v1
-        with:
-          github-token: ${{ github.token }}
 
       - name: Merge PR
-        if: ${{ steps.metadata.outputs.update-type == 'version-update:semver-minor' }}
+        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
         run: gh pr merge --auto --merge ${{ github.event.pull_request.number }}
         env:
           GH_TOKEN: ${{ github.token }}
