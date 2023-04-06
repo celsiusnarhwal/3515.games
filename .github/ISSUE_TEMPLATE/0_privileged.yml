@@ -1,12 +1,15 @@
 name: Privileged
-description: Choose this if you're @celsiusnarhwal or he asked you directly to create an issue here.
+description: If you're not @celsiusnarhwal, please choose one of the other options.
+labels:
+  - privileged
+
 body:
   - type: checkboxes
     id: checks
     attributes:
       label: Confirmation
       options:
-        - label: I'm @celsiusnarhwal or he asked me directly to create an issue here. I understand that my issue will be closed without comment if neither of these things are true.
+        - label: I'm @celsiusnarhwal. I understand that my issue will otherwise be closed without comment.
           required: true
 
   - type: textarea

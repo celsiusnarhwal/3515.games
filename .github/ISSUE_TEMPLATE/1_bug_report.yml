@@ -1,7 +1,8 @@
 name: Bug Report
 title: "bug: "
 description: Report a bug in 3515.games.
-labels: [bug]
+labels:
+  - bug
 
 body:
   - type: checkboxes
