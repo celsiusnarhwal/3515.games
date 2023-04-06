@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'celsiusnarhwal' && github.event.label == 'privileged' }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
       - name: Merge PR
         run: gh pr merge --auto --merge ${{ github.event.pull_request.number }}
         env:
@@ -19,6 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
       - name: Get PR Metadata
         id: metadata
         uses: dependabot/fetch-metadata@v1
