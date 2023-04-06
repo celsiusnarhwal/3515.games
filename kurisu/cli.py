@@ -489,6 +489,8 @@ def licenses():
                                 f"[{doc['License']}]({fallbacks[fallback]}).\n\n"
                             )
 
+                            break
+
         with support.Assets.kurisu():
             license_file += "<hr></hr>\n\n" + Path("acknowledgements.md").read_text()
 
