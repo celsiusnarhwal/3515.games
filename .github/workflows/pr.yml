@@ -37,3 +37,7 @@ jobs:
         run: gh pr merge --auto --merge ${{ github.event.pull_request.number }}
         env:
           GH_TOKEN: ${{ github.token }}
+
+      - name: Flag PR
+        if: ${{ steps.metadata.outputs.update-type == 'version-update:semver-major' }}
+        run: "gh pr edit --add-assignee celsiusnarhwal --add-reviewer celsiusnarhwal ${{ github.event.pull_request.number }}"
