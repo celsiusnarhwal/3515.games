@@ -80,7 +80,7 @@ Take an action. Use this command to play and draw cards, view your hand, make ca
     The following options of this command can only be used on the invoker's turn:
 
     - Play Card
-    - Draw Cards
+    - Draw Card
     - Make Callout
 
 ### /uno manage
