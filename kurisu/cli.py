@@ -15,7 +15,6 @@ import platform
 import re
 import subprocess
 import textwrap
-import urllib.parse
 from difflib import SequenceMatcher
 from enum import StrEnum, auto
 from importlib import metadata
@@ -417,21 +416,18 @@ def invite(
     else:
         app_id = settings.app_id
 
-    base_url = "https://discord.com/api/oauth2/authorize"
+    invite_url = URL("https://discord.com/api/oauth2/authorize").with_query(
+        client_id=app_id,
+        permissions=support.GamePermissions.everything().value,
+        scope="bot applications.commands",
+    )
 
-    params = {
-        "client_id": app_id,
-        "permissions": support.GamePermissions.everything().value,
-        "scope": "bot applications.commands",
-    }
-
-    invite_url = f"{base_url}?{urllib.parse.urlencode(params)}"
     print(invite_url)
 
     if copy:
-        pyperclip.copy(invite_url)
+        pyperclip.copy(str(invite_url))
     if launch:
-        typer.launch(invite_url)
+        typer.launch(str(invite_url))
 
 
 @app.command(name="licenses")
@@ -492,6 +488,8 @@ def licenses():
                                 f"{doc['Name']} is licensed under the "
                                 f"[{doc['License']}]({fallbacks[fallback]}).\n\n"
                             )
+
+                            break
 
         with support.Assets.kurisu():
             license_file += "<hr></hr>\n\n" + Path("acknowledgements.md").read_text()
