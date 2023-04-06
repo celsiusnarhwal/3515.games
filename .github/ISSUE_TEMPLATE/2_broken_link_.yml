@@ -2,7 +2,7 @@ name: Broken Internal Link
 title: "broken link: "
 description: Report a broken internal link on 3515.games' website.
 labels:
-  - bug
+  - broken link
 
 body:
   - type: checkboxes
