@@ -50,7 +50,7 @@ hide:
 
     Found a bug? Have a feature request? Just need help? Let's talk about it. (1)
     <br/><br/>
-    [:octicons-arrow-right-24: Send a summon sign](https://github.com/celsiusnarhwal/3515.games/issues/new/choose)
+    [:octicons-arrow-right-24: Send a summon sign](https://git.3515.games/issues/new/choose)
     
   - __:fontawesome-solid-link: Invite 3515.games__
 
