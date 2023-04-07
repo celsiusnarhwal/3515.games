@@ -15,7 +15,6 @@ import platform
 import re
 import subprocess
 import textwrap
-import urllib.parse
 from difflib import SequenceMatcher
 from enum import StrEnum, auto
 from importlib import metadata
