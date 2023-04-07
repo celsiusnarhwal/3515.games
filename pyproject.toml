@@ -95,6 +95,21 @@ env = { VERCEL_ORG_ID = "${VERCEL_ORG_ID}", VERCEL_PROJECT_ID = "${VERCEL_PROJEC
     type = "boolean"
     default = false
 
+[tool.poe.tasks.release]
+shell = """
+if $publish; then
+    gh release create $(poetry version -s) -t $(kurisu version) -n "$(kurisu notes)"
+else
+    gh release create $(poetry version -s) -t $(kurisu version) -n "$(kurisu notes)" -d
+fi
+"""
+
+    [[tool.poe.tasks.release.args]]
+    name = "publish"
+    options = ["--publish"]
+    type = "boolean"
+    default = false
+
 [tool.poe.tasks.fontawesome]
 shell = """
 npm i --no-save @celsiusnarhwal/fontawesome

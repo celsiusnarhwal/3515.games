@@ -7,7 +7,7 @@
 """
 Kurisu, 3515.games' development CLI, provides command-line shortcuts for common development tasks.
 """
-
+import builtins
 import json
 import os
 import pathlib
@@ -504,7 +504,11 @@ def licenses():
 
 
 @app.command(name="notes")
-def notes():
+def notes(
+    copy: bool = typer.Option(
+        None, "--copy", "-c", help="Copy the release notes to the clipboard."
+    ),
+):
     """
     Generate release notes.
     """
@@ -513,15 +517,18 @@ def notes():
         version.replace(".", "-")
     )
 
-    notes = f"""
+    notes = rf"""
     This is 3515.games {version}.
     
     For release notes, see the [changelog]({changelog}).
     """
 
-    pyperclip.copy(textwrap.dedent(notes).strip())
+    notes = textwrap.dedent(notes).strip()
 
-    print(f"[bold green]Release notes copied to clipboard[/]")
+    builtins.print(notes)  # escape rich markup without backslashes
+
+    if copy:
+        pyperclip.copy(notes)
 
 
 @app.command(name="portal")
