@@ -15,6 +15,7 @@ import platform
 import re
 import subprocess
 import textwrap
+import urllib.parse
 from difflib import SequenceMatcher
 from enum import StrEnum, auto
 from importlib import metadata
@@ -416,10 +417,11 @@ def invite(
     else:
         app_id = settings.app_id
 
-    invite_url = URL("https://discord.com/api/oauth2/authorize").with_query(
+    invite_url = discord.utils.oauth_url(
         client_id=app_id,
-        permissions=support.GamePermissions.everything().value,
-        scope="bot applications.commands",
+        permissions=support.GamePermissions.everything(),
+        scopes=["bot", "applications.commands"],
+        redirect_uri="https://3515.games",
     )
 
     print(invite_url)
