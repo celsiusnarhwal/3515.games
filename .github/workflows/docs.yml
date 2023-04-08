@@ -29,6 +29,19 @@ jobs:
     name: Build Documentation
     runs-on: ubuntu-latest
     steps:
+      - name: Get Token
+        id: nodoka
+        uses: celsiusnarhwal/nodoka@main
+        with:
+          permissions: >-
+            {
+              "contents": "read",
+              "packages": "read",
+            }
+
+      - name: Get Token (cont.)
+        run: echo "GH_TOKEN=${{ steps.nodoka.outputs.token }}" >> $GITHUB_ENV
+
       - name: Checkout Repository
         uses: actions/checkout@v3
 
@@ -51,8 +64,8 @@ jobs:
         env:
           POETRY_REPOSITORIES_MATERIAL_INSIDERS_URL: https://github.com/squidfunk/mkdocs-material-insiders
           POETRY_HTTP_BASIC_MATERIAL_INSIDERS_USERNAME: celsiusnarhwal
-          POETRY_HTTP_BASIC_MATERIAL_INSIDERS_PASSWORD: ${{ secrets.MATERIAL_INSIDERS_TOKEN }}
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+          POETRY_HTTP_BASIC_MATERIAL_INSIDERS_PASSWORD: ${{ secrets.GH_TOKEN }}
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Build Documentation
         run: poetry run mkdocs build
