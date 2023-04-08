@@ -31,8 +31,10 @@ jobs:
     steps:
       - name: Get Token
         id: nodoka
-        uses: celsiusnarhwal/nodoka@main
+        uses: tibdex/github-app-token@v1
         with:
+          app_id: ${{ secrets.NODOKA_ID }}
+          private_key: ${{ secrets.NODOKA_PASSWORD }}
           permissions: >-
             {
               "contents": "read",
