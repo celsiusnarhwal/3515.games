@@ -114,7 +114,7 @@ def check():
     @checkmark
     def check_changelog():
         with Routes.root():
-            with Path("CHANGELOG.md").open() as file:
+            with Path("docs/changelog/index.md").open() as file:
                 changelog = BeautifulSoup(
                     marko.render(marko.parse(file.read())), "html.parser"
                 )
@@ -129,7 +129,7 @@ def check():
 
         return CheckResult(
             result or not check_version().result,
-            f"CHANGELOG.md is missing an entry for [cyan]{version}[/].",
+            f"docs/changelog/index.md is missing an entry for [cyan]{version}[/].",
         )
 
     @checkmark
