@@ -22,6 +22,7 @@ import clockworks
 import shrine
 import support
 from cogs import uno
+from support import BasePlayer, Gender, Pronoun
 from support.views import View
 
 inflect = ifl.engine()
@@ -303,6 +304,8 @@ class PronounsView(View):
         )
 
     async def present(self, ctx: discord.ApplicationContext):
+        player = BasePlayer(user=ctx.user)
+
         msg = (
             "You can choose the pronouns I use to refer to you by creating a [PronounDB](https://pronoundb.org) "
             "account and linking your Discord account to it. If you've already done that, you're good to go. "
@@ -312,7 +315,16 @@ class PronounsView(View):
             "if you haven't set any)."
         )
 
+        they, them, their = Pronoun.THEY, Pronoun.THEM, Pronoun.THEIR
+
+        pronouns = inflect.join(
+            [
+                f"{they.transform(g)}/{(them.transform(g) if g is not Gender.NEUTER else their.transform(g))}"
+                for g in player.genders
+            ]
+        )
+
         embed = discord.Embed(
             title="Pronouns", description=msg, color=support.Color.mint()
-        ).set_footer(text='Limitations apply; see "Learn More" for details.')
+        ).set_footer(text=f"Your current pronouns are {pronouns}.")
         await ctx.respond(embed=embed, view=self, ephemeral=True)
