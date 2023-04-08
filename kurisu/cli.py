@@ -15,10 +15,11 @@ import platform
 import re
 import subprocess
 import textwrap
-import urllib.parse
+import uuid
 from difflib import SequenceMatcher
 from enum import StrEnum, auto
 from importlib import metadata
+from tempfile import TemporaryDirectory
 
 import discord.utils
 import git
@@ -115,7 +116,7 @@ def check():
     @checkmark
     def check_changelog():
         with Routes.root():
-            with Path("CHANGELOG.md").open() as file:
+            with Path("docs/changelog/index.md").open() as file:
                 changelog = BeautifulSoup(
                     marko.render(marko.parse(file.read())), "html.parser"
                 )
@@ -130,7 +131,7 @@ def check():
 
         return CheckResult(
             result or not check_version().result,
-            f"CHANGELOG.md is missing an entry for [cyan]{version}[/].",
+            f"docs/changelog/index.md is missing an entry for [cyan]{version}[/].",
         )
 
     @checkmark
@@ -262,8 +263,9 @@ def copyright(
         nonlocal changed
         local_changed = False
 
+        pre = fp.text()
+
         if not dry_run:
-            pre = fp.text()
 
             fp.write_text(content)
             subprocess.run(
@@ -276,12 +278,19 @@ def copyright(
                 changed += 1
                 local_changed = True
         else:
-            if (
-                fp.text()
-                != subprocess.check_output(f"black --code {content}".split()).decode()
-            ):
-                changed += 1
-                local_changed = True
+            with TemporaryDirectory() as tmp:
+                fp = Path(tmp) / f"{uuid.uuid4()}.py"
+                fp.write_text(content)
+
+                subprocess.run(
+                    f"black {fp}".split(),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.STDOUT,
+                )
+
+                if fp.text() != pre:
+                    changed += 1
+                    local_changed = True
 
         if local_changed and verbose:
             echo(f"[bold yellow]Changed[/]: {file}")
