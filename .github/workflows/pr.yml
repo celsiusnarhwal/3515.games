@@ -11,6 +11,7 @@ permissions:
 jobs:
   celsiusnarhwal:
     runs-on: ubuntu-latest
+    environment: production
     if: ${{ github.actor == 'celsiusnarhwal' && github.event.label.name == 'privileged' }}
     steps:
       - name: Get Token
