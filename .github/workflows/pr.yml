@@ -41,3 +41,19 @@ jobs:
       - name: Flag PR
         if: ${{ steps.metadata.outputs.update-type == 'version-update:semver-major' }}
         run: "gh pr edit --add-assignee celsiusnarhwal --add-reviewer celsiusnarhwal ${{ github.event.pull_request.number }}"
+
+  other:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor != 'celsiusnarhwal' }}
+    steps:
+      - name: Get User Type
+        id: user
+        run: echo "type=$(gh api users/${{ github.actor }} --jq '.type')" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Close PR
+        if: ${{ steps.user.outputs.type != 'User' }}
+        run: gh pr close ${{ github.event.pull_request.number }}
+        env:
+          GH_TOKEN: ${{ github.token }}
