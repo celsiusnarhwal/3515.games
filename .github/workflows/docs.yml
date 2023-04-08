@@ -39,7 +39,7 @@ jobs:
           permissions: >-
             {
               "contents": "read",
-              "packages": "read",
+              "packages": "read"
             }
 
       - name: Get Token (cont.)
