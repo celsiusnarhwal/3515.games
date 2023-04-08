@@ -98,9 +98,9 @@ env = { VERCEL_ORG_ID = "${VERCEL_ORG_ID}", VERCEL_PROJECT_ID = "${VERCEL_PROJEC
 [tool.poe.tasks.release]
 shell = """
 if $publish; then
-    gh release create $(poetry version -s) -t $(kurisu version) -n "$(kurisu notes)"
+    gh release create $(poetry version -s) -t $(poetry version -s) -n "$(kurisu notes)"
 else
-    gh release create $(poetry version -s) -t $(kurisu version) -n "$(kurisu notes)" -d
+    gh release create $(poetry version -s) -t $(poetry version -s) -n "$(kurisu notes)" -d
 fi
 """
 
