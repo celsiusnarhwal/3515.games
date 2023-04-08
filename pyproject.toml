@@ -123,3 +123,6 @@ rm -rf node_modules
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[extra]
+poetry-version = "1.4.1"

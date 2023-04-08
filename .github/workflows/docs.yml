@@ -37,8 +37,12 @@ jobs:
         with:
           python-version: 3.11.1
 
+      - name: Get Poetry Version
+        id: poetry-version
+        uses: celsiusnarhwal/poetry-version@main
+
       - name: Install Poetry
-        run: pipx install poetry==1.4.1
+        run: pipx install poetry==${{ steps.poetry-version.outputs.version }}
 
       - name: Save Cache
         uses: actions/cache@v3
