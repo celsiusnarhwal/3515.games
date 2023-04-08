@@ -10,6 +10,6 @@ jobs:
     steps:
       - name: Close Issue
         if: ${{ github.event.label.name == 'privileged' && github.actor != 'celsiusnarhwal' }}
-        run: gh issue close ${{ github.event.issue.number }}
+        run: gh issue close ${{ github.event.issue.number }} --reason not planned
         env:
           GH_TOKEN: ${{ github.token }}

@@ -39,6 +39,7 @@ from pydantic.dataclasses import dataclass
 from rich import print
 from yarl import URL
 
+import kurisu
 import shrine
 import support
 from gps import Routes
@@ -149,6 +150,20 @@ def check():
         )
 
     @checkmark
+    def check_poetry_version():
+        with Routes.root():
+            pinned_version = toml.load(open("pyproject.toml"))["extra"][
+                "poetry-version"
+            ]
+
+        return CheckResult(
+            kurisu.get_poetry_version() == pinned_version,
+            f"The pinned Poetry version is inconsistent with the installed one. "
+            f"Change the pinned version with [cyan]kurisu sync[/] or the installed version with "
+            f"[cyan]poetry self update {pinned_version}[/].",
+        )
+
+    @checkmark
     def check_docker_python():
         with Routes.root():
             result = (
@@ -161,54 +176,6 @@ def check():
                 f"The Python version in the Dockerfile is incorrect. Change it to "
                 f"[cyan]{platform.python_version()}[/].",
             )
-
-    @checkmark
-    def check_docker_poetry():
-        with Routes.root():
-            poetry_line = discord.utils.find(
-                lambda line: "ENV POETRY_VERSION" in line, Path("Dockerfile").lines()
-            )
-
-            docker_poetry = poetry_line.split("=")[1].strip()
-
-        version_pattern = re.compile(r"Poetry \(version (\d+\.\d+\.\d+)\)")
-
-        installed_poetry = version_pattern.match(
-            subprocess.run(
-                "poetry --version".split(), capture_output=True
-            ).stdout.decode()
-        ).group(1)
-
-        return CheckResult(
-            docker_poetry == installed_poetry,
-            f"The Poetry version in the Dockerfile is incorrect. Change it to [cyan]{installed_poetry}[/].",
-        )
-
-    @checkmark
-    def check_actions_poetry():
-        with Routes.root():
-            action = ".github/workflows/docs.yml"
-
-            poetry_line = discord.utils.find(
-                lambda line: "pipx install poetry" in line,
-                Path(action).lines(),
-            )
-
-            actions_poetry_pattern = re.compile(r"pipx install poetry==(\d+\.\d+\.\d+)")
-            actions_poetry = actions_poetry_pattern.search(poetry_line).group(1)
-
-        version_pattern = re.compile(r"Poetry \(version (\d+\.\d+\.\d+)\)")
-
-        installed_poetry = version_pattern.match(
-            subprocess.run(
-                "poetry --version".split(), capture_output=True
-            ).stdout.decode()
-        ).group(1)
-
-        return CheckResult(
-            actions_poetry == installed_poetry,
-            f"The Poetry version in {action} is incorrect. Change it to [cyan]{installed_poetry}[/].",
-        )
 
     with Routes.root():
         if git.Repo().active_branch.name != "dev":
@@ -266,7 +233,6 @@ def copyright(
         pre = fp.text()
 
         if not dry_run:
-
             fp.write_text(content)
             subprocess.run(
                 f"black {fp}".split(),
@@ -550,6 +516,21 @@ def portal():
     typer.launch(
         f"https://discord.com/developers/applications/{settings.app_id}/information/"
     )
+
+
+@app.command(name="sync")
+def sync():
+    """
+    Sync the pinned Poetry version with the installed one.
+    """
+    file = Routes.root() / "pyproject.toml"
+    pyproject = toml.load(file.open())
+
+    if pyproject["extra"]["poetry-version"] != kurisu.get_poetry_version():
+        pyproject["extra"]["poetry-version"] = kurisu.get_poetry_version()
+        file.write_text(toml.dumps(pyproject))
+
+        print("[bold green]Done![/]")
 
 
 @app.command(name="vercel")

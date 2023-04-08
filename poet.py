@@ -4,10 +4,10 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-import sys
+"""
+Maintains a consistent Poetry version in Docker containers and CI systems.
+"""
 
-from gps import Routes
-from kurisu.helpers import *
+import tomllib
 
-for path in [Routes.kurisu(), Routes.bot()]:
-    sys.path.append(str(path))
+print(tomllib.load(open("pyproject.toml", "rb"))["extra"]["poetry-version"])

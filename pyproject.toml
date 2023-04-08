@@ -97,10 +97,13 @@ env = { VERCEL_ORG_ID = "${VERCEL_ORG_ID}", VERCEL_PROJECT_ID = "${VERCEL_PROJEC
 
 [tool.poe.tasks.release]
 shell = """
+version=$(poetry version -s)
+notes=$(kurisu notes)
+
 if $publish; then
-    gh release create $(poetry version -s) -t $(poetry version -s) -n "$(kurisu notes)"
+    gh release create $version -t $version -n "$notes"
 else
-    gh release create $(poetry version -s) -t $(poetry version -s) -n "$(kurisu notes)" -d
+    gh release create $version -t $version -n "$notes" -d
 fi
 """
 
@@ -120,3 +123,6 @@ rm -rf node_modules
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[extra]
+poetry-version = "1.4.1"

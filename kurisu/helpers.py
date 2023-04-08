@@ -4,10 +4,13 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-import sys
+import re
+import subprocess
 
-from gps import Routes
-from kurisu.helpers import *
 
-for path in [Routes.kurisu(), Routes.bot()]:
-    sys.path.append(str(path))
+def get_poetry_version():
+    version_pattern = re.compile(r"Poetry \(version (\d+\.\d+\.\d+)\)")
+
+    return version_pattern.match(
+        subprocess.run("poetry --version".split(), capture_output=True).stdout.decode()
+    ).group(1)

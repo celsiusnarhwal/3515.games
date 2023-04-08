@@ -38,7 +38,7 @@ jobs:
           python-version: 3.11.1
 
       - name: Install Poetry
-        run: pipx install poetry==1.4.1
+        run: pipx install poetry==$(python poet.py)
 
       - name: Save Cache
         uses: actions/cache@v3
