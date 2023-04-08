@@ -3,5 +3,6 @@
 !bot/
 !gps.py
 !COPYING
+!poet.py
 !poetry.lock
 !pyproject.toml
