@@ -160,5 +160,6 @@ extra:
 
 # CSS
 extra_css:
+  - https://kit.fontawesome.com/2273b2767b.css
   - assets/stylesheets/extra.css
   - assets/stylesheets/admonitions.css
