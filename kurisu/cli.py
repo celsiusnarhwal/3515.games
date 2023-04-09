@@ -15,7 +15,6 @@ import platform
 import re
 import subprocess
 import textwrap
-import uuid
 from difflib import SequenceMatcher
 from enum import StrEnum, auto
 from importlib import metadata
@@ -227,36 +226,29 @@ def copyright(
             print(*args, **kwargs)
 
     def write(fp: Path, content: str):
-        nonlocal changed
-        local_changed = False
-
-        pre = fp.text()
-
-        if not dry_run:
+        def _write(fp: Path, content: str):
             fp.write_text(content)
+
             subprocess.run(
                 f"black {fp}".split(),
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
             )
 
-            if fp.text() != pre:
-                changed += 1
-                local_changed = True
+            return 1 if fp.text() != pre else 0
+
+        pre = fp.text()
+
+        if not dry_run:
+            result = _write(fp, content)
         else:
             with TemporaryDirectory() as tmp:
-                fp = Path(tmp) / f"{uuid.uuid4()}.py"
-                fp.write_text(content)
+                result = _write(Path(tmp) / fp.name, content)
 
-                subprocess.run(
-                    f"black {fp}".split(),
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.STDOUT,
-                )
+        nonlocal changed
 
-                if fp.text() != pre:
-                    changed += 1
-                    local_changed = True
+        changed += result
+        local_changed = bool(result)
 
         if local_changed and verbose:
             echo(f"[bold yellow]Changed[/]: {file}")
