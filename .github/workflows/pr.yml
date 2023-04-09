@@ -31,7 +31,7 @@ jobs:
       - name: Merge PR
         run: gh pr merge --auto --merge ${{ github.event.pull_request.number }}
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.nodoka.outputs.token }}
 
   dependabot:
     runs-on: ubuntu-latest
