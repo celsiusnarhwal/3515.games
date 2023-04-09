@@ -162,7 +162,3 @@ extra:
 extra_css:
   - assets/stylesheets/extra.css
   - assets/stylesheets/admonitions.css
-
-# JavaScript
-extra_javascript:
-  - https://kit.fontawesome.com/2273b2767b.js
