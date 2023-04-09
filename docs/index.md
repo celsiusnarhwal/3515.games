@@ -1,5 +1,6 @@
 ---
 icon: fontawesome/solid/house-chimney-blank
+description: Yet another Discord bot for playing games in text channels
 hide:
     - navigation
     - toc
