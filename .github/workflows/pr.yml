@@ -61,7 +61,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Close PR
-        if: ${{ steps.user.outputs.type != 'User' }}
+        if: ${{ steps.user.outputs.type != 'Bot' }}
         run: gh pr close ${{ github.event.pull_request.number }}
         env:
           GH_TOKEN: ${{ github.token }}
