@@ -20,10 +20,6 @@ jobs:
         with:
           app_id: ${{ secrets.NODOKA_ID }}
           private_key: ${{ secrets.NODOKA_PASSWORD }}
-          permissions: >-
-            {
-              "pull_requests": "write"
-            }
 
       - name: Checkout Repository
         uses: actions/checkout@v3
