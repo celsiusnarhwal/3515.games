@@ -4,6 +4,9 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-from cogs.chess.helpers import *
-from cogs.chess.models import *
-from cogs.chess.views import *
+# This package uses the "shogi" namespace because the "chess" namespace is used by a third-party dependency.
+# I know it's not the same game. Cry about it.
+
+from cogs.shogi.helpers import *
+from cogs.shogi.models import *
+from cogs.shogi.views import *

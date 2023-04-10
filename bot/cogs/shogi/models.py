@@ -13,16 +13,16 @@ import uuid
 from collections import Counter
 from contextlib import asynccontextmanager
 
+import chess
 import discord
 from attrs import define
+from chess import square_name
 from elysia import Fields
 from pydantic import BaseModel, validate_arguments
 
-import chess as pychess
 import shrine
 import support
-from chess import square_name
-from cogs import chess
+from cogs import shogi
 from keyboard import *
 from shrine.kami import posessive
 from support import BasePlayer, ThreadedGame
@@ -379,7 +379,7 @@ class ChessGame(ThreadedGame):
                 f"Thanks for playing!"
             )
 
-            view = chess.ChessEndgameView(game=self) if self.saving_enabled else None
+            view = shogi.ChessEndgameView(game=self) if self.saving_enabled else None
 
             message = await self.thread.send(embed=embed_to_send, view=view)
 
@@ -396,7 +396,7 @@ class ChessPlayer(BasePlayer):
     is_ready: bool = Fields.attr(default=False)
     opponent: ChessPlayer = Fields.attr(default=None)
     has_proposed_draw: bool = Fields.attr(default=False)
-    color: pychess.Color = Fields.attr(default=None)
+    color: chess.Color = Fields.attr(default=None)
     piece_symbols: list[str] = Fields.attr(default=None)
 
     async def ready(self):
@@ -413,7 +413,7 @@ class ChessPlayer(BasePlayer):
         await self.game.check_ready_players()
 
     async def move_with_gui(self, ctx: discord.ApplicationContext):
-        view = chess.ChessMoveView(ctx=ctx, player=self)
+        view = shogi.ChessMoveView(ctx=ctx, player=self)
 
         move = await view.start()
 
@@ -424,7 +424,7 @@ class ChessPlayer(BasePlayer):
         await self.end_turn()
 
     async def move_with_notation(self, ctx: discord.ApplicationContext, notation: str):
-        def parse_move(move_str: str) -> pychess.Move | None:
+        def parse_move(move_str: str) -> chess.Move | None:
             try:
                 parsed_move = self.game.board.parse_san(move_str)
             except ValueError:
@@ -470,7 +470,7 @@ class ChessPlayer(BasePlayer):
             await ctx.respond(embed=embed, ephemeral=True)
 
     async def view_board(self, ctx: discord.ApplicationContext):
-        view = chess.ChessBoardView(ctx=ctx, player=self)
+        view = shogi.ChessBoardView(ctx=ctx, player=self)
         await view.initiate_view()
 
     async def forfeit(self):
@@ -512,12 +512,12 @@ class ChessPlayer(BasePlayer):
         await self.game.end_current_turn()
 
     def set_color(self):
-        self.color = pychess.WHITE if self == self.game.white else pychess.BLACK
+        self.color = chess.WHITE if self == self.game.white else chess.BLACK
 
     def embed_color(self):
         embed_colors = {
-            pychess.WHITE: support.Color.white(),
-            pychess.BLACK: support.Color.black(),
+            chess.WHITE: support.Color.white(),
+            chess.BLACK: support.Color.black(),
         }
 
         return embed_colors[self.color]
@@ -529,23 +529,23 @@ class ChessPlayer(BasePlayer):
         return self.user.name
 
 
-class ChessBoard(pychess.Board):
+class ChessBoard(chess.Board):
     def piece_at(self, square) -> ChessPiece | None:
         piece = super().piece_at(square)
         return ChessPiece.from_base_piece(piece) if piece else None
 
     @asynccontextmanager
     async def image(self) -> discord.File:
-        async with chess.get_board_image(board=self) as image:
+        async with shogi.get_board_image(board=self) as image:
             yield image
 
 
-class ChessPiece(pychess.Piece):
+class ChessPiece(chess.Piece):
     def name(self) -> str:
-        return pychess.PIECE_NAMES[self.piece_type]
+        return chess.PIECE_NAMES[self.piece_type]
 
     @classmethod
-    def from_base_piece(cls, piece: pychess.Piece) -> ChessPiece:
+    def from_base_piece(cls, piece: chess.Piece) -> ChessPiece:
         return cls(piece.piece_type, piece.color)
 
     @classmethod
@@ -584,7 +584,7 @@ class ChessEventProcessor:
     game: ChessGame
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
-    def move_event(self, player: ChessPlayer, move: pychess.Move, data: ChessMoveData):
+    def move_event(self, player: ChessPlayer, move: chess.Move, data: ChessMoveData):
         msg = (
             f"**{player.user.mention}** moves **{data.piece}** from {square_name(data.origin).capitalize()} "
             f"to {square_name(data.destination).capitalize()}."
@@ -642,7 +642,7 @@ class ChessEventProcessor:
         square = discord.utils.find(
             lambda sq: board_copy.piece_at(sq)
             and (
-                board_copy.piece_at(sq).piece_type == pychess.PAWN
+                board_copy.piece_at(sq).piece_type == chess.PAWN
                 or not board_copy.is_en_passant(move)
             )
             and board_copy.color_at(sq) is not player.color,

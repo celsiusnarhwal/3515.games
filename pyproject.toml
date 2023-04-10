@@ -74,6 +74,7 @@ target-version = ["py311"]
 [tool.isort]
 profile = "black"
 src_paths = ["./**"]
+known_third_party = ["chess"]
 
 [tool.poe.tasks]
 clear = "rm -rf site .cache"
