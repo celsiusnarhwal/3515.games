@@ -4,10 +4,9 @@
 #                                      For more information, see the COPYING file.                                     #
 ########################################################################################################################
 
-"""
-Maintains a consistent Poetry version in Docker containers and CI systems.
-"""
+# This package uses the "shogi" namespace because the "chess" namespace is used by a third-party dependency.
+# I know it's not the same game. Cry about it.
 
-import tomllib
-
-print(tomllib.load(open("pyproject.toml", "rb"))["extra"]["poetry-version"])
+from cogs.shogi.helpers import *
+from cogs.shogi.models import *
+from cogs.shogi.views import *

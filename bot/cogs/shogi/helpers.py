@@ -6,19 +6,18 @@
 
 from __future__ import annotations
 
-import os
 from contextlib import asynccontextmanager
 from tempfile import TemporaryDirectory
 
+import chess.svg
 import discord
 from discord.ext import commands
 from path import Path
 from reportlab.graphics import renderPM
 from svglib.svglib import svg2rlg
 
-import chess.svg as pychess_svg
 import support
-from cogs import chess
+from cogs import shogi
 
 # decorators
 
@@ -28,7 +27,7 @@ def verify_context(level: str):
         command_name = f"`/{ctx.command.qualified_name}`"
 
         async def is_chess_thread():
-            if chess.ChessGame.retrieve_game(ctx.channel.id):
+            if shogi.ChessGame.retrieve_game(ctx.channel.id):
                 return True
             else:
                 message = (
@@ -45,7 +44,7 @@ def verify_context(level: str):
                 return False
 
         async def is_player():
-            game = chess.ChessGame.retrieve_game(ctx.channel.id)
+            game = shogi.ChessGame.retrieve_game(ctx.channel.id)
 
             if any(player.user == ctx.user for player in game.players):
                 return True
@@ -61,7 +60,7 @@ def verify_context(level: str):
                 return False
 
         async def is_active_game():
-            game = chess.ChessGame.retrieve_game(ctx.channel.id)
+            game = shogi.ChessGame.retrieve_game(ctx.channel.id)
 
             if game.has_started:
                 return True
@@ -80,7 +79,7 @@ def verify_context(level: str):
                 return False
 
         async def is_player_turn():
-            game = chess.ChessGame.retrieve_game(ctx.channel.id)
+            game = shogi.ChessGame.retrieve_game(ctx.channel.id)
 
             if game.current_player.user == ctx.user:
                 return True
@@ -121,6 +120,6 @@ def verify_context(level: str):
 @asynccontextmanager
 async def get_board_image(**kwargs) -> discord.File:
     with (TemporaryDirectory() as tmp, Path(tmp)):
-        open("board.svg", "w+").write(pychess_svg.board(**kwargs, size=1800))
+        open("board.svg", "w+").write(chess.svg.board(**kwargs, size=1800))
         renderPM.drawToFile(svg2rlg("board.svg"), "board.png", fmt="png")
-        yield discord.File(os.path.abspath("board.png"))
+        yield discord.File(Path("board.png").abspath())

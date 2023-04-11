@@ -150,10 +150,7 @@ def check():
 
     @checkmark
     def check_poetry_version():
-        with Routes.root():
-            pinned_version = toml.load(open("pyproject.toml"))["extra"][
-                "poetry-version"
-            ]
+        pinned_version = (Routes.root() / ".poetry-version").read_text().strip()
 
         return CheckResult(
             kurisu.get_poetry_version() == pinned_version,
@@ -515,14 +512,7 @@ def sync():
     """
     Sync the pinned Poetry version with the installed one.
     """
-    file = Routes.root() / "pyproject.toml"
-    pyproject = toml.load(file.open())
-
-    if pyproject["extra"]["poetry-version"] != kurisu.get_poetry_version():
-        pyproject["extra"]["poetry-version"] = kurisu.get_poetry_version()
-        file.write_text(toml.dumps(pyproject))
-
-        print("[bold green]Done![/]")
+    (Routes.root() / ".poetry-version").write_text(kurisu.get_poetry_version())
 
 
 @app.command(name="vercel")

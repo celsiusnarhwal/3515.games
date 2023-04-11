@@ -11,7 +11,7 @@ from discord.ext import commands
 import shrine
 import support
 from bot import bot
-from cogs import chess
+from cogs import shogi
 from cogs.base import Cog
 from support import SlashCommandGroup
 
@@ -75,10 +75,10 @@ class ChessCog(Cog):
             )
             await ctx.respond(embed=embed, ephemeral=True)
 
-        elif chess.ChessGame.retrieve_duplicate_game(
+        elif shogi.ChessGame.retrieve_duplicate_game(
             players=[ctx.user, opponent], guild=ctx.guild
         ):
-            chess_game = chess.ChessGame.retrieve_duplicate_game(
+            chess_game = shogi.ChessGame.retrieve_duplicate_game(
                 players=[ctx.user, opponent], guild=ctx.guild
             )
             msg = (
@@ -147,7 +147,7 @@ class ChessCog(Cog):
                 auto_archive_duration=1440,
             )
 
-            chess_game = chess.ChessGame(
+            chess_game = shogi.ChessGame(
                 guild=ctx.guild,
                 thread=game_thread,
                 players=[ctx.user, opponent],
@@ -174,13 +174,13 @@ class ChessCog(Cog):
             await chess_game.game_timer()
 
     @chess_group.command()
-    @chess.verify_context(level="player")
+    @shogi.verify_context(level="player")
     async def ready(self, ctx: discord.ApplicationContext):
         """
         Ready yourself to begin a chess game.
         """
-        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
-        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+        chess_game: shogi.ChessGame = shogi.ChessGame.retrieve_game(ctx.channel.id)
+        player: shogi.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
         if player.is_ready:
             msg = "You've already readied yourself with `/chess ready`."
@@ -222,7 +222,7 @@ class ChessCog(Cog):
                 )
 
     @chess_group.command()
-    @chess.verify_context(level="turn")
+    @shogi.verify_context(level="turn")
     async def move(
         self,
         ctx: discord.ApplicationContext,
@@ -237,8 +237,8 @@ class ChessCog(Cog):
         """
         Make a move.
         """
-        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
-        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+        chess_game: shogi.ChessGame = shogi.ChessGame.retrieve_game(ctx.channel.id)
+        player: shogi.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
         if notation:
             await player.move_with_notation(ctx, notation)
@@ -246,24 +246,24 @@ class ChessCog(Cog):
             await player.move_with_gui(ctx)
 
     @chess_group.command()
-    @chess.verify_context(level="game")
+    @shogi.verify_context(level="game")
     async def board(self, ctx: discord.ApplicationContext):
         """
         View the board and move history.
         """
-        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
-        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+        chess_game: shogi.ChessGame = shogi.ChessGame.retrieve_game(ctx.channel.id)
+        player: shogi.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
         await player.view_board(ctx)
 
     @chess_group.command()
-    @chess.verify_context(level="player")
+    @shogi.verify_context(level="player")
     async def forfeit(self, ctx: discord.ApplicationContext):
         """
         Forfeit the game.
         """
-        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
-        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+        chess_game: shogi.ChessGame = shogi.ChessGame.retrieve_game(ctx.channel.id)
+        player: shogi.ChessPlayer = chess_game.retrieve_player(ctx.user)
 
         if chess_game.has_started:
             msg = (
@@ -303,7 +303,7 @@ class ChessCog(Cog):
             )
 
     @chess_group.command()
-    @chess.verify_context(level="game")
+    @shogi.verify_context(level="game")
     async def draw(
         self,
         ctx: discord.ApplicationContext,
@@ -316,8 +316,8 @@ class ChessCog(Cog):
         """
         Make or rescind a proposal to draw.
         """
-        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(ctx.channel.id)
-        player: chess.ChessPlayer = chess_game.retrieve_player(ctx.user)
+        chess_game: shogi.ChessGame = shogi.ChessGame.retrieve_game(ctx.channel.id)
+        player: shogi.ChessPlayer = chess_game.retrieve_player(ctx.user)
         if mode == "Propose":
             if player.has_proposed_draw:
                 msg = "You'll need to resicind your current proposal before you can make a new one."
@@ -381,15 +381,15 @@ class ChessCog(Cog):
         """
         Review and replay your past chess games.
         """
-        view = chess.ChessReplayMenuView(ctx=ctx)
+        view = shogi.ChessReplayMenuView(ctx=ctx)
         await view.initiate_view()
 
     @commands.Cog.listener(name="on_thread_member_remove")
     async def sync_game_thread_removal(self, thread_member: discord.ThreadMember):
-        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(
+        chess_game: shogi.ChessGame = shogi.ChessGame.retrieve_game(
             thread_member.thread_id
         )
-        player: chess.ChessPlayer = chess_game.retrieve_player(thread_member)
+        player: shogi.ChessPlayer = chess_game.retrieve_player(thread_member)
 
         if player:
             await player.forfeit()
@@ -410,7 +410,7 @@ class ChessCog(Cog):
 
     @commands.Cog.listener(name="on_raw_thread_delete")
     async def force_close_thread_deletion(self, thread: discord.RawThreadDeleteEvent):
-        chess_game: chess.ChessGame = chess.ChessGame.retrieve_game(thread.thread_id)
+        chess_game: shogi.ChessGame = shogi.ChessGame.retrieve_game(thread.thread_id)
 
         if chess_game:
             await chess_game.force_close(reason="thread_deletion")
@@ -420,7 +420,7 @@ class ChessCog(Cog):
         for thread in [
             thread
             for thread in channel.threads
-            if chess.ChessGame.retrieve_game(thread.id)
+            if shogi.ChessGame.retrieve_game(thread.id)
         ]:
-            chess_game = chess.ChessGame.retrieve_game(thread.id)
+            chess_game = shogi.ChessGame.retrieve_game(thread.id)
             await chess_game.force_close(reason="channel_deletion")

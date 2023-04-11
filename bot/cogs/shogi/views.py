@@ -12,18 +12,18 @@ from collections import deque
 from io import StringIO
 from tempfile import TemporaryDirectory
 
+import chess
+import chess.pgn
 import discord
+from chess import square_name
 from discord import ButtonStyle, Interaction
 from discord.ui import Button, InputText, Modal, Select
 from discord.ui import button as discord_button
 from path import Path
 
-import chess as pychess
-import chess.pgn as pychess_pgn
 import database.models as orm
 import support
-from chess import square_name
-from cogs import chess
+from cogs import shogi
 from support import View
 
 
@@ -53,12 +53,12 @@ class ChessMoveView(View):
 
     PIECE_SELECTION, ORIGIN, DESTINATION, PROMOTION, CONFIRMATION = range(5)
 
-    def __init__(self, player: chess.ChessPlayer, **kwargs):
+    def __init__(self, player: shogi.ChessPlayer, **kwargs):
         super().__init__(**kwargs)
         self.player = player
         self.uuid = player.game.turn_uuid
 
-        self.move_data = chess.ChessMoveData()
+        self.move_data = shogi.ChessMoveData()
 
         self.board = self.player.game.board
         self.legal_moves = dict()
@@ -112,7 +112,7 @@ class ChessMoveView(View):
             menu.callback = self.select_menu_callback
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        if not chess.ChessGame.retrieve_game(self.player.game.thread.id):
+        if not shogi.ChessGame.retrieve_game(self.player.game.thread.id):
             for child in self.children:
                 child.disabled = True
                 await interaction.response.edit_message(view=self)
@@ -207,7 +207,7 @@ class ChessMoveView(View):
                 destination = self.move_data["destination"]
 
                 try:
-                    self.board.find_move(origin, destination, promotion=pychess.QUEEN)
+                    self.board.find_move(origin, destination, promotion=chess.QUEEN)
                 except ValueError:
                     return self.CONFIRMATION
                 else:
@@ -236,10 +236,10 @@ class ChessMoveView(View):
         ].values[0]
 
         move_data_values = {
-            self.PIECE_SELECTION: chess.ChessPiece.from_symbol(self.move_data["piece"]),
+            self.PIECE_SELECTION: shogi.ChessPiece.from_symbol(self.move_data["piece"]),
             self.ORIGIN: int(self.move_data["origin"]),
             self.DESTINATION: int(self.move_data["destination"]),
-            self.PROMOTION: chess.ChessPiece.from_symbol(self.move_data["promotion"]),
+            self.PROMOTION: shogi.ChessPiece.from_symbol(self.move_data["promotion"]),
         }
 
         self.move_data[move_data_keys[self.current_stage]] = move_data_values[
@@ -285,7 +285,7 @@ class ChessMoveView(View):
             self.add_item(confirm_button)
 
     def get_move(self):
-        return pychess.Move(
+        return chess.Move(
             from_square=self.move_data["origin"],
             to_square=self.move_data["destination"],
             promotion=self.move_data["promotion"] or None,
@@ -382,7 +382,7 @@ class ChessMoveView(View):
                 title="Destination Square", description=msg, color=support.Color.mint()
             )
 
-            self.image_data["squares"] = pychess.SquareSet(
+            self.image_data["squares"] = chess.SquareSet(
                 [square for square in self.legal_moves[orig]]
             )
             self.image_data["fill"].clear()
@@ -393,10 +393,10 @@ class ChessMoveView(View):
         async def promotion():
             menu = self.stages[self.PROMOTION]
 
-            for piece_symbol in pychess.PIECE_SYMBOLS:
+            for piece_symbol in chess.PIECE_SYMBOLS:
                 if piece_symbol != "p":
                     menu.add_option(
-                        label=chess.ChessPiece.from_symbol(piece_symbol)
+                        label=shogi.ChessPiece.from_symbol(piece_symbol)
                         .name()
                         .capitalize(),
                         value=piece_symbol,
@@ -434,7 +434,7 @@ class ChessMoveView(View):
             self.clear_items()
 
             select_menu = await stages[self.current_stage]()
-            async with chess.get_board_image(**self.image_data) as board_png:
+            async with shogi.get_board_image(**self.image_data) as board_png:
                 select_menu.embed.set_image(url=f"attachment://{board_png.filename}")
                 self.add_item(select_menu)
 
@@ -485,7 +485,7 @@ class ChessMoveView(View):
             self.image_data["lastmove"] = self.get_move()
             self.image_data["arrows"] = [(origin_square, destination_square)]
 
-            async with chess.get_board_image(**self.image_data) as board_png:
+            async with shogi.get_board_image(**self.image_data) as board_png:
                 embed.set_image(url=f"attachment://{board_png.filename}")
                 await interaction.response.defer()
                 await interaction.edit_original_response(
@@ -501,7 +501,7 @@ class ChessMoveView(View):
 
 class ChessBoardView(View):
     class MoveHistoryPaginator:
-        def __init__(self, board: chess.ChessBoard):
+        def __init__(self, board: shogi.ChessBoard):
             self.board = board
             self.page_number = len(board.move_stack)
             self.popped_moves = deque()
@@ -546,7 +546,7 @@ class ChessBoardView(View):
         def __len__(self):
             return len(self.board.move_stack) + len(self.popped_moves)
 
-    def __init__(self, player: chess.ChessPlayer, **kwargs):
+    def __init__(self, player: shogi.ChessPlayer, **kwargs):
         super().__init__(**kwargs)
         self.player = player
 
@@ -764,7 +764,7 @@ class ChessBoardView(View):
         next_button.disabled = last_button.disabled = not self.history.has_next()
 
     async def present(self, interaction: Interaction = None):
-        async with chess.get_board_image(**self.image_data) as board_png:
+        async with shogi.get_board_image(**self.image_data) as board_png:
             if interaction:
                 await interaction.response.defer()
                 await interaction.edit_original_response(
@@ -798,13 +798,13 @@ class ChessBoardView(View):
 
 
 class ChessEndgameView(View):
-    def __init__(self, game: chess.ChessGame):
+    def __init__(self, game: shogi.ChessGame):
         super().__init__()
         self.game = game
         self.has_saved = []
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        player: chess.ChessPlayer = self.game.retrieve_player(interaction.user)
+        player: shogi.ChessPlayer = self.game.retrieve_player(interaction.user)
         if not player:
             msg = "Only users who played in this game can save it to their history."
             embed = discord.Embed(
@@ -826,7 +826,7 @@ class ChessEndgameView(View):
 
     @discord_button(label="Save Game", style=ButtonStyle.gray)
     async def save_game(self, _, interaction: Interaction):
-        pgn = pychess_pgn.Game.from_board(self.game.board)
+        pgn = chess.pgn.Game.from_board(self.game.board)
 
         headers = {
             "Event": f"{self.game.white.user.name} vs. {self.game.black.user.name}",
@@ -861,7 +861,7 @@ class ChessEndgameView(View):
                 server=self.game.guild.name,
                 result=result,
                 date=self.game.thread.created_at,
-                pgn=pgn.accept(chess.pychess_pgn.StringExporter()).replace(
+                pgn=pgn.accept(chess.pgn.StringExporter()).replace(
                     '\n[Round "?"]\n', ""
                 ),
             )
@@ -1097,7 +1097,7 @@ class ChessReplayMenuView(View):
 # believe it or not, subclassing ChessBoardView actually makes things worse!
 class ChessReplayView(View):
     class MoveHistoryPaginator:
-        def __init__(self, board: pychess.Board):
+        def __init__(self, board: chess.Board):
             self.board = board
             self.page_number = 0
             self.popped_moves = deque()
@@ -1144,7 +1144,7 @@ class ChessReplayView(View):
 
     def __init__(self, pgn: str, **kwargs):
         super().__init__(**kwargs)
-        board = pychess_pgn.read_game(StringIO(pgn), Visitor=pychess_pgn.BoardBuilder)
+        board = chess.pgn.read_game(StringIO(pgn), Visitor=chess.pgn.BoardBuilder)
         self.history = self.MoveHistoryPaginator(board)
         self.highlight_last_move = False
         self.show_analysis = False
@@ -1277,7 +1277,7 @@ class ChessReplayView(View):
         next_button.disabled = last_button.disabled = not self.history.has_next()
 
     async def present(self, interaction):
-        async with chess.get_board_image(**self.image_data) as board_png:
+        async with shogi.get_board_image(**self.image_data) as board_png:
             await interaction.response.defer()
             await interaction.edit_original_response(
                 file=board_png, attachments=[], view=self
@@ -1339,7 +1339,7 @@ class ChessReplayView(View):
         last_button.callback = self.history_last
         self.add_item(last_button)
 
-        async with chess.get_board_image(**self.image_data) as board_png:
+        async with shogi.get_board_image(**self.image_data) as board_png:
             await interaction.response.defer(ephemeral=True)
             await interaction.followup.send(
                 file=board_png, embed=None, view=self, ephemeral=True
