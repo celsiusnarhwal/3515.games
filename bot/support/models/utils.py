@@ -72,7 +72,7 @@ class Assets(Path):
 
     @classmethod
     def chess(cls) -> Self:
-        return cls._get("chess")
+        return cls._get("shogi")
 
     @classmethod
     def cah(cls) -> Self:
