@@ -910,7 +910,6 @@ class ChessReplayMenuView(View):
 
         await interaction.response.edit_message(embed=embed, view=self)
 
-    @orm.db_session
     def get_menu(self) -> Select:
         menu = Select(
             min_values=1,
@@ -922,14 +921,15 @@ class ChessReplayMenuView(View):
 
         menu.callback = self.select_menu_callback
 
-        for game in orm.ChessGame.get_user_games(self.ctx.user):
-            menu.add_option(
-                label=f"{game.white} vs. {game.black}",
-                description=f"{game.server} / {game.date.strftime('%Y.%m.%d')}",
-                value=str(game.id),
-            )
+        with orm.db_session:
+            for game in orm.ChessGame.get_user_games(self.ctx.user):
+                menu.add_option(
+                    label=f"{game.white} vs. {game.black}",
+                    description=f"{game.server} / {game.date.strftime('%Y.%m.%d')}",
+                    value=str(game.id),
+                )
 
-        return menu
+            return menu
 
     @discord_button(
         label="Replay Game",
