@@ -24,9 +24,9 @@ class Torii(Environment):
     Base class for Jinja environments.
     """
 
-    filters_: ClassVar[dict[str, Callable]] = {}
-    globals_: ClassVar[dict[str, Any]] = {}
-    extensions_: ClassVar[list[type]] = []
+    filters_: ClassVar = {}
+    globals_: ClassVar = {}
+    extensions_: ClassVar = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -58,6 +58,10 @@ class Torii(Environment):
     @classmethod
     def cah(cls) -> Self:
         return cls._get(Assets.cah())
+
+    @classmethod
+    def claris(cls) -> Self:
+        return cls._get(Assets.claris())
 
     @classmethod
     def kurisu(cls) -> Self:

@@ -79,6 +79,10 @@ class Assets(Path):
         return cls._get("cah")
 
     @classmethod
+    def claris(cls) -> Self:
+        return cls._get("claris")
+
+    @classmethod
     def kurisu(cls) -> Self:
         return cls.joinpath(Routes.kurisu(), "assets")
 
@@ -151,7 +155,7 @@ class GamePermissions(discord.Permissions):
     @classmethod
     def cah(cls) -> Self:
         """
-        The set of permissions required for public CAH games. This is currently equivalent to
+        The set of permissions required for CAH games. This is currently equivalent to
         ``GamePermissions.uno()``.
 
         Returns a :class:`GamePermissions` object with the following permissions:
@@ -166,6 +170,24 @@ class GamePermissions(discord.Permissions):
         - Use External Emojis
         """
         return cls.uno()
+
+    @classmethod
+    def claris(cls) -> Self:
+        """
+        The set of permissions required for Connect 4 games. This is currently equivalent to
+        ``GamePermissions.chess()``.
+
+        Returns a :class:`GamePermissions` object with the following permissions:
+
+        - Create Public Threads
+        - Send Messages in Threads
+        - Manage Messages
+        - Manage Threads
+        - Embed Links
+        - Attach Files
+        - Use External Emojis
+        """
+        return cls.chess()
 
     @classmethod
     def vc(cls) -> Self:

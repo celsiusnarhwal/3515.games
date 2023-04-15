@@ -37,10 +37,11 @@ class MiscCog(Cog):
     )
     async def caniplay(self, ctx: discord.ApplicationContext):
         games = {
+            "Cards Against Humanity": support.GamePermissions.cah(),
+            "Chess": support.GamePermissions.chess(),
+            "Connect 4": support.GamePermissions.claris(),
             "Rock-Paper-Scissors": support.GamePermissions.rps(),
             "UNO": support.GamePermissions.uno(),
-            "Chess": support.GamePermissions.chess(),
-            "Cards Against Humanity": support.GamePermissions.cah(),
         }
 
         msg = (
