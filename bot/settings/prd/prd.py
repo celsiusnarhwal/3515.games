@@ -9,6 +9,7 @@ Production settings.
 """
 import os
 
+from cogs.claris.cog import ClarisCog
 from settings.base import Settings
 
 settings = Settings(
@@ -17,4 +18,5 @@ settings = Settings(
         "provider": "postgres",
         "dsn": os.getenv("DATABASE_URL"),
     },
+    disabled_cogs=[ClarisCog],
 )
