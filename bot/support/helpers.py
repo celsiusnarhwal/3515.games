@@ -12,6 +12,7 @@ from functools import partial
 
 import alianator
 import discord
+import en_core_web_sm
 import tomlkit as toml
 from dict_deep import deep_get
 from discord import ButtonStyle
@@ -29,6 +30,7 @@ from support.models.commands import Pseudocommand
 CELSIUSNARHWAL = 170966436125212673
 CLESIUSNORHWALE = 417027940383981568
 TESTING_GROUNDS = 392426193581768717
+NLP = en_core_web_sm.load()
 
 # decorators
 

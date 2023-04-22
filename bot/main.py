@@ -11,7 +11,6 @@ import logging
 import warnings
 
 import nest_asyncio as nest
-import nltk
 from click import secho as print
 
 import clockworks
@@ -38,11 +37,6 @@ def suppress_warnings():
         warnings.filterwarnings("ignore", category=warning)
 
 
-def configure_nltk():
-    for corpus in settings.nltk_corpora:
-        nltk.download(corpus, quiet=True)
-
-
 def configure_database():
     db.bind(**settings.database)
     db.generate_mapping(create_tables=True)
@@ -55,7 +49,6 @@ def load_extensions():
 def setup():
     configure_logging()
     suppress_warnings()
-    configure_nltk()
     configure_database()
     load_extensions()
 

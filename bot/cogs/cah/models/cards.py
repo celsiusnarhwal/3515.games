@@ -13,7 +13,6 @@ import uuid
 
 import aiohttp
 import discord
-import nltk
 import orjson
 from attrs import define
 from elysia import Fields
@@ -23,6 +22,7 @@ from pydantic import BaseModel, Field, validate_arguments, validator
 
 from cogs.cah.models.player import CAHPlayer
 from keyboard import *
+from support import NLP
 
 
 class CAHBlackCard(BaseModel):
@@ -33,7 +33,7 @@ class CAHBlackCard(BaseModel):
     class Config:
         frozen = True
 
-    text: str
+    text: Optional[str]  # not actually optional
     pick: int
 
     @validator("text")
@@ -42,6 +42,14 @@ class CAHBlackCard(BaseModel):
             v += " _"
 
         return discord.utils.escape_markdown(v.replace("_", "_" * 5))
+
+    @validator("text")
+    def no_haiku(self, v):
+        if v == "Make a haiku.":
+            return None
+
+    def __bool__(self):
+        return bool(self.text)
 
     def __str__(self):
         return self.text
@@ -207,21 +215,20 @@ class CAHCandidateCard:
         # read: THIS SHIT DOESN'T WORK!!!
 
         candidates = []
-
         underscores = discord.utils.escape_markdown("_" * 5)
         punctuation = ".?!:"
 
         proper_nouns = []
         for card in white_cards:
-            words = re.sub(r"[.?!,]", "", card.text).split()
-            proper_nouns.extend(
-                [word for word, pos in nltk.pos_tag(words) if pos.startswith("NNP")]
-            )
+            for token in NLP(card.text):
+                if token.pos_ == "PROPN":
+                    proper_nouns.append(token.text)
 
-        # ngl I shoulda written comments for this when I had the chance. too bad!
+        black_card = player.game.black_card
 
         for c1, c2 in zip(white_cards, reversed(white_cards)):
-            tokens = dllist(re.split(r"((?:\\_){5})", player.game.black_card.text))
+            tokens = dllist(re.split(r"((?:\\_){5})", black_card.text))
+
             if not tokens[-1]:
                 tokens.pop()
 
@@ -239,9 +246,11 @@ class CAHCandidateCard:
 
                     decapitalize: bool = (
                         underscore_node.prev is not None
+                        and bool(underscore_node.prev.value)
                         and not underscore_node.prev.value.rstrip().endswith(
                             tuple(punctuation)
                         )
+                        and not text.istitle()
                         and text.split()[0] not in proper_nouns
                     )
 
@@ -256,7 +265,7 @@ class CAHCandidateCard:
 
             candidates.append(cls("".join(tokens), player, white_cards))
 
-            if len(candidates) == player.game.black_card.pick:
+            if len(candidates) == black_card.pick:
                 break
 
         return candidates
