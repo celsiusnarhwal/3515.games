@@ -91,11 +91,11 @@ fi
 """
 env = { VERCEL_ORG_ID = "${VERCEL_ORG_ID}", VERCEL_PROJECT_ID = "${VERCEL_PROJECT_ID}" }
 
-    [[tool.poe.tasks.docs.args]]
-    name = "vercel"
-    options = ["--vercel"]
-    type = "boolean"
-    default = false
+[[tool.poe.tasks.docs.args]]
+name = "vercel"
+options = ["--vercel"]
+type = "boolean"
+default = false
 
 [tool.poe.tasks.release]
 shell = """
