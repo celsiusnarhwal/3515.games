@@ -158,6 +158,7 @@ extra:
     - icon: celsius
       link: https://celsiusnarhwal.dev
       name: celsiusnarhwal.dev
+  generator: false
 
 # CSS
 extra_css:
