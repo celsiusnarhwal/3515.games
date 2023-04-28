@@ -92,6 +92,7 @@ plugins:
         text: white
       cards_font: Poppins
   - typeset
+  - fontawesome-pro
 
 # Extensions
 markdown_extensions:

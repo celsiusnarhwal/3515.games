@@ -28,7 +28,7 @@ jobs:
   build:
     name: Build Documentation
     runs-on: ubuntu-latest
-    environment: production
+    environment: main
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -48,12 +48,13 @@ jobs:
           path: .cache
 
       - name: Install Dependencies
-        run: poetry install --no-root --only docs && poetry run poe fontawesome
+        run: poetry install --no-root --only docs
         env:
           POETRY_REPOSITORIES_MATERIAL_INSIDERS_URL: https://github.com/squidfunk/mkdocs-material-insiders
           POETRY_HTTP_BASIC_MATERIAL_INSIDERS_USERNAME: celsiusnarhwal
-          POETRY_HTTP_BASIC_MATERIAL_INSIDERS_PASSWORD: ${{ secrets.MATERIAL_INSIDERS_TOKEN }}
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+          POETRY_HTTP_BASIC_MATERIAL_INSIDERS_PASSWORD: ${{ secrets.GH_PAT }}
+          POETRY_HTTP_BASIC_FONTAWESOME_USERNAME: celsiusnarhwal
+          POETRY_HTTP_BASIC_FONTAWESOME_PASSWORD: ${{ secrets.FONTAWESOME_TOKEN }}
 
       - name: Build Documentation
         run: poetry run mkdocs build
